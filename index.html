@@ -705,11 +705,11 @@ async function viewStats() {
   const keys = [...buckets.keys()].sort();
   const allN = ms.data.length, allW = ms.data.filter(isWin).length;
   const allK = st.data.reduce((a, s) => a + (s.kills || 0), 0), allD = st.data.reduce((a, s) => a + (s.deaths || 0), 0);
-  const maxN = Math.max(1, ...keys.map(k => buckets[k].n));
+  const maxN = Math.max(1, ...keys.map(k => buckets.get(k).n));
   const W = Math.max(320, keys.length * 46), H = 100, step = W / Math.max(1, keys.length), bw = Math.min(14, step * 0.32);
   const every = Math.max(1, Math.ceil(keys.length / 8));
   const bars = keys.map((k, i) => {
-    const b = buckets[k], h = Math.max(2, b.n / maxN * H), hw = Math.max(2, b.w / maxN * H);
+    const b = buckets.get(k), h = Math.max(2, b.n / maxN * H), hw = Math.max(2, b.w / maxN * H);
     const x = i * step + (step - bw * 2 - 2) / 2;
     const lab = i % every === 0 ? `<text x="${x + bw}" y="${H + 14}" text-anchor="middle">${esc(labelOf(k))}</text>` : '';
     return `<g><title>${esc(labelOf(k))}: боёв ${b.n}, побед ${b.w}</title><rect x="${x}" y="${H - h}" width="${bw}" height="${h}" rx="3" fill="var(--ac)"/><rect x="${x + bw + 2}" y="${H - hw}" width="${bw}" height="${hw}" rx="3" fill="var(--ok)"/>${lab}</g>`;
