@@ -122,6 +122,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_0kJv9lAMAvBYwPQW23Qwyg_R_MkNBAe';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const avImg = (url, cls) => url ? '<img class="av ' + (cls || '') + '" referrerpolicy="no-referrer" src="' + esc(url) + '" alt="">' : '';
 let user = null, clan = null, tab = 'rating';
 
 function msg(text) { app.innerHTML = `<div class="card err">${esc(text)}</div>`; }
