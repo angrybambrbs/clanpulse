@@ -115,6 +115,11 @@ a{color:var(--ac)}
 .warnrow td{background:var(--warn-bg)}.badrow td{background:var(--bad-bg)}
 .att{font-size:12px;white-space:normal}.chart text{fill:var(--mut);font-size:10px}
 .topcard{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.calgrid{display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;overflow-x:auto}
+.calday{background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:8px;min-height:92px}
+.calday.today{border-color:var(--ac)}
+.calhead{font-size:12px;color:var(--mut);margin-bottom:6px}
+.calev{font-size:12px;background:var(--card);border-radius:6px;padding:4px 6px;margin-bottom:4px;overflow-wrap:anywhere}
 .prow{display:flex;gap:8px;align-items:center;padding:3px 0;border-bottom:1px solid var(--bd)}
 </style>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('cp_theme')||'dark'}catch(e){}</script>
@@ -1356,8 +1361,8 @@ async function viewNotifs() {
   const { data, error } = await sb.from('notifications').select('*').eq('user_id', user.id)
     .order('created_at', { ascending: false }).limit(50);
   if (error) return body.innerHTML = failBox(error);
-  const ICON = { application: '📋', dm: '✉', rsvp: '📅', verification: '🛡' };
-  const LABEL = { application: 'Заявка', dm: 'Сообщение', rsvp: 'Событие', verification: 'Верификация' };
+  const ICON = { application: '📋', dm: '✉', rsvp: '📅', verification: '🛡', digest: '📊' };
+  const LABEL = { application: 'Заявка', dm: 'Сообщение', rsvp: 'Событие', verification: 'Верификация', digest: 'Сводка' };
   body.innerHTML = `<div class="card"><div class="top"><h2>Уведомления</h2>
     ${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">Прочитать все</button>' : ''}</div>
     ${data.length ? data.map(n => `<div class="msg" data-n="${n.id}" ${n.read_at ? '' : 'style="border-left:3px solid var(--ac)"'}>
@@ -1632,18 +1637,24 @@ function showImport(body, parsed, roster) {
 
 const EV_KIND = { tournament: 'Турнир', brawl: 'Потасовка', base: 'Захват базы', other: 'Другое' };
 const RSVP = { yes: 'Буду', maybe: 'Возможно', no: 'Не смогу' };
+const RESULTS = { 'победа': 'Победа', 'поражение': 'Поражение', 'ничья': 'Ничья', 'не состоялось': 'Не состоялось' };
 const localDt = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 const evDate = iso => new Date(iso).toLocaleString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const dayKey = d => { const x = new Date(d); return [x.getFullYear(), String(x.getMonth()+1).padStart(2,'0'), String(x.getDate()).padStart(2,'0')].join('-'); };
+let calOffset = 0;
+const calStart = () => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7) + calOffset*7); return d; };
 
 async function viewEvents() {
   const body = document.getElementById('body');
-  const since = new Date(Date.now() - 6 * 3600e3).toISOString();
-  const [ev, mb] = await Promise.all([
-    sb.from('clan_events').select('*').eq('clan_id', clan.id).gte('starts_at', since).order('starts_at').limit(30),
-    sb.from('clan_members').select('user_id,display_name').eq('clan_id', clan.id)
+  const start = calStart(), end = new Date(start.getTime() + 7 * 864e5);
+  const [ev, mb, mt] = await Promise.all([
+    sb.from('clan_events').select('*').eq('clan_id', clan.id).gte('starts_at', start.toISOString()).lt('starts_at', end.toISOString()).order('starts_at'),
+    sb.from('clan_members').select('user_id,display_name').eq('clan_id', clan.id),
+    sb.from('matches').select('id,result,place,played_at').eq('clan_id', clan.id)
   ]);
-  const err = ev.error || mb.error;
+  const err = ev.error || mb.error || mt.error;
   if (err) return body.innerHTML = failBox(err);
+  const matches = Object.fromEntries(mt.data.map(m => [m.id, m]));
   const ids = ev.data.map(e => e.id);
   const rs = ids.length ? await sb.from('event_rsvps').select('event_id,user_id,answer').in('event_id', ids) : { data: [] };
   if (rs.error) return body.innerHTML = failBox(rs.error);
@@ -1653,6 +1664,16 @@ async function viewEvents() {
     (by[r.event_id] = by[r.event_id] || { yes: [], maybe: [], no: [] })[r.answer].push(names[r.user_id] || 'вне клана');
     if (r.user_id === user.id) mine[r.event_id] = r.answer;
   });
+  const days = Array.from({ length: 7 }, (_, i) => new Date(start.getTime() + i * 864e5));
+  const weekEnd = new Date(start.getTime() + 6 * 864e5);
+  const title = start.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ' — ' + weekEnd.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  const today = dayKey(new Date());
+  const dayNames = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const cells = days.map((d, i) => {
+    const list = ev.data.filter(e => dayKey(e.starts_at) === dayKey(d));
+    return `<div class="calday ${dayKey(d) === today ? 'today' : ''}"><div class="calhead">${dayNames[i]}, ${d.getDate()}</div>` +
+      (list.length ? list.map(e => `<div class="calev">${esc(e.title || EV_KIND[e.kind])}<br><span class="mut">${new Date(e.starts_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span></div>`).join('') : '<span class="mut">—</span>') + '</div>';
+  }).join('');
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(20, 0, 0, 0);
   const form = canEdit() ? `<div class="card"><h2>Новое событие</h2><div class="grid">
     ${fld('Тип', `<select id="e_kind">${selOpts(EV_KIND, 'tournament')}</select>`)}${fld('Название (необязательно)', '<input id="e_title" maxlength="120">')}
@@ -1660,14 +1681,29 @@ async function viewEvents() {
     ${fld('Заметка (необязательно)', '<textarea id="e_note" maxlength="500"></textarea>')}<button id="e_add">Создать</button></div>` : '';
   const card = e => {
     const g = by[e.id] || { yes: [], maybe: [], no: [] };
+    const link = e.match_id && matches[e.match_id];
+    const resSel = `<select id="res_${e.id}">${selOpts(RESULTS, link ? link.result : '', '—')}</select>`;
+    const resultBlock = link
+      ? `<p>Результат: <b>${esc(link.result || ('место ' + (link.place || '—')))}</b></p><div class="row">${resSel}<button class="ghost" data-res="${e.id}" data-mid="${link.id}">Обновить</button></div>`
+      : (new Date(e.starts_at) <= new Date() && canEdit()
+          ? `<div class="row">${resSel}<button class="ghost" data-res="${e.id}">Записать результат</button></div>` : '');
     return `<div class="card"><div class="rtitle"><span class="chip ok">${EV_KIND[e.kind]}</span><b>${esc(e.title)}</b></div>
       <p class="mut">${evDate(e.starts_at)}</p>${e.note ? `<p>${esc(e.note)}</p>` : ''}
       <p>Буду: <b>${g.yes.length}</b> · Возможно: <b>${g.maybe.length}</b> · Не смогу: <b>${g.no.length}</b></p>
       <div class="row">${Object.entries(RSVP).map(([k, l]) => `<button class="ghost ${mine[e.id] === k ? 'on' : ''}" data-rsvp="${e.id}|${k}">${l}</button>`).join('')}</div>
+      ${resultBlock}
       <details><summary class="mut">Кто что ответил</summary>${Object.entries(RSVP).map(([k, l]) => `<p><b>${l}:</b> ${g[k].length ? g[k].map(n => esc(n)).join(', ') : '—'}</p>`).join('')}</details>
       ${canEdit() ? `<button class="ghost" data-delev="${e.id}" style="margin-top:8px">Удалить</button>` : ''}</div>`;
   };
-  body.innerHTML = form + (ev.data.length ? ev.data.map(card).join('') : '<div class="card mut">Ближайших событий нет.</div>');
+  body.innerHTML = `<div class="card"><div class="top"><h2 style="margin:0">Календарь клана</h2><span class="row">
+    <button class="ghost" data-cal="-1">←</button><button class="ghost" data-cal="0">Сегодня</button><button class="ghost" data-cal="1">→</button></span></div>
+    <p class="mut">${title}. Напоминание придёт за день до события.</p><div class="calgrid">${cells}</div></div>
+    ${form}
+    ${ev.data.length ? ev.data.map(card).join('') : '<div class="card mut">На этой неделе событий нет. Листай календарь стрелками.</div>'}`;
+  body.querySelectorAll('[data-cal]').forEach(b => b.onclick = () => {
+    const v = Number(b.dataset.cal); calOffset = v === 0 ? 0 : calOffset + v;
+    const y = scrollY; viewEvents().then(() => scrollTo(0, y));
+  });
   const add = document.getElementById('e_add');
   if (add) add.onclick = async () => {
     const kind = val('e_kind'), dt = val('e_dt');
@@ -1675,7 +1711,7 @@ async function viewEvents() {
     const { error } = await sb.from('clan_events').insert({ clan_id: clan.id, kind, title: txt('e_title') || EV_KIND[kind],
       starts_at: new Date(dt).toISOString(), note: txt('e_note'), created_by: user.id });
     if (error) return alert(error.message);
-    viewEvents();
+    calOffset = 0; viewEvents();
   };
   body.querySelectorAll('[data-rsvp]').forEach(b => b.onclick = async () => {
     const [eid, ans] = b.dataset.rsvp.split('|');
@@ -1683,14 +1719,29 @@ async function viewEvents() {
     if (error) return alert(error.message);
     const y = scrollY; await viewEvents(); scrollTo(0, y);
   });
+  body.querySelectorAll('[data-res]').forEach(b => b.onclick = async () => {
+    const eid = b.dataset.res, mid = b.dataset.mid || null;
+    const result = document.getElementById('res_' + eid).value;
+    if (!result) return alert('Выбери результат');
+    const event = ev.data.find(x => x.id === eid);
+    if (mid) {
+      const { error } = await sb.from('matches').update({ result }).eq('id', mid);
+      if (error) return alert(error.message);
+    } else {
+      const { data: m, error: e1 } = await sb.from('matches').insert({ clan_id: clan.id, played_at: event.starts_at, result, mode: EV_KIND[event.kind], created_by: user.id }).select('id').single();
+      if (e1) return alert(e1.message);
+      const { error: e2 } = await sb.from('clan_events').update({ match_id: m.id }).eq('id', eid);
+      if (e2) return alert(e2.message);
+    }
+    const y = scrollY; await viewEvents(); scrollTo(0, y);
+  });
   body.querySelectorAll('[data-delev]').forEach(b => b.onclick = async () => {
     if (!confirm('Удалить событие?')) return;
     const { error } = await sb.from('clan_events').delete().eq('id', b.dataset.delev);
     if (error) return alert(error.message);
-    viewEvents();
+    const y = scrollY; await viewEvents(); scrollTo(0, y);
   });
 }
-
 sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLogin(); });
 init();
 </script>
