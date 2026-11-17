@@ -266,15 +266,15 @@ function shell(title, tabs, views, again, icon, primary) {
 function render() {
   const tabs = [['rating', 'Рейтинг']];
   if (canEdit()) tabs.push(['match', 'Новый бой']);
-  tabs.push(['history', 'История']);
-  if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки']);
+  tabs.push(['history', 'История'], ['stats', 'Аналитика']);
+  if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки'], ['audit', 'Журнал']);
   tabs.push(['events', 'События'], ['chat', 'Чат клана'], ['team', 'Команда']);
   if (myRole === 'owner') tabs.push(['settings', 'Клан в поиске']);
   tabs.push(['catalog', 'Каталог снаряжения'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']);
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (tab !== 'player' && !tabs.some(t => t[0] === tab)) tab = 'rating';
-  shell(clan.name, tabs, { rating: viewRating, match: viewMatch, history: viewHistory, roster: viewRoster, team: viewTeam, apps: viewApps,
-    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog }, render, clan.avatar_url, ['rating', 'match', 'events', 'chat']);
+  shell(clan.name, tabs, { rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
+    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog }, render, clan.avatar_url, ['rating', 'match', 'stats', 'events', 'chat']);
 }
 
 function renderHub() {
