@@ -696,7 +696,7 @@ async function viewRating() {
     <p class="mut">Боёв клана за период: ${total}. Явка — доля этих боёв, в которых игрок участвовал.</p>
     <table><tr><th>#</th><th>Игрок</th><th>Отряд</th><th>Боёв</th><th>Явка</th><th>K</th><th>D</th><th>K/D</th><th>П</th><th>Счёт</th><th>Последний бой</th></tr>${rows}</table></div>`;
   body.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { period = Number(b.dataset.p); viewRating(); });
-  document.getElementById('fsq').onchange = e => { ratingSquad = e.target.value; viewRating(); };
+  const fsq = document.getElementById('fsq'); if (fsq) fsq.onchange = e => { ratingSquad = e.target.value; viewRating(); };
   wirePl(body);
 }
 
