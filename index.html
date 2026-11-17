@@ -1104,7 +1104,7 @@ async function viewTeam() {
     const mine = m.user_id === user.id;
     const manage = owner && m.role !== 'owner';
     const rankCell = manage
-      ? `<select data-rank="${m.user_id}">${Object.keys(CLAN_RANKS).map(k => `<option value="${k}" ${(m.rank || 'PRIVATE') === k ? 'selected' : ''}>${CLAN_RANKS[k]}</option>`).join('')}</select>`
+      ? `<select data-rank="${m.user_id}">${CLAN_RANK_ORDER.map(k => `<option value="${k}" ${(m.rank || 'PRIVATE') === k ? 'selected' : ''}>${CLAN_RANKS[k]}</option>`).join('')}</select>`
       : esc(clanRank(m));
     const roleCell = manage
       ? `<select data-role="${m.user_id}"><option value="officer" ${m.role === 'officer' ? 'selected' : ''}>офицер</option>
