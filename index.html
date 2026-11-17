@@ -1175,14 +1175,14 @@ async function viewNotifs() {
   if (error) return body.innerHTML = failBox(error);
   const ICON = { application: '📋', dm: '✉', rsvp: '📅', verification: '🛡' };
   const LABEL = { application: 'Заявка', dm: 'Сообщение', rsvp: 'Событие', verification: 'Верификация' };
-  body.innerHTML = \`<div class="card"><div class="top"><h2>Уведомления</h2>
-    \${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">Прочитать все</button>' : ''}</div>
-    \${data.length ? data.map(n => \`<div class="msg" data-n="\${n.id}" \${n.read_at ? '' : 'style="border-left:3px solid var(--ac)"'}>
-      <div class="brand"><b>\${ICON[n.type] || '🔔'} \${esc(LABEL[n.type] || n.type)}</b>
-        <span class="mut">\${fmtTime(n.created_at)}</span></div>
-      <p><b>\${esc(n.title)}</b>\${n.body ? '<br>' + esc(n.body) : ''}</p>
-      \${n.href ? \`<button class="ghost" data-go="\${esc(n.href.slice(1))}">Открыть</button>\` : ''}</div>\`).join('')
-      : '<p class="mut">Уведомлений пока нет. Здесь появятся новые заявки в клан, сообщения, ответы на события и запросы верификации.</p>'}</div>\`;
+  body.innerHTML = `<div class="card"><div class="top"><h2>Уведомления</h2>
+    ${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">Прочитать все</button>' : ''}</div>
+    ${data.length ? data.map(n => `<div class="msg" data-n="${n.id}" ${n.read_at ? '' : 'style="border-left:3px solid var(--ac)"'}>
+      <div class="brand"><b>${ICON[n.type] || '🔔'} ${esc(LABEL[n.type] || n.type)}</b>
+        <span class="mut">${fmtTime(n.created_at)}</span></div>
+      <p><b>${esc(n.title)}</b>${n.body ? '<br>' + esc(n.body) : ''}</p>
+      ${n.href ? `<button class="ghost" data-go="${esc(n.href.slice(1))}">Открыть</button>` : ''}</div>`).join('')
+      : '<p class="mut">Уведомлений пока нет. Здесь появятся новые заявки в клан, сообщения, ответы на события и запросы верификации.</p>'}</div>`;
   body.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
     await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', b.closest('[data-n]').dataset.n);
     await refreshNotifCount(); setUnread();
