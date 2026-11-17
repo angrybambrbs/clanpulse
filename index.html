@@ -684,9 +684,15 @@ async function viewRating() {
     .sort((x, y) => y.n - x.n || y.k - x.k);
   const pb = (v, l) => `<button class="ghost ${period === v ? 'on' : ''}" data-p="${v}">${l}</button>`;
   const fopt = (v, l) => `<option value="${v}" ${ratingSquad === v ? 'selected' : ''}>${esc(l)}</option>`;
-  const rk = pl.data.some(x => x.user_id) ? (await sb.from('profiles').select('user_id,rank').in('user_id', pl.data.filter(x => x.user_id).map(x => x.user_id))).data || [] : [];
-  const rankOf = Object.fromEntries(rk.map(x => [x.user_id, x.rank]));
-  const rows = list.map((a, i) => `<tr class="${a.n ? '' : 'dim'}"><td>${i + 1}</td><td>${plLink(a.id, a.nick)}</td><td>${a.uid && rankOf[a.uid] ? esc(RANKS[rankOf[a.uid]] || rankOf[a.uid]) : '—'}</td><td>${esc(a.sq)}</td>
+  const uids = pl.data.filter(x => x.user_id).map(x => x.user_id);
+  const nicks = pl.data.filter(x => !x.user_id && x.nick).map(x => x.nick);
+  const [rkU, rkN] = await Promise.all([
+    uids.length ? sb.from('profiles').select('user_id,rank').in('user_id', uids) : Promise.resolve({ data: [] }),
+    nicks.length ? sb.from('profiles').select('nickname,rank').in('nickname', nicks) : Promise.resolve({ data: [] })
+  ]);
+  const rankOf = Object.fromEntries((rkU.data || []).map(x => [x.user_id, x.rank]));
+  const rankByNick = Object.fromEntries((rkN.data || []).map(x => [x.nickname, x.rank]));
+  const rows = list.map((a, i) => `<tr class="${a.n ? '' : 'dim'}"><td>${i + 1}</td><td>${plLink(a.id, a.nick)}</td><td>${(() => { const r = (a.uid && rankOf[a.uid]) || rankByNick[a.nick]; return r ? esc(RANKS[r] || r) : '—'; })()}</td><td>${esc(a.sq)}</td>
     <td>${a.n}</td><td>${total ? Math.round(a.n / total * 100) + '%' : '—'}</td>
     <td>${a.k}</td><td>${a.d}</td><td>${a.d ? (a.k / a.d).toFixed(2) : '—'}</td><td>${a.ast}</td><td>${a.sc}</td>
     <td>${a.last ? new Date(a.last).toLocaleDateString('ru-RU') : 'не был'}</td></tr>`).join('');
