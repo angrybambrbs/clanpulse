@@ -130,6 +130,9 @@ function msg(text) { app.innerHTML = `<div class="card err">${esc(text)}</div>`;
 let myRole = 'viewer';
 const canEdit = () => myRole === 'owner' || myRole === 'officer';
 const ROLE = { owner: 'владелец', officer: 'офицер', viewer: 'участник' };
+const CLAN_RANKS = { RESERVE: 'Запасной', PRIVATE: 'Рядовой', FIGHTER: 'Боец', SERGEANT: 'Сержант', OFFICER: 'Офицер', COLONEL: 'Полковник', CALLER: 'Колер', LEADER: 'Лидер' };
+const CLAN_RANK_ORDER = ['LEADER','CALLER','COLONEL','OFFICER','SERGEANT','FIGHTER','PRIVATE','RESERVE'];
+const clanRank = (m) => CLAN_RANKS[m && m.rank] || (m && m.role === 'owner' ? CLAN_RANKS.LEADER : '—');
 
 function grabInvite() {
   try {
@@ -292,11 +295,10 @@ async function viewProfile() {
   if (pr.error) return body.innerHTML = failBox(pr.error);
   const v = pr.data || {};
   const G = gearOf(v);
-  body.innerHTML = `<div class="card"><div class="brand">${avImg((user.user_metadata || {}).avatar_url)}<h2 style="margin:0">Мой игровой профиль</h2>${v.rank ? `<span class="chip">${RANKS[v.rank]}</span>` : ''}</div>
+  body.innerHTML = `<div class="card"><div class="brand">${avImg((user.user_metadata || {}).avatar_url)}<h2 style="margin:0">Мой игровой профиль</h2></div>
     <p class="mut">Его увидят лидеры кланов, в которые ты подашь заявку, и участники твоего клана. Аватарка подтягивается из Discord автоматически.</p><div class="grid">
     ${fld('Игровой ник', `<input id="p_nick" value="${esc(v.nickname)}">`)}
     ${fld('Фракция', `<select id="p_faction">${selOpts(FACTIONS, v.faction, '—')}</select>`)}
-    ${fld('Звание в игре', `<select id="p_rank">${selOpts(RANKS, v.rank, '—')}</select>`)}
     ${fld('Лучшая снаряга', `<select id="p_gear">${selOpts(GEAR, v.gear_level || 1)}</select>`)}
     ${fld('K/D', `<input id="p_kd" type="number" step="0.01" min="0" max="99" value="${esc(v.kd)}">`)}
     ${fld('Приведёнка (общая живучесть)', `<input id="p_ehp" type="number" min="0" value="${esc(v.ehp)}">`)}
@@ -316,7 +318,7 @@ async function viewProfile() {
       b: k === 'container' ? (x.b || []).slice(0, 12).map(a => a && a.n ? { n: a.n, p: a.p || null } : null) : undefined }));
     const out = { armor: clean('armor'), weapon: clean('weapon'), secondary: clean('secondary'), container: clean('container') };
     const a0 = out.armor[0] || {}, w0 = out.weapon[0] || {};
-    const row = { user_id: user.id, nickname: txt('p_nick'), faction: txt('p_faction'), rank: txt('p_rank') || null, gear_level: Number(val('p_gear')),
+    const row = { user_id: user.id, nickname: txt('p_nick'), faction: txt('p_faction'), gear_level: Number(val('p_gear')),
       armor_type: a0.t || null, armor_name: a0.n || null, armor_icon: a0.p || null, armor_enchant: a0.e ?? null,
       weapon_main: w0.n || null, weapon_icon: w0.p || null, weapon_enchant: w0.e ?? null, gear: out,
       kd: numv('p_kd'), ehp: numv('p_ehp'), speed: numv('p_speed'), tournaments_per_week: Number(val('p_tpw')),
@@ -494,7 +496,7 @@ async function viewApps() {
   if (error) return body.innerHTML = failBox(error);
   if (!data.length) return body.innerHTML = '<div class="card mut">Новых заявок нет.</div>';
   const lines = p => [
-    `${FACTIONS[p.faction] || 'фракция не указана'} · звание: ${RANKS[p.rank] || '—'} · снаряга: ${GEAR[p.gear_level]}`,
+    `${FACTIONS[p.faction] || 'фракция не указана'} · снаряга: ${GEAR[p.gear_level]}`,
     `Броня: ${ARMOR[p.armor_type] || '—'}${p.armor_name ? ', ' + esc(p.armor_name) : ''}${p.armor_enchant != null ? ' +' + p.armor_enchant : ''}`,
     `Оружие: ${p.weapon_main ? esc(p.weapon_main) : '—'}${p.weapon_enchant != null ? ' +' + p.weapon_enchant : ''}`,
     `K/D: ${p.kd ?? '—'} · приведёнка: ${p.ehp ?? '—'} · скорость: ${p.speed ?? '—'} · турниров в неделю: ${p.tournaments_per_week} · ${p.mic ? 'с микрофоном' : 'без микрофона'}`
@@ -664,7 +666,7 @@ async function viewRating() {
     sb.from('matches').select('id').eq('clan_id', clan.id).gte('played_at', since),
     sb.from('match_stats').select('player_id,kills,deaths,assists,score,matches!inner(played_at)')
       .eq('clan_id', clan.id).eq('confirmed', true).gte('matches.played_at', since),
-    sb.from('players').select('id,nick,squad_id,user_id').eq('clan_id', clan.id).eq('active', true),
+    sb.from('players').select('id,nick,squad_id').eq('clan_id', clan.id).eq('active', true),
     sb.from('squads').select('id,name').eq('clan_id', clan.id).order('name')
   ]);
   const err = ms.error || st.error || pl.error || sq.error;
@@ -673,7 +675,7 @@ async function viewRating() {
   const total = ms.data.length;
   const sqName = Object.fromEntries(sq.data.map(x => [x.id, x.name]));
   const agg = {};
-  pl.data.forEach(p => agg[p.id] = { id: p.id, nick: p.nick, uid: p.user_id, sid: p.squad_id, sq: sqName[p.squad_id] || '—', n: 0, k: 0, d: 0, ast: 0, sc: 0, last: null });
+  pl.data.forEach(p => agg[p.id] = { id: p.id, nick: p.nick, sid: p.squad_id, sq: sqName[p.squad_id] || '—', n: 0, k: 0, d: 0, ast: 0, sc: 0, last: null });
   st.data.forEach(s => {
     const a = agg[s.player_id]; if (!a || idleStat(s)) return;
     a.n++; a.k += s.kills || 0; a.d += s.deaths || 0; a.ast += s.assists || 0; a.sc += s.score || 0;
@@ -684,15 +686,7 @@ async function viewRating() {
     .sort((x, y) => y.n - x.n || y.k - x.k);
   const pb = (v, l) => `<button class="ghost ${period === v ? 'on' : ''}" data-p="${v}">${l}</button>`;
   const fopt = (v, l) => `<option value="${v}" ${ratingSquad === v ? 'selected' : ''}>${esc(l)}</option>`;
-  const uids = pl.data.filter(x => x.user_id).map(x => x.user_id);
-  const nicks = pl.data.filter(x => !x.user_id && x.nick).map(x => x.nick);
-  const [rkU, rkN] = await Promise.all([
-    uids.length ? sb.from('profiles').select('user_id,rank').in('user_id', uids) : Promise.resolve({ data: [] }),
-    nicks.length ? sb.from('profiles').select('nickname,rank').in('nickname', nicks) : Promise.resolve({ data: [] })
-  ]);
-  const rankOf = Object.fromEntries((rkU.data || []).map(x => [x.user_id, x.rank]));
-  const rankByNick = Object.fromEntries((rkN.data || []).map(x => [x.nickname, x.rank]));
-  const rows = list.map((a, i) => `<tr class="${a.n ? '' : 'dim'}"><td>${i + 1}</td><td>${plLink(a.id, a.nick)}</td><td>${(() => { const r = (a.uid && rankOf[a.uid]) || rankByNick[a.nick]; return r ? esc(RANKS[r] || r) : '—'; })()}</td><td>${esc(a.sq)}</td>
+  const rows = list.map((a, i) => `<tr class="${a.n ? '' : 'dim'}"><td>${i + 1}</td><td>${plLink(a.id, a.nick)}</td><td>${esc(a.sq)}</td>
     <td>${a.n}</td><td>${total ? Math.round(a.n / total * 100) + '%' : '—'}</td>
     <td>${a.k}</td><td>${a.d}</td><td>${a.d ? (a.k / a.d).toFixed(2) : '—'}</td><td>${a.ast}</td><td>${a.sc}</td>
     <td>${a.last ? new Date(a.last).toLocaleDateString('ru-RU') : 'не был'}</td></tr>`).join('');
@@ -700,7 +694,7 @@ async function viewRating() {
     <select id="fsq">${fopt('', 'Все отряды')}${sq.data.map(x => fopt(x.id, x.name)).join('')}${fopt('none', 'Без отряда')}</select></div>
     <div class="card wrap"><h2>Рейтинг активности</h2>
     <p class="mut">Боёв клана за период: ${total}. Явка — доля этих боёв, в которых игрок участвовал.</p>
-    <table><tr><th>#</th><th>Игрок</th><th>Звание</th><th>Отряд</th><th>Боёв</th><th>Явка</th><th>K</th><th>D</th><th>K/D</th><th>П</th><th>Счёт</th><th>Последний бой</th></tr>${rows}</table></div>`;
+    <table><tr><th>#</th><th>Игрок</th><th>Отряд</th><th>Боёв</th><th>Явка</th><th>K</th><th>D</th><th>K/D</th><th>П</th><th>Счёт</th><th>Последний бой</th></tr>${rows}</table></div>`;
   body.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { period = Number(b.dataset.p); viewRating(); });
   document.getElementById('fsq').onchange = e => { ratingSquad = e.target.value; viewRating(); };
   wirePl(body);
@@ -916,7 +910,7 @@ async function viewPlayer() {
     ? `<tr><td>${fmtTime(r.m.played_at)}</td><td>${r.s.kills ?? '—'}</td><td>${r.s.deaths ?? '—'}</td><td>${r.s.assists ?? '—'}</td><td>${r.s.score ?? '—'}</td></tr>`
     : `<tr class="dim"><td>${fmtTime(r.m.played_at)}</td><td colspan="4">не явился</td></tr>`).join('');
   const gear = prof ? `<div class="card"><h2>Снаряга и показатели</h2><div id="gear_host"></div>
-    <div style="margin-top:10px"><span class="chip">${FACTIONS[prof.faction] || 'Без фракции'}</span><span class="chip">${RANKS[prof.rank] || '—'}</span><span class="chip ok">${GEAR[prof.gear_level] || '—'}</span><span class="chip">${prof.mic ? 'С микрофоном' : 'Без микрофона'}</span></div>
+    <div style="margin-top:10px"><span class="chip">${FACTIONS[prof.faction] || 'Без фракции'}</span><span class="chip ok">${GEAR[prof.gear_level] || '—'}</span><span class="chip">${prof.mic ? 'С микрофоном' : 'Без микрофона'}</span></div>
     <div class="stats">${stat(prof.kd ?? '—', 'K/D')}${stat(prof.ehp ?? '—', 'приведёнка')}${stat(prof.speed ?? '—', 'скорость')}${stat((prof.tournaments_per_week ?? 0) + ' в нед.', 'турниры')}</div>
     ${prof.gear_notes ? `<p style="margin-top:10px">${esc(prof.gear_notes)}</p>` : ''}</div>` : '';
   body.innerHTML = `<button class="ghost" id="pback">← К рейтингу</button>
@@ -1098,7 +1092,7 @@ async function viewTeam() {
   const body = document.getElementById('body');
   const owner = myRole === 'owner';
   const [mb, iv] = await Promise.all([
-    sb.from('clan_members').select('user_id,role,display_name,avatar_url').eq('clan_id', clan.id),
+    sb.from('clan_members').select('user_id,role,display_name,avatar_url,rank').eq('clan_id', clan.id),
     owner ? sb.from('clan_invites').select('code,role,expires_at').eq('clan_id', clan.id)
       .gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }) : Promise.resolve({ data: [] })
   ]);
@@ -1109,11 +1103,14 @@ async function viewTeam() {
   const rows = members.map(m => {
     const mine = m.user_id === user.id;
     const manage = owner && m.role !== 'owner';
+    const rankCell = manage
+      ? `<select data-rank="${m.user_id}">${Object.keys(CLAN_RANKS).map(k => `<option value="${k}" ${(m.rank || 'PRIVATE') === k ? 'selected' : ''}>${CLAN_RANKS[k]}</option>`).join('')}</select>`
+      : esc(clanRank(m));
     const roleCell = manage
       ? `<select data-role="${m.user_id}"><option value="officer" ${m.role === 'officer' ? 'selected' : ''}>офицер</option>
          <option value="viewer" ${m.role === 'viewer' ? 'selected' : ''}>участник</option></select>`
       : ROLE[m.role];
-    return `<tr><td><span class="brand">${avImg(m.avatar_url, 'sm')}${esc(m.display_name || 'без имени')}${mine ? ' (ты)' : ''}</span></td><td>${roleCell}</td>
+    return `<tr><td><span class="brand">${avImg(m.avatar_url, 'sm')}${esc(m.display_name || 'без имени')}${mine ? ' (ты)' : ''}</span></td><td>${rankCell}</td><td>${roleCell}</td>
       <td>${!mine ? `<button class="ghost" data-dm="${m.user_id}">Написать</button> ` : ''}${manage ? `<button class="ghost" data-rm="${m.user_id}">Убрать</button>` : ''}</td></tr>`;
   }).join('');
   const link = c => location.origin + location.pathname + '?invite=' + c;
@@ -1121,7 +1118,7 @@ async function viewTeam() {
     <td>${ROLE[i.role]}</td><td>до ${new Date(i.expires_at).toLocaleDateString('ru-RU')}</td>
     <td><button data-copy="${esc(link(i.code))}">Копировать</button> <button class="ghost" data-delinv="${esc(i.code)}">Удалить</button></td></tr>`).join('');
   body.innerHTML = `<div class="card wrap"><h2>Команда клана</h2>
-    <table><tr><th>Участник</th><th>Роль</th><th></th></tr>${rows}</table>
+    <table><tr><th>Участник</th><th>Звание</th><th>Роль</th><th></th></tr>${rows}</table>
     <p class="mut">Офицеры вносят бои и управляют составом, участники только смотрят рейтинг и историю.</p></div>
     ${owner ? `<div class="card wrap"><h2>Приглашения</h2>
     <div class="row"><select id="irole"><option value="officer">Офицер</option><option value="viewer">Участник</option></select>
@@ -1129,6 +1126,11 @@ async function viewTeam() {
     ${iv.data.length ? `<table>${invRows}</table>` : '<p class="mut">Активных приглашений нет.</p>'}
     <p class="mut">Ссылка действует 7 дней и подходит для нескольких человек. Чтобы по ней могли зайти другие, сайт должен быть доступен из интернета, а не только на твоём компьютере.</p></div>` : ''}`;
   body.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => openDm(b.dataset.dm));
+  body.querySelectorAll('[data-rank]').forEach(sel => sel.onchange = async () => {
+    const { error } = await sb.from('clan_members').update({ rank: sel.value }).eq('clan_id', clan.id).eq('user_id', sel.dataset.rank);
+    if (error) return alert(error.message);
+    viewTeam();
+  });
   if (!owner) return;
   document.getElementById('inew').onclick = async () => {
     const { error } = await sb.rpc('create_invite', { cid: clan.id, r: document.getElementById('irole').value });
