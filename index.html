@@ -146,7 +146,7 @@ async function init() {
   user = session.user;
   isAdmin = (await sb.rpc('is_platform_admin')).data === true;
   sb.rpc('touch_card').then(() => {});
-  await refreshUnread(); startDmSub();
+  await refreshUnread(); await refreshNotifCount(); startDmSub(); startNotifSub();
   sb.from('profiles').update({ avatar_url: (user.user_metadata || {}).avatar_url || null }).eq('user_id', user.id).then(() => {});
   let note = '';
   const code = pendingInvite();
@@ -197,6 +197,7 @@ function showLogin(errText, invited) {
 let hubNote = '';
 let isAdmin = false;
 let unread = 0, chan = null, dmPartner = null, dmListener = null, dmChan = null, dmChanUser = null;
+let notifCount = 0, notifChan = null, notifChanUser = null;
 const FACTIONS = { svoboda: 'Свобода', dolg: 'Долг', naemniki: 'Наёмники', zavet: 'Завет' };
 const GOALS = { tournaments: 'Рейтинговые турниры', brawls: 'Потасовки', bases: 'Захват баз', chrono: 'Хроноразломы и аирдропы', open: 'Открытый мир и фарм', casual: 'Без напряга' };
 const GEAR = { 1: 'Ветеранская', 2: 'Мастерская', 3: 'Мастерская +10', 4: 'Мастерская +15' };
@@ -221,6 +222,7 @@ function shell(title, tabs, views, again, icon, primary) {
     `<button class="navi ${tab === id ? 'on' : ''}" data-t="${id}"><span>${l}</span>${id === 'dm' ? cnt : ''}</button>`).join('');
   app.innerHTML = `<div class="top"><span class="brand"><button class="ghost" id="menu" aria-label="Меню">☰</button>${logo}<h1>${esc(title)}</h1></span>
     <span class="topr"><button class="ghost ${tab === 'dm' ? 'on' : ''}" data-t="dm" aria-label="Сообщения">✉ ${cnt}</button>
+    <button class="ghost ${tab === 'notifs' ? 'on' : ''}" data-t="notifs" aria-label="Уведомления">🔔 <span class="badge ncount">${notifCount || ''}</span></button>
     <button class="ghost avb ${tab === 'profile' ? 'on' : ''}" data-t="profile" aria-label="Профиль">${md.avatar_url ? '<img class="av sm" referrerpolicy="no-referrer" src="' + esc(md.avatar_url) + '" alt="">' : 'Профиль'}</button></span></div>
     <div class="tabs">${primary.filter(id => label[id]).map(id => `<button class="ghost ${tab === id ? 'on' : ''}" data-t="${id}">${label[id]}</button>`).join('')}</div>
     <div id="body"></div>
@@ -244,18 +246,18 @@ function render() {
   if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки']);
   tabs.push(['events', 'События'], ['chat', 'Чат клана'], ['team', 'Команда']);
   if (myRole === 'owner') tabs.push(['settings', 'Клан в поиске']);
-  tabs.push(['catalog', 'Каталог снаряжения'], ['dm', 'Сообщения'], ['profile', 'Профиль']);
+  tabs.push(['catalog', 'Каталог снаряжения'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']);
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (tab !== 'player' && !tabs.some(t => t[0] === tab)) tab = 'rating';
   shell(clan.name, tabs, { rating: viewRating, match: viewMatch, history: viewHistory, roster: viewRoster, team: viewTeam, apps: viewApps,
-    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, events: viewEvents, player: viewPlayer, catalog: viewCatalog }, render, clan.avatar_url, ['rating', 'match', 'events', 'chat']);
+    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog }, render, clan.avatar_url, ['rating', 'match', 'events', 'chat']);
 }
 
 function renderHub() {
-  const tabs = [['search', 'Поиск клана'], ['myapps', 'Мои заявки'], ['start', 'Создать клан'], ['catalog', 'Каталог снаряжения'], ['dm', 'Сообщения'], ['profile', 'Профиль']];
+  const tabs = [['search', 'Поиск клана'], ['myapps', 'Мои заявки'], ['start', 'Создать клан'], ['catalog', 'Каталог снаряжения'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']];
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (!tabs.some(t => t[0] === tab)) tab = 'search';
-  shell('ClanPulse', tabs, { search: viewSearch, myapps: viewMyApps, start: viewStart, profile: viewProfile, admin: viewAdmin, dm: viewDm, catalog: viewCatalog },
+  shell('ClanPulse', tabs, { search: viewSearch, myapps: viewMyApps, start: viewStart, profile: viewProfile, admin: viewAdmin, dm: viewDm, notifs: viewNotifs, catalog: viewCatalog },
     renderHub, null, ['search', 'myapps']);
 }
 
@@ -1149,6 +1151,49 @@ const fmtTime = iso => new Date(iso).toLocaleString('ru-RU', { dateStyle: 'short
 
 function setUnread() {
   document.querySelectorAll('.dmcount').forEach(el => { el.textContent = unread || ''; });
+  document.querySelectorAll('.ncount').forEach(el => { el.textContent = notifCount || ''; });
+}
+
+async function refreshNotifCount() {
+  const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('read_at', null);
+  notifCount = count || 0;
+}
+
+function startNotifSub() {
+  if (notifChanUser === user.id) return;
+  if (notifChan) sb.removeChannel(notifChan);
+  notifChanUser = user.id;
+  notifChan = sb.channel('notifs-' + user.id).on('postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + user.id },
+    () => { notifCount++; setUnread(); }).subscribe();
+}
+
+async function viewNotifs() {
+  const body = document.getElementById('body');
+  const { data, error } = await sb.from('notifications').select('*').eq('user_id', user.id)
+    .order('created_at', { ascending: false }).limit(50);
+  if (error) return body.innerHTML = failBox(error);
+  const ICON = { application: '📋', dm: '✉', rsvp: '📅', verification: '🛡' };
+  const LABEL = { application: 'Заявка', dm: 'Сообщение', rsvp: 'Событие', verification: 'Верификация' };
+  body.innerHTML = \`<div class="card"><div class="top"><h2>Уведомления</h2>
+    \${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">Прочитать все</button>' : ''}</div>
+    \${data.length ? data.map(n => \`<div class="msg" data-n="\${n.id}" \${n.read_at ? '' : 'style="border-left:3px solid var(--ac)"'}>
+      <div class="brand"><b>\${ICON[n.type] || '🔔'} \${esc(LABEL[n.type] || n.type)}</b>
+        <span class="mut">\${fmtTime(n.created_at)}</span></div>
+      <p><b>\${esc(n.title)}</b>\${n.body ? '<br>' + esc(n.body) : ''}</p>
+      \${n.href ? \`<button class="ghost" data-go="\${esc(n.href.slice(1))}">Открыть</button>\` : ''}</div>\`).join('')
+      : '<p class="mut">Уведомлений пока нет. Здесь появятся новые заявки в клан, сообщения, ответы на события и запросы верификации.</p>'}</div>\`;
+  body.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
+    await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', b.closest('[data-n]').dataset.n);
+    await refreshNotifCount(); setUnread();
+    tab = b.dataset.go;
+    if (clan && !['search', 'myapps', 'start'].includes(tab)) render(); else renderHub();
+  });
+  const all = document.getElementById('nall');
+  if (all) all.onclick = async () => {
+    await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', user.id).is('read_at', null);
+    await refreshNotifCount(); setUnread(); viewNotifs();
+  };
 }
 
 async function refreshUnread() {
