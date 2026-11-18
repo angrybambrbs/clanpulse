@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f0f23">
 <title>ClanPulse</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,7 +80,7 @@ button:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none;filter
 .drawer.open{transform:none}
 .scrim{position:fixed;inset:0;background:rgba(10,8,24,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
 .scrim.open{opacity:1;pointer-events:auto}
-.navi{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:10px 12px;color:var(--tx);font-weight:500}
+.navi{display:flex;justify-content:space-between;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:10px 12px;color:var(--tx);font-weight:500}
 .navi:hover{background:var(--in);color:var(--ac2);box-shadow:none;transform:none;filter:none}
 .navi.on{background:rgba(139,92,246,.15);color:var(--ac2)}
 .grp{margin:14px 0 6px;font-size:13px}
@@ -168,10 +169,10 @@ a:hover{color:var(--ac)}
 [data-theme="light"] .sidebar{background:linear-gradient(180deg,rgba(124,58,237,.05),transparent 240px),var(--card)}
 .side-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 12px;border-bottom:1px solid var(--bd);min-width:0}
 .side-brand .av{width:38px;height:38px;border-radius:11px;box-shadow:0 0 0 1px var(--bd2),0 0 16px rgba(139,92,246,.25)}
-.side-brand span{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.side-brand span{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700}
 .side-brand b{display:block;font-family:'Russo One','Exo 2',sans-serif;font-weight:400;font-size:15px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .side-nav{flex:1;display:flex;flex-direction:column;gap:2px;min-height:0}
-.side-sec{padding:12px 10px 4px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;opacity:.8}
+.side-sec{padding:12px 10px 4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;opacity:.8}
 .side-foot{border-top:1px solid var(--bd);padding-top:8px;display:flex;flex-direction:column;gap:2px}
 .sidebar .navi,.drawer .navi{padding:9px 10px;font-size:14px}
 .navi .nlabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -182,7 +183,7 @@ a:hover{color:var(--ac)}
 .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:11px clamp(14px,3vw,28px);background:rgba(13,11,30,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
 [data-theme="light"] .topbar{background:rgba(255,255,255,.82)}
 .tb-title{flex:1;min-width:0}
-.tb-kicker{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-kicker{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-title h1{font-size:18px;line-height:1.2;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-actions{display:flex;align-items:center;gap:4px;flex:none}
 .tb-actions .ghost{display:inline-flex;align-items:center;gap:6px;padding:7px 9px;border-radius:9px;line-height:1}
@@ -195,13 +196,13 @@ a:hover{color:var(--ac)}
 .dash-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(225,29,72,.06) 55%,transparent),var(--card);border:1px solid var(--bd2);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
 .dash-hero:before{content:"";position:absolute;top:-45%;right:-8%;width:340px;height:340px;background:radial-gradient(circle,rgba(139,92,246,.28),transparent 65%);pointer-events:none}
 .dh-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;position:relative}
-.dh-kicker{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ac2);font-weight:700;margin-bottom:4px}
+.dh-kicker{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ac2);font-weight:700;margin-bottom:4px}
 .dash-hero h2{font-size:22px;margin:0}
 .dh-mark{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--ac2);background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.32);box-shadow:var(--glow)}
 .hero-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative}
 .hstat{background:rgba(9,8,22,.35);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;min-width:0}
 [data-theme="light"] .hstat{background:rgba(124,58,237,.04)}
-.hstat span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.hstat span{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:700}
 .hstat b{display:block;font-family:'Russo One','Exo 2',sans-serif;font-weight:400;font-size:24px;line-height:1.25;margin:2px 0}
 .hstat i{display:block;font-style:normal;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
@@ -261,6 +262,35 @@ a:hover{color:var(--ac)}
 .calev.k-tournament{border-left-color:#f43f5e}.calev.k-brawl{border-left-color:#fbbf24}.calev.k-base{border-left-color:#34d399}.calev.k-other{border-left-color:#60a5fa}
 .calempty{color:var(--bd2);font-size:12px}
 
+/* ===== Тактика: карты и разметка ===== */
+.tac-maps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tac-map{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;overflow:hidden;background:var(--in);border:1px solid var(--bd);border-radius:12px;text-align:left;color:var(--tx);box-shadow:none;transform:none;font-weight:500;min-width:0}
+.tac-map:hover{transform:none;box-shadow:0 0 0 1px var(--bd2);filter:none}
+.tac-map img{display:block;width:100%;height:72px;object-fit:cover;opacity:.8;transition:opacity .2s ease}
+.tac-map:hover img,.tac-map.on img{opacity:1}
+.tac-map.on{border-color:var(--ac);background:rgba(139,92,246,.12);box-shadow:0 0 0 1px var(--ac),var(--glow)}
+.tac-map .nm{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 10px;font-size:13px;line-height:1.25}
+.tac-map .nm b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tac-map .nm span{flex:none;font-size:11px;color:var(--mut);font-weight:400}
+.tac-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.tac-tool{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;min-height:36px;border-radius:9px;background:var(--in);border:1px solid var(--bd);color:var(--mut);font-weight:600;font-size:13px;box-shadow:none;transform:none;text-decoration:none}
+.tac-tool:hover{color:var(--tx);border-color:var(--ac);box-shadow:none;transform:none;filter:none}
+.tac-tool.on{color:var(--tx);border-color:var(--ac);background:rgba(139,92,246,.16);box-shadow:inset 0 0 0 1px rgba(139,92,246,.3)}
+.tac-sep{width:1px;height:22px;background:var(--bd);margin:0 3px}
+.tac-colors{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.tac-color{width:28px;height:28px;min-height:0;padding:0;border-radius:50%;border:2px solid transparent;box-shadow:0 0 0 1px var(--bd2);transform:none}
+.tac-color:hover{transform:scale(1.1);box-shadow:0 0 0 1px var(--bd2);filter:none}
+.tac-color.on{border-color:var(--card);box-shadow:0 0 0 2px var(--tx),inset 0 0 0 2px rgba(0,0,0,.25)}
+.tac-size{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut)}
+.tac-size input[type=range]{width:92px;padding:0;background:transparent;border:0;box-shadow:none}
+.tac-size b{font-family:'Russo One','Exo 2',sans-serif;font-weight:400;font-size:13px;color:var(--tx);min-width:18px;text-align:center}
+.tac-stage{position:relative;display:flex;justify-content:center;border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:#080714}
+[data-theme="light"] .tac-stage{background:#e9e6f4}
+.tac-fit{position:relative;flex:none;max-width:100%}
+.tac-fit img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.tac-fit canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.tac-hint{font-size:12px;color:var(--mut);margin:10px 0 0}
+
 /* ===== Мобильная раскладка ===== */
 @media (max-width:959px){
   .app{grid-template-columns:1fr}
@@ -277,9 +307,20 @@ a:hover{color:var(--ac)}
   .podium{grid-template-columns:1fr}
   .bub{max-width:88%}
   .drawer{display:flex;flex-direction:column;gap:8px}
+  /* Крупные цели для пальца (HIG: 44pt) */
+  .row button,.row input,.row select,.sbar button,.sbar input,.sbar select,.fld input,.fld select,.fld textarea,.chatform button,.tabs button{min-height:44px}
+  .tac-maps{grid-template-columns:1fr}
+  .tac-map{flex-direction:row;align-items:center}
+  .tac-map img{width:88px;height:56px;flex:none}
+  .tac-map .nm{flex:1;min-width:0}
+  .tac-tool{min-height:44px}
+  .tac-color{width:40px;height:40px}
+  .tac-size{width:100%}
+  .tac-size input[type=range]{flex:1;width:auto}
+  .tb-actions .ghost{min-width:40px;min-height:40px;justify-content:center}
 }
 </style>
-<script>try{document.documentElement.dataset.theme=localStorage.getItem('cp_theme')||'dark'}catch(e){}</script>
+<script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
 </head>
 <body>
 <main id="app"><p class="mut">Загрузка…</p></main>
@@ -302,7 +343,7 @@ function msg(text) { app.innerHTML = `<div class="card err">${esc(text)}</div>`;
 // Тосты вместо нативных alert(): успех — зелёный, ошибка — красный.
 function toast(text, kind) {
   let host = document.getElementById('toasts');
-  if (!host) { host = document.createElement('div'); host.id = 'toasts'; host.className = 'toasts'; document.body.append(host); }
+  if (!host) { host = document.createElement('div'); host.id = 'toasts'; host.className = 'toasts'; host.setAttribute('role', 'status'); host.setAttribute('aria-live', 'polite'); document.body.append(host); }
   const ok = /сохран|отправлен|готово|добавлен|удал[её]н|обновл[её]н|скопирован|принят|создан|записан/i.test(text);
   const el = document.createElement('div');
   el.className = 'toast ' + (kind || (ok ? 'ok' : 'err'));
@@ -393,7 +434,7 @@ const FACTIONS = { svoboda: 'Свобода', dolg: 'Долг', naemniki: 'На�
 const FCLASS = { svoboda: 'svoboda', dolg: 'dolg', naemniki: 'naemniki', zavet: 'zavet' };
 const factionChip = (f, any) => `<span class="chip faction ${FCLASS[f] || ''}">${FACTIONS[f] || any || 'Без фракции'}</span>`;
 const THEME_KEY = 'cp_theme';
-const setTheme = t => { document.documentElement.dataset.theme = t; try { localStorage.setItem(THEME_KEY, t); } catch (e) {} };
+const setTheme = t => { document.documentElement.dataset.theme = t; try { localStorage.setItem(THEME_KEY, t); } catch (e) {} const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#f4f3fa' : '#0f0f23'; };
 const svg = (w, d) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-${Math.round(w * 0.15)}px">${d}</svg>`;
 const TSVG = {
   sun: svg(16, '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
@@ -439,13 +480,14 @@ const fld = (label, inner) => `<label class="fld"><span>${label}</span>${inner}<
 
 const NAV_ICON = {
   rating: ICONS.star, match: ICONS.sword, history: ICONS.clock, stats: ICONS.chart,
+  tactics: svg(16, '<path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3z"/><path d="M9 3v15M15 6v15"/>'),
   roster: ICONS.users, team: ICONS.users, apps: ICONS.inbox, audit: ICONS.book,
   settings: ICONS.gear, chat: ICONS.chat, catalog: ICONS.box, dm: ICONS.mail,
   notifs: ICONS.bell, profile: ICONS.user, admin: ICONS.shield, search: ICONS.search,
   myapps: ICONS.file, start: ICONS.plus, player: ICONS.user
 };
 const NAV_GROUP = {
-  rating: 'Разделы', match: 'Разделы', history: 'Разделы', stats: 'Разделы', events: 'Разделы', chat: 'Разделы', team: 'Разделы',
+  rating: 'Разделы', match: 'Разделы', history: 'Разделы', stats: 'Разделы', events: 'Разделы', tactics: 'Разделы', chat: 'Разделы', team: 'Разделы',
   roster: 'Управление', apps: 'Управление', audit: 'Управление', settings: 'Управление',
   search: 'Клан', myapps: 'Клан', start: 'Клан',
   catalog: 'Аккаунт', dm: 'Аккаунт', notifs: 'Аккаунт', profile: 'Аккаунт', admin: 'Аккаунт'
@@ -464,7 +506,7 @@ function shell(title, tabs, views, again, icon, primary) {
   for (const [id, l] of tabs) {
     const g = NAV_GROUP[id] || 'Аккаунт';
     if (g !== group) { nav += `<div class="side-sec">${g}</div>`; group = g; }
-    nav += `<button class="navi ${tab === id ? 'on' : ''}" data-t="${id}">${NAV_ICON[id] || ICONS.list}<span class="nlabel">${esc(l)}</span>${id === 'dm' ? cnt : id === 'notifs' ? ncnt : ''}</button>`;
+    nav += `<button class="navi ${tab === id ? 'on' : ''}" data-t="${id}" ${tab === id ? 'aria-current="page"' : ''}>${NAV_ICON[id] || ICONS.list}<span class="nlabel">${esc(l)}</span>${id === 'dm' ? cnt : id === 'notifs' ? ncnt : ''}</button>`;
   }
   const pageTitle = tab === 'player' ? 'Профиль игрока' : (label[tab] || title);
   const ava = md.avatar_url ? '<img class="av sm" referrerpolicy="no-referrer" src="' + esc(md.avatar_url) + '" alt="">' : 'Профиль';
@@ -499,9 +541,17 @@ function shell(title, tabs, views, again, icon, primary) {
     <div class="side-foot">${foot}</div>
   </aside>`;
   const drawer = document.getElementById('drawer'), scrim = document.getElementById('scrim');
-  const toggle = open => { drawer.classList.toggle('open', open); scrim.classList.toggle('open', open); };
-  document.getElementById('menu').onclick = () => toggle(true);
+  const menu = document.getElementById('menu');
+  drawer.inert = true;
+  const toggle = open => {
+    drawer.classList.toggle('open', open); scrim.classList.toggle('open', open);
+    drawer.inert = !open; menu.setAttribute('aria-expanded', String(open));
+  };
+  menu.setAttribute('aria-expanded', 'false');
+  menu.setAttribute('aria-controls', 'drawer');
+  menu.onclick = () => toggle(true);
   scrim.onclick = () => toggle(false);
+  drawer.addEventListener('keydown', e => { if (e.key === 'Escape') toggle(false); });
   app.querySelectorAll('[data-out]').forEach(b => b.onclick = async () => { await sb.auth.signOut(); init(); });
   app.querySelectorAll('[data-theme-toggle]').forEach(b => b.onclick = () => {
     const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
@@ -516,14 +566,14 @@ function shell(title, tabs, views, again, icon, primary) {
 function render() {
   const tabs = [['rating', 'Рейтинг']];
   if (canEdit()) tabs.push(['match', 'Новый бой']);
-  tabs.push(['history', 'История'], ['stats', 'Аналитика'], ['events', 'События'], ['chat', 'Чат клана'], ['team', 'Команда']);
+  tabs.push(['history', 'История'], ['stats', 'Аналитика'], ['tactics', 'Тактика'], ['events', 'События'], ['chat', 'Чат клана'], ['team', 'Команда']);
   if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки'], ['audit', 'Журнал']);
   if (myRole === 'owner') tabs.push(['settings', 'Клан в поиске']);
   tabs.push(['catalog', 'Каталог снаряжения'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']);
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (tab !== 'player' && !tabs.some(t => t[0] === tab)) tab = 'rating';
-  shell(clan.name, tabs, { rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
-    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog }, render, clan.avatar_url, ['rating', 'match', 'stats', 'events', 'chat']);
+  shell(clan.name, tabs, { rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, tactics: viewTactics, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
+    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog }, render, clan.avatar_url, ['rating', 'match', 'tactics', 'events', 'chat']);
 }
 
 function renderHub() {
@@ -1101,7 +1151,7 @@ async function viewRating() {
   wirePl(body);
 }
 
-const oppRow = () => `<div class="row opp"><input class="oname" placeholder="Название клана" maxlength="40" style="flex:2 1 150px"><input type="number" class="oscore" min="0" placeholder="Очки" style="width:90px"><input type="number" class="oplace" min="1" placeholder="Место" style="width:90px"></div>`;
+const oppRow = () => `<div class="row opp"><input class="oname" placeholder="Название клана" aria-label="Название клана-соперника" maxlength="40" style="flex:2 1 150px"><input type="number" class="oscore" min="0" placeholder="Очки" aria-label="Очки соперника" style="width:90px"><input type="number" class="oplace" min="1" placeholder="Место" aria-label="Место соперника" style="width:90px"></div>`;
 function manualMeta() {
   const place = numv('mplace'), score = numv('mscore');
   const opps = [...document.querySelectorAll('.opp')].map(r => ({ name: r.querySelector('.oname').value.trim().slice(0, 40),
@@ -1121,7 +1171,7 @@ const CAT_RU = { 'armor/combat': 'Боевая броня', 'armor/combined': '�
   backpacks: 'Рюкзак', containers: 'Контейнер', 'artefact/gravity': 'Артефакт (гравитационный)', 'artefact/thermal': 'Артефакт (термический)',
   'artefact/biochemical': 'Артефакт (биохимический)', 'artefact/electrophysical': 'Артефакт (электрофизический)', 'artefact/other_arts': 'Артефакт (другой)' };
 const CAT_GROUPS = { armor: ['Броня', c => c.startsWith('armor/')], weapon: ['Оружие', c => c.startsWith('weapon/')],
-  pack: ['Рюкзаки и контейнеры', c => c === 'backpacks' || c === 'containers'], cont: ['Контейнеры', c => c === 'containers'], art: ['Артефакты', c => c.startsWith('artefact/')] };
+  pack: ['Рюкзаки и контейнеры', c => c === 'backpacks' || c === 'containers'], art: ['Артефакты', c => c.startsWith('artefact/')] };
 let CATALOG = null;
 async function loadCatalog() {
   if (CATALOG) return CATALOG;
@@ -1143,13 +1193,17 @@ async function openPicker(group, onPick) {
   try { cat = await loadCatalog(); } catch (e) { return alert(e.message); }
   const scrim = document.createElement('div'); scrim.className = 'scrim open'; scrim.style.zIndex = '40';
   const box = document.createElement('div'); box.className = 'sheet open'; box.style.zIndex = '50';
+  box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', CAT_GROUPS[group][0]);
   box.innerHTML = `<div class="row" style="justify-content:space-between;align-items:center;margin:0"><h2 style="margin:0">${CAT_GROUPS[group][0]}</h2><button class="ghost" id="pk_x">Закрыть</button></div>
-    <input id="pk_q" placeholder="Поиск по названию (по-русски или по-английски)" style="width:100%;margin:10px 0"><div id="pk_list"></div>
+    <input id="pk_q" placeholder="Поиск по названию (по-русски или по-английски)" aria-label="Поиск предмета" style="width:100%;margin:10px 0" autocomplete="off"><div id="pk_list"></div>
     <p class="mut" style="margin-top:12px">Нет в списке? Укажи название вручную:</p>
     <div class="row"><input id="pk_own" maxlength="60" placeholder="Своё название" style="flex:1 1 160px"><button class="ghost" id="pk_set">Использовать</button></div>
     <p class="mut" style="font-size:12px">Данные и иконки предметов: открытая база EXBO.</p>`;
   document.body.append(scrim, box);
-  const close = () => { scrim.remove(); box.remove(); };
+  const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); close(); } };
+  const close = () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; scrim.remove(); box.remove(); };
+  document.addEventListener('keydown', onKey);
+  document.body.style.overflow = 'hidden';
   const list = box.querySelector('#pk_list');
   const paint = () => {
     const res = searchCatalog(cat, group, box.querySelector('#pk_q').value, '').slice(0, 40);
@@ -1160,6 +1214,7 @@ async function openPicker(group, onPick) {
   box.querySelector('#pk_x').onclick = close; scrim.onclick = close;
   box.querySelector('#pk_set').onclick = () => { const t = box.querySelector('#pk_own').value.trim(); if (!t) return; close(); onPick({ name: t, icon: null }); };
   paint();
+  box.querySelector('#pk_q').focus();
 }
 
 let catQ = '', catGroup = '', catRank = '', catLimit = 60;
@@ -1169,7 +1224,7 @@ async function viewCatalog() {
   try { cat = await loadCatalog(); } catch (e) { return body.innerHTML = `<div class="card err">${esc(e.message)}</div>`; }
   const groups = Object.fromEntries(Object.entries(CAT_GROUPS).map(([k, v]) => [k, v[0]]));
   body.innerHTML = `<div class="card"><h2>Каталог снаряжения</h2><p class="mut">Броня, оружие, рюкзаки, контейнеры и артефакты из игры. Данные и иконки предметов: открытая база EXBO.</p>
-    <input id="c_q" placeholder="Поиск по названию" value="${esc(catQ)}" style="width:100%;margin-bottom:8px">
+    <input id="c_q" placeholder="Поиск по названию" aria-label="Поиск по названию" value="${esc(catQ)}" style="width:100%;margin-bottom:8px">
     <div class="sbasic" style="grid-template-columns:1fr 1fr"><select id="c_g">${selOpts(groups, catGroup, 'Все категории')}</select><select id="c_r">${selOpts(RANKS, catRank, 'Любой ранг')}</select></div></div>
     <p class="mut" id="c_n"></p><div class="card" id="c_list"></div>`;
   const paint = () => {
@@ -1186,7 +1241,7 @@ async function viewCatalog() {
   paint();
 }
 
-const GEAR_KINDS = { armor: 'Броня', weapon: 'Основной ган', secondary: 'Вторичка', container: 'Контейнер' };
+const GEAR_KINDS = { armor: 'Броня', weapon: 'Основной ган', secondary: 'Вторичка', container: 'Рюкзак / контейнер' };
 const byIdOf = cat => cat ? Object.fromEntries(cat.map(x => [x.i, x])) : {};
 function gearOf(p) {
   const g = p && p.gear && typeof p.gear === 'object' ? p.gear : {};
@@ -1196,7 +1251,7 @@ function gearOf(p) {
   if (!out.weapon.length && p && p.weapon_main) out.weapon.push({ n: p.weapon_main, p: p.weapon_icon || null, e: p.weapon_enchant ?? null, id: null });
   return out;
 }
-const slotsFor = (it, byId) => Math.min(12, (it && it.id && byId[it.id] && byId[it.id].sl) || 6);
+const slotsFor = (it, byId) => { const c = it && it.id ? byId[it.id] : null; return c ? Math.min(12, Math.max(0, c.sl || 0)) : 6; };
 const contStatsHtml = (it, byId) => {
   const c = it && it.id && byId[it.id];
   if (!c || !c.s) return '';
@@ -1213,8 +1268,8 @@ function renderGear(host, G, byId) {
       inner = `<div class="gtile">${iconImg(it.p)}<div style="min-width:0"><b>${esc(it.n)}</b>${it.e != null ? ` <span class="chip ok" style="margin:0">+${esc(it.e)}</span>` : ''}${k === 'armor' && it.t ? `<div class="mut" style="font-size:12px">${esc(ARMOR[it.t] || '')}</div>` : ''}</div></div>`;
       if (k === 'container') {
         const n = slotsFor(it, byId);
-        inner += contStatsHtml(it, byId) + `<div class="slots">${Array.from({ length: n }, (_, s) => { const a = (it.b || [])[s];
-          return `<div class="slot">${a ? `${iconImg(a.p, 'sm')}<span>${esc(a.n)}</span>` : '<span class="mut">пусто</span>'}</div>`; }).join('')}</div>`;
+        inner += contStatsHtml(it, byId) + (n ? `<div class="slots">${Array.from({ length: n }, (_, s) => { const a = (it.b || [])[s];
+          return `<div class="slot">${a ? `${iconImg(a.p, 'sm')}<span>${esc(a.n)}</span>` : '<span class="mut">пусто</span>'}</div>`; }).join('')}</div>` : '');
       }
     }
     return `<div class="gcard"><b>${GEAR_KINDS[k]}</b>${chips}${inner}</div>`;
@@ -1228,7 +1283,7 @@ function renderGear(host, G, byId) {
 
 function gearEditor(host, G, byId) {
   const cur = { armor: 0, weapon: 0, secondary: 0, container: 0 };
-  const GROUP = { armor: 'armor', weapon: 'weapon', secondary: 'weapon', container: 'cont' };
+  const GROUP = { armor: 'armor', weapon: 'weapon', secondary: 'weapon', container: 'pack' };
   const cardHtml = k => {
     const list = G[k];
     cur[k] = Math.max(0, Math.min(cur[k], list.length - 1));
@@ -1240,8 +1295,10 @@ function gearEditor(host, G, byId) {
     let more;
     if (k === 'container') {
       const n = slotsFor(it, byId);
-      more = contStatsHtml(it, byId) + `<p class="mut" style="margin:10px 0 0">Сборка (артефакты в слотах)</p><div class="slots">${Array.from({ length: n }, (_, s) => { const a = (it.b || [])[s];
-        return `<div class="slot edit" data-slot="${s}">${a ? `${iconImg(a.p, 'sm')}<span>${esc(a.n)}</span><button class="ghost x" data-clr="${s}">×</button>` : '<span class="mut">+</span>'}</div>`; }).join('')}</div>`;
+      more = contStatsHtml(it, byId) + (n
+        ? `<p class="mut" style="margin:10px 0 0">Сборка (артефакты в слотах)</p><div class="slots">${Array.from({ length: n }, (_, s) => { const a = (it.b || [])[s];
+          return `<div class="slot edit" data-slot="${s}">${a ? `${iconImg(a.p, 'sm')}<span>${esc(a.n)}</span><button class="ghost x" data-clr="${s}">×</button>` : '<span class="mut">+</span>'}</div>`; }).join('')}</div>`
+        : `<p class="mut" style="margin:8px 0 0">Это рюкзак — ячеек для артефактов у него нет.</p>`);
     } else {
       more = `<div class="row" style="margin-top:8px">${k === 'armor' ? `<select data-atype="1">${selOpts(ARMOR, it.t, 'Тип брони')}</select>` : ''}<input type="number" min="0" max="15" data-ench="${k}" placeholder="Заточка 0–15" value="${esc(it.e)}" style="width:140px"></div>`;
     }
@@ -1388,6 +1445,34 @@ async function loadSquads() {
   return data;
 }
 
+// clan_members и players — разные таблицы: при вступлении по ссылке запись
+// в players не появляется, поэтому человек «в клане», но не в составе,
+// не виден в отрядах и не попадает в бои. Досоздаём запись и/или привязываем user_id.
+const memberNick = (m, profiles) => ((profiles.find(p => p.user_id === m.user_id) || {}).nickname || m.display_name || '').trim().slice(0, 40);
+async function syncRoster(members, profiles, players) {
+  if (!canEdit()) return { added: 0, error: '' };
+  const byUser = new Map(players.filter(p => p.user_id).map(p => [p.user_id, p]));
+  const add = [], link = [];
+  for (const m of members) {
+    const nick = memberNick(m, profiles);
+    if (!nick) continue;
+    const p = byUser.get(m.user_id) || players.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+    if (!p) add.push({ clan_id: clan.id, nick, user_id: m.user_id, active: true });
+    else if (!p.user_id) link.push({ id: p.id, user_id: m.user_id });
+  }
+  if (!add.length && !link.length) return { added: 0, error: '' };
+  let error = '';
+  for (const l of link) {
+    const r = await sb.from('players').update({ user_id: l.user_id }).eq('id', l.id);
+    if (r.error) error = r.error.message;
+  }
+  if (add.length) {
+    const r = await sb.from('players').upsert(add, { onConflict: 'clan_id,nick', ignoreDuplicates: true });
+    if (r.error) error = r.error.message;
+  }
+  return { added: add.length + link.length, error };
+}
+
 const RS = { q: '', rank: '', squad: '', faction: '' };
 async function viewRoster() {
   const body = document.getElementById('body');
@@ -1402,6 +1487,8 @@ async function viewRoster() {
   const err = mb.error || pf.error;
   if (err) return body.innerHTML = failBox(err);
   const members = mb.data || [], profiles = pf.data || [];
+  const sync = await syncRoster(members, profiles, players);
+  if (sync.added) { try { players = await loadPlayers(); } catch (e) {} }
   const mByUser = Object.fromEntries(members.map(m => [m.user_id, m]));
   const mByName = Object.fromEntries(members.filter(m => m.display_name).map(m => [m.display_name, m]));
   const pByUser = Object.fromEntries(profiles.map(p => [p.user_id, p]));
@@ -1414,19 +1501,26 @@ async function viewRoster() {
   };
   const opts = sel => '<option value="">— без отряда —</option>' +
     squads.map(x => `<option value="${x.id}" ${x.id === sel ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
+  const orphan = members.filter(m => { const nick = memberNick(m, profiles); return !players.some(p => p.user_id === m.user_id || (nick && p.nick.toLowerCase() === nick.toLowerCase())); });
   const cnt = id => players.filter(p => p.active && p.squad_id === id).length;
   const sqRows = squads.map(x => `<tr><td>${esc(x.name)}</td><td class="mut">${cnt(x.id)} игроков</td>
     <td><button class="ghost" data-dsq="${x.id}">Удалить</button></td></tr>`).join('');
   const sqFilter = '<option value="">Все отряды</option><option value="none" ' + (RS.squad === 'none' ? 'selected' : '') + '>Без отряда</option>' +
     squads.map(x => `<option value="${x.id}" ${RS.squad === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
-  body.innerHTML = `<div class="card wrap"><h2>Отряды</h2>
-    <div class="row"><input id="sqn" placeholder="Название отряда"><button id="sqa">Создать отряд</button></div>
+  const syncCard = orphan.length ? `<div class="card" style="border-color:var(--warn)">
+    <h2>Участники без записи в составе (${orphan.length})</h2>
+    <p class="mut">Эти люди в клане, но их нет в составе: они не попадают в отряды и в бои.${canEdit() ? ' Добавь их одной кнопкой.' : ' Попроси офицера добавить их в состав.'}</p>
+    <div class="row" style="margin-bottom:0">${orphan.map(m => `<span class="chip">${esc(m.display_name || memberNick(m, profiles) || 'без имени')}</span>`).join('')}</div>
+    ${canEdit() ? '<button id="rsync" style="margin-top:10px">Добавить в состав</button>' : ''}
+    ${sync.error ? `<p class="err" style="margin-top:8px">${esc(sync.error)}</p>` : ''}</div>` : '';
+  body.innerHTML = `${syncCard}<div class="card wrap"><h2>Отряды</h2>
+    <div class="row"><input id="sqn" placeholder="Название отряда" aria-label="Название отряда"><button id="sqa">Создать отряд</button></div>
     ${squads.length ? `<table>${sqRows}</table>` : '<p class="mut">Отрядов пока нет.</p>'}</div>
     <div class="card"><h2>Добавить игроков</h2>
-    <textarea id="nicks" placeholder="По одному нику на строку"></textarea>
+    <textarea id="nicks" aria-label="Ники игроков, по одному на строку" placeholder="По одному нику на строку"></textarea>
     <div class="row" style="margin-top:8px"><select id="nsq">${opts('')}</select><button id="add">Добавить</button></div></div>
     <div class="card"><h2>Поиск по составу</h2>
-    <div class="sbar"><input id="r_q" class="sq" placeholder="Ник игрока" value="${esc(RS.q)}">
+    <div class="sbar"><input id="r_q" class="sq" placeholder="Ник игрока" aria-label="Поиск по нику" value="${esc(RS.q)}">
     <select id="r_rank">${selOpts(CLAN_RANKS, RS.rank, 'Любое звание')}</select>
     <select id="r_squad">${sqFilter}</select>
     <select id="r_faction">${selOpts(FACTIONS, RS.faction, 'Все фракции')}</select></div>
@@ -1471,6 +1565,14 @@ async function viewRoster() {
   });
   paint();
   const again = async () => { const y = scrollY; await viewRoster(); scrollTo(0, y); };
+  const rs = document.getElementById('rsync');
+  if (rs) rs.onclick = async () => {
+    rs.disabled = true; rs.textContent = 'Добавляю…';
+    const r = await syncRoster(members, profiles, players);
+    if (r.error) { rs.disabled = false; rs.textContent = 'Добавить в состав'; return toast('Не получилось: ' + r.error); }
+    toast('Участники добавлены в состав');
+    again();
+  };
   document.getElementById('sqa').onclick = async () => {
     const name = document.getElementById('sqn').value.trim();
     if (!name) return;
@@ -1500,8 +1602,29 @@ async function viewMatch() {
   let players, squads;
   try { [players, squads] = await Promise.all([loadPlayers(), loadSquads()]); }
   catch (e) { return body.innerHTML = failBox(e); }
+  // Если кто-то вступил в клан, но ещё не попал в состав, досоздаём запись,
+  // иначе его нельзя отметить в бою.
+  if (canEdit()) {
+    try {
+      const [mb, pf] = await Promise.all([
+        sb.from('clan_members').select('user_id,rank,display_name').eq('clan_id', clan.id),
+        sb.from('profiles').select('user_id,nickname,faction').limit(1000)
+      ]);
+      if (!mb.error && !pf.error) {
+        const r = await syncRoster(mb.data || [], pf.data || [], players);
+        if (r.added && !r.error) players = await loadPlayers();
+      }
+    } catch (e) {}
+  }
   players = players.filter(p => p.active);
-  if (!players.length) return body.innerHTML = '<div class="card mut">Сначала добавь игроков во вкладке «Состав».</div>';
+  if (!players.length) {
+    body.innerHTML = `<div class="card empty"><div class="eico">${ICONS.users}</div><h3>Пока некого отмечать</h3>
+      <p>В составе нет активных игроков. Добавь их во вкладке «Состав» — после этого они появятся здесь и в отрядах.</p>
+      ${canEdit() ? '<button id="mgo">Открыть состав</button>' : ''}</div>`;
+    const go = document.getElementById('mgo');
+    if (go) go.onclick = () => { tab = 'roster'; render(); };
+    return;
+  }
   const sqName = Object.fromEntries(squads.map(x => [x.id, x.name]));
   const key = p => sqName[p.squad_id] || '\uffff';
   players.sort((a, b) => key(a).localeCompare(key(b), 'ru') || a.nick.localeCompare(b.nick, 'ru'));
@@ -1512,19 +1635,39 @@ async function viewMatch() {
     <td><input type="number" min="0" class="ast"></td><td><input type="number" min="0" class="sc"></td></tr>`).join('');
   body.innerHTML = `${importCardHtml()}<div class="card"><h2>Или внеси бой вручную</h2>
     <div class="row"><input type="datetime-local" id="dt" value="${now}">
-    <input id="mode" placeholder="Режим (необязательно)">
+    <input id="mode" list="modes" placeholder="Режим (необязательно)" autocomplete="off">
+    <datalist id="modes"><option value="Турнир"></option><option value="Захват базы"></option><option value="Хроноразлом"></option><option value="Потасовка"></option><option value="Открытый мир"></option></datalist>
     <select id="res"><option value="">Результат</option><option>победа</option><option>поражение</option></select>
     <select id="msq"><option value="">Отметить весь отряд…</option>${squads.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></div>
     <div class="row"><input type="number" id="mplace" min="1" placeholder="Место клана" style="width:140px"><input type="number" id="mscore" min="0" placeholder="Очки клана" style="width:140px"></div>
     <p class="mut" style="margin:8px 0 4px">Противники (необязательно)</p><div id="opps">${oppRow()}</div>
     <button class="ghost" id="oppadd" style="margin-bottom:12px">+ Противник</button>
+    <div class="row" style="align-items:center;margin:0 0 8px"><input id="msearch" placeholder="Найти игрока" aria-label="Найти игрока" style="flex:1 1 200px" autocomplete="off">
+      <button class="ghost" id="mall">Отметить всех</button><button class="ghost" id="mnone">Снять всех</button>
+      <span class="mut" id="mcount" style="font-size:12px"></span></div>
     <div class="wrap"><table><tr><th>Был</th><th>Игрок</th><th>Отряд</th><th>K</th><th>D</th><th>П</th><th>Счёт</th></tr>${rows}</table></div>
-    <div class="row" style="margin-top:12px"><button id="save">Сохранить бой</button></div></div>`;
+    <div class="row" style="margin-top:12px"><button id="save">Сохранить бой</button>${canEdit() ? '<button class="ghost" id="mgoto">Состав и отряды</button>' : ''}</div></div>`;
   document.getElementById('msq').onchange = e => {
     const id = e.target.value; if (!id) return;
     body.querySelectorAll('tr[data-pid]').forEach(r => { if (r.dataset.sq === id) r.querySelector('.at').checked = true; });
     e.target.value = '';
+    cnt();
   };
+  const cnt = () => { const n = body.querySelectorAll('tr[data-pid] .at:checked').length; document.getElementById('mcount').textContent = 'Отмечено ' + n + ' из ' + players.length; };
+  const mtbl = body.querySelector('.wrap table');
+  if (mtbl) mtbl.addEventListener('change', e => { if (e.target.classList.contains('at')) cnt(); });
+  document.getElementById('mall').onclick = () => {
+    body.querySelectorAll('tr[data-pid]').forEach(r => { if (r.style.display !== 'none') r.querySelector('.at').checked = true; });
+    cnt();
+  };
+  document.getElementById('mnone').onclick = () => { body.querySelectorAll('tr[data-pid] .at').forEach(c => { c.checked = false; }); cnt(); };
+  document.getElementById('msearch').oninput = e => {
+    const q = e.target.value.trim().toLowerCase();
+    body.querySelectorAll('tr[data-pid]').forEach(r => { r.style.display = q && !r.dataset.nick.toLowerCase().includes(q) ? 'none' : ''; });
+  };
+  const mgoto = document.getElementById('mgoto');
+  if (mgoto) mgoto.onclick = () => { tab = 'roster'; render(); };
+  cnt();
   wireImport(body);
   document.getElementById('oppadd').onclick = () => { if (document.querySelectorAll('.opp').length < 6) document.getElementById('opps').insertAdjacentHTML('beforeend', oppRow()); };
   const num = el => el.value === '' ? null : Number(el.value);
@@ -1613,6 +1756,237 @@ async function viewTeam() {
     viewTeam();
   });
 }
+
+// ===== Тактика: карты турниров и разметка =====
+const TAC_MAPS = {
+  berdovka: { name: 'Малая Бердовка', file: 'tactics/berdovka.jpg', w: 1615, h: 1070 },
+  hvoiny: { name: 'Хвойный', file: 'tactics/hvoiny.jpg', w: 1297, h: 991 },
+  nizina: { name: 'Низина', file: 'tactics/nizina.jpg', w: 1847, h: 1172 }
+};
+const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
+  ['#29d3ff', 'голубой'], ['#b47cff', 'фиолетовый'], ['#ffffff', 'белый'], ['#0b1020', 'чёрный']];
+const TAC_TOOLS = [['brush', 'Кисть'], ['line', 'Линия'], ['arrow', 'Стрелка'], ['erase', 'Ластик']];
+const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true };
+let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
+
+function tacPlan() {
+  if (TAC_PLAN) return TAC_PLAN;
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem('cp_tac_' + clan.id) || 'null'); } catch (e) {}
+  TAC_PLAN = { maps: (o && o.maps) || {} };
+  Object.keys(TAC_MAPS).forEach(k => { if (!Array.isArray(TAC_PLAN.maps[k])) TAC_PLAN.maps[k] = []; });
+  return TAC_PLAN;
+}
+function tacSave() {
+  clearTimeout(TAC_SAVE);
+  TAC_SAVE = setTimeout(() => {
+    try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 1, maps: TAC_PLAN.maps })); }
+    catch (e) { toast('Разметка не сохранилась: в браузере нет места'); }
+  }, 300);
+}
+// Рисует одну метку. Координаты хранятся в долях карты (0..1), поэтому
+// разметка не зависит от размера экрана и resolution-independent при экспорте.
+function tacPaint(ctx, W, H, s) {
+  const pts = s.pts;
+  if (!pts || !pts.length) return;
+  const P = i => [pts[i][0] * W, pts[i][1] * H];
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.globalCompositeOperation = s.t === 'erase' ? 'destination-out' : 'source-over';
+  ctx.strokeStyle = s.c; ctx.fillStyle = s.c;
+  ctx.lineWidth = Math.max(1, (s.w || 0.004) * W);
+  if (s.t === 'line' || s.t === 'arrow') {
+    const a = P(0), b = P(pts.length - 1);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    if (s.t === 'arrow') {
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), L = Math.max(10, ctx.lineWidth * 3.4);
+      ctx.beginPath(); ctx.moveTo(b[0], b[1]);
+      ctx.lineTo(b[0] - L * Math.cos(ang - 0.45), b[1] - L * Math.sin(ang - 0.45));
+      ctx.lineTo(b[0] - L * Math.cos(ang + 0.45), b[1] - L * Math.sin(ang + 0.45));
+      ctx.closePath(); ctx.fill();
+    }
+  } else if (pts.length === 1) {
+    const a = P(0);
+    ctx.beginPath(); ctx.arc(a[0], a[1], Math.max(1, ctx.lineWidth / 2), 0, 6.2832); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.moveTo(P(0)[0], P(0)[1]);
+    for (let i = 1; i < pts.length; i++) { const p = P(i); ctx.lineTo(p[0], p[1]); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function viewTactics() {
+  const body = document.getElementById('body');
+  const plan = tacPlan();
+  if (!TAC_MAPS[TAC.map]) TAC.map = 'berdovka';
+  const m = TAC_MAPS[TAC.map];
+  const list = plan.maps[TAC.map];
+  const cntText = n => plural(n, 'метка', 'метки', 'меток');
+  const tbtn = t => `<button class="tac-tool ${TAC.tool === t[0] ? 'on' : ''}" data-tool="${t[0]}" aria-pressed="${TAC.tool === t[0]}">${t[1]}</button>`;
+  body.innerHTML = `<div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-start;margin:0 0 12px">
+      <div style="min-width:0;flex:1 1 220px"><h2 style="margin:0">Карты турниров</h2>
+        <p class="mut" style="font-size:13px;margin:4px 0 0">Выбери карту и нарисуй план: маршруты, входы, укрытия. Рисовать можно мышью или пальцем.</p></div>
+      <span class="chip ok tac-count" id="tac_count" style="margin:0">${cntText(list.length)}</span>
+    </div>
+    <div class="tac-maps">${Object.entries(TAC_MAPS).map(([k, v]) => `<button class="tac-map ${k === TAC.map ? 'on' : ''}" data-map="${k}" aria-pressed="${k === TAC.map}">
+      <img src="${v.file}" alt="" loading="lazy" width="${v.w}" height="${v.h}">
+      <span class="nm"><b>${esc(v.name)}</b><span data-mcount="${k}">${plan.maps[k].length}</span></span></button>`).join('')}</div>
+  </div>
+  <div class="card">
+    <div class="tac-bar" role="toolbar" aria-label="Инструменты рисования">
+      ${TAC_TOOLS.map(tbtn).join('')}
+      <span class="tac-sep" aria-hidden="true"></span>
+      <div class="tac-colors" role="group" aria-label="Цвет разметки">${TAC_COLORS.map(c => `<button class="tac-color ${c[0] === TAC.color ? 'on' : ''}" data-color="${c[0]}" style="background:${c[0]}" aria-label="Цвет: ${c[1]}" aria-pressed="${c[0] === TAC.color}"></button>`).join('')}</div>
+      <span class="tac-sep" aria-hidden="true"></span>
+      <label class="tac-size"><span>Толщина</span><input type="range" id="tac_size" min="1" max="14" step="1" value="${TAC.size}" aria-label="Толщина линии"><b id="tac_sv">${TAC.size}</b></label>
+    </div>
+    <div class="tac-bar">
+      <button class="tac-tool" id="tac_undo">Отменить</button>
+      <button class="tac-tool" id="tac_clear">Очистить</button>
+      <button class="tac-tool" id="tac_hide" aria-pressed="${!TAC.visible}">${TAC.visible ? 'Скрыть разметку' : 'Показать разметку'}</button>
+      <span class="tac-sep" aria-hidden="true"></span>
+      <button class="tac-tool" id="tac_png">Скачать PNG</button>
+      <a class="tac-tool" href="${m.file}" target="_blank" rel="noopener">Открыть карту</a>
+    </div>
+    <div class="tac-stage" id="tac_stage"><div class="tac-fit" id="tac_fit">
+      <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false">
+      <canvas id="tac_cv" role="img" aria-label="Поле для рисования плана на карте «${esc(m.name)}»"></canvas>
+    </div></div>
+    <p class="tac-hint">Разметка сохраняется в этом браузере. Чтобы показать план клану, скачай PNG и отправь в чат. Отменить — Ctrl+Z.</p>
+  </div>`;
+
+  const stage = document.getElementById('tac_stage'), fit = document.getElementById('tac_fit');
+  const img = document.getElementById('tac_img'), cv = document.getElementById('tac_cv');
+  const ctx = cv.getContext('2d');
+
+  function redraw() {
+    const dpr = cv._dpr || 1, W = cv.width / dpr, H = cv.height / dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (!TAC.visible) return;
+    list.forEach(s => tacPaint(ctx, W, H, s));
+  }
+  function layout() {
+    const avail = Math.max(200, stage.clientWidth - 2);
+    let w = avail, h = w * m.h / m.w;
+    const maxH = Math.max(230, Math.round(window.innerHeight * 0.66));
+    if (h > maxH) { h = maxH; w = h * m.w / m.h; }
+    fit.style.width = Math.round(w) + 'px';
+    fit.style.height = Math.round(h) + 'px';
+    const r = fit.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.max(1, Math.round(r.width * dpr));
+    cv.height = Math.max(1, Math.round(r.height * dpr));
+    cv._dpr = dpr;
+    redraw();
+  }
+
+  let live = null, raf = 0;
+  const ptOf = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height)]; };
+  const paintBase = () => { const dpr = cv._dpr || 1; ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalCompositeOperation = live.t === 'erase' ? 'destination-out' : 'source-over'; ctx.strokeStyle = live.c; ctx.fillStyle = live.c; ctx.lineWidth = Math.max(1, live.w * cv.width / dpr); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; return { W: cv.width / dpr, H: cv.height / dpr }; };
+  const dot = p => { const { W, H } = paintBase(); ctx.beginPath(); ctx.arc(p[0] * W, p[1] * H, Math.max(1, ctx.lineWidth / 2), 0, 6.2832); ctx.fill(); ctx.restore(); };
+  const seg = (a, b) => { const { W, H } = paintBase(); ctx.beginPath(); ctx.moveTo(a[0] * W, a[1] * H); ctx.lineTo(b[0] * W, b[1] * H); ctx.stroke(); ctx.restore(); };
+  const preview = () => { redraw(); if (live) tacPaint(ctx, cv.width / (cv._dpr || 1), cv.height / (cv._dpr || 1), live); };
+  const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; preview(); }); };
+
+  cv.addEventListener('pointerdown', e => {
+    if (!TAC.visible) return toast('Разметка скрыта — нажми «Показать разметку»');
+    if (e.button) return;
+    e.preventDefault();
+    try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+    const p = ptOf(e);
+    live = { t: TAC.tool, c: TAC.color, w: TAC.size / 1000, pts: [p] };
+    if (live.t === 'brush' || live.t === 'erase') dot(p); else preview();
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!live) return;
+    const p = ptOf(e), prev = live.pts[live.pts.length - 1];
+    const d = Math.hypot((p[0] - prev[0]) * fit.clientWidth, (p[1] - prev[1]) * fit.clientHeight);
+    if (d < 1.1) return;
+    if (live.t === 'brush' || live.t === 'erase') { live.pts.push(p); seg(prev, p); }
+    else { live.pts[1] = p; if (live.pts.length > 2) live.pts.length = 2; schedule(); }
+  });
+  const finish = e => {
+    if (!live) return;
+    try { cv.releasePointerCapture(e.pointerId); } catch (er) {}
+    if (live.t !== 'brush' && live.t !== 'erase' && live.pts.length < 2) live.t = 'brush';
+    if (live.pts.length > 1200) { const step = Math.ceil(live.pts.length / 1200); live.pts = live.pts.filter((_, i) => i % step === 0); }
+    if (list.length >= 400) toast('На карте уже 400 меток — очисти лишнее');
+    else { list.push(live); tacSave(); counts(); }
+    live = null; redraw();
+  };
+  cv.addEventListener('pointerup', finish);
+  cv.addEventListener('pointercancel', finish);
+
+  const counts = () => {
+    document.querySelectorAll('[data-mcount]').forEach(el => { el.textContent = plan.maps[el.dataset.mcount].length; });
+    const c = document.getElementById('tac_count'); if (c) c.textContent = cntText(list.length);
+  };
+  const markTools = () => body.querySelectorAll('[data-tool]').forEach(b => { const on = b.dataset.tool === TAC.tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  body.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { TAC.tool = b.dataset.tool; markTools(); });
+  body.querySelectorAll('[data-color]').forEach(b => b.onclick = () => {
+    TAC.color = b.dataset.color;
+    body.querySelectorAll('[data-color]').forEach(x => { const on = x.dataset.color === TAC.color; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+    if (TAC.tool === 'erase') { TAC.tool = 'brush'; markTools(); }
+  });
+  const sizeEl = document.getElementById('tac_size');
+  sizeEl.oninput = () => { TAC.size = Number(sizeEl.value) || 1; document.getElementById('tac_sv').textContent = TAC.size; };
+  body.querySelectorAll('[data-map]').forEach(b => b.onclick = () => { TAC.map = b.dataset.map; viewTactics(); });
+
+  document.getElementById('tac_undo').onclick = () => {
+    if (!list.length) return toast('Отменять нечего');
+    list.pop(); tacSave(); redraw(); counts(); toast('Последняя метка убрана');
+  };
+  document.getElementById('tac_clear').onclick = () => {
+    if (!list.length) return toast('Разметки нет');
+    if (!confirm('Очистить всю разметку на карте «' + m.name + '»?')) return;
+    list.length = 0; tacSave(); redraw(); counts(); toast('Разметка очищена');
+  };
+  const hideBtn = document.getElementById('tac_hide');
+  hideBtn.onclick = () => {
+    TAC.visible = !TAC.visible;
+    hideBtn.textContent = TAC.visible ? 'Скрыть разметку' : 'Показать разметку';
+    hideBtn.setAttribute('aria-pressed', String(!TAC.visible));
+    redraw();
+  };
+  document.getElementById('tac_png').onclick = () => {
+    if (!img.complete || !img.naturalWidth) return toast('Карта ещё загружается');
+    const out = document.createElement('canvas'); out.width = m.w; out.height = m.h;
+    const o = out.getContext('2d');
+    try {
+      o.drawImage(img, 0, 0, m.w, m.h);
+      if (TAC.visible) list.forEach(s => tacPaint(o, m.w, m.h, s));
+      out.toBlob(blob => {
+        if (!blob) return toast('Не удалось собрать PNG');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'clanpulse-' + TAC.map + '.png';
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        toast('PNG сохранён');
+      }, 'image/png');
+    } catch (er) { toast('Браузер не разрешил сохранить картинку'); }
+  };
+
+  const onResize = () => {
+    if (!document.body.contains(stage)) { removeEventListener('resize', onResize); if (TAC_RESIZE === onResize) TAC_RESIZE = null; return; }
+    layout();
+  };
+  if (TAC_RESIZE) removeEventListener('resize', TAC_RESIZE);
+  TAC_RESIZE = onResize;
+  addEventListener('resize', onResize);
+  layout();
+}
+
+document.addEventListener('keydown', e => {
+  if (tab !== 'tactics' || !(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+  const b = document.getElementById('tac_undo');
+  if (!b) return;
+  e.preventDefault(); b.click();
+});
 
 const stopChan = () => { if (chan) { sb.removeChannel(chan); chan = null; } };
 const dmLabel = () => 'Сообщения' + (unread ? ' (' + unread + ')' : '');
