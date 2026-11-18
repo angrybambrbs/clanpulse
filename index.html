@@ -1828,9 +1828,14 @@ async function viewTeam() {
 
 // ===== Тактика: карты турниров, разметка и метки =====
 const TAC_MAPS = {
-  berdovka: { name: 'Малая Бердовка', file: 'tactics/berdovka.jpg', w: 1615, h: 1070, caps: [[0.52, 0.5]] },
-  hvoiny: { name: 'Хвойный', file: 'tactics/hvoiny.jpg', w: 1297, h: 991, caps: [[0.5, 0.55]] },
-  nizina: { name: 'Низина', file: 'tactics/nizina.jpg', w: 1847, h: 1172, caps: [[0.48, 0.5]] }
+  // Точки захвата взяты с игровых tactical-карт клановых боёв (гайд STALZONE),
+  // координаты приведены к долям соответствующих изображений из tactics/.
+  berdovka: { name: 'Малая Бердовка', file: 'tactics/berdovka.jpg', w: 1615, h: 1070,
+    caps: [[0.350, 0.459], [0.477, 0.459], [0.436, 0.213], [0.590, 0.317], [0.589, 0.600], [0.435, 0.699]] },
+  hvoiny: { name: 'Хвойный', file: 'tactics/hvoiny.jpg', w: 1297, h: 991,
+    caps: [[0.316, 0.484], [0.493, 0.479], [0.675, 0.484]] },
+  nizina: { name: 'Низина', file: 'tactics/nizina.jpg', w: 1847, h: 1172,
+    caps: [[0.500, 0.536], [0.395, 0.401], [0.500, 0.361], [0.602, 0.402], [0.590, 0.662], [0.501, 0.796], [0.409, 0.654]] }
 };
 const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
   ['#29d3ff', 'голубой'], ['#b47cff', 'фиолетовый'], ['#ffffff', 'белый'], ['#0b1020', 'чёрный']];
@@ -1901,18 +1906,36 @@ function tacStamp(ctx, W, H, s, view) {
   if (!p) return;
   const side = s.side === 'enemy' ? 'enemy' : 'ally';
   const col = TAC_SIDE[side][1];
-  const r = Math.max(9, W * 0.017 / Math.sqrt(Math.max(1, view)));
   ctx.save();
   ctx.translate(p[0] * W, p[1] * H);
   if (s.k === 'cap') {
-    const R = r * 1.95;
-    ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.2832);
-    ctx.fillStyle = side === 'enemy' ? 'rgba(255,59,97,.13)' : 'rgba(47,155,255,.13)'; ctx.fill();
-    ctx.setLineDash([Math.max(3, r * .5), Math.max(2.5, r * .35)]);
-    ctx.lineWidth = Math.max(1.2, r * .13); ctx.strokeStyle = col;
-    ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.2832); ctx.stroke();
-    ctx.setLineDash([]);
+    // Точка захвата в стиле карты клановых боёв: тёмный квадрат с буквой
+    // и четыре белых угловых скобки. Размер ~4,6% ширины карты.
+    const box = Math.max(14, Math.min(90, W * 0.046 / Math.sqrt(Math.max(1, view))));
+    const half = box / 2, rad = box * .12;
+    ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = box * .35; ctx.shadowOffsetY = box * .08;
+    ctx.fillStyle = 'rgba(16,18,22,.86)';
+    ctx.beginPath();
+    ctx.moveTo(-half + rad, -half);
+    ctx.arcTo(half, -half, half, half, rad); ctx.arcTo(half, half, -half, half, rad);
+    ctx.arcTo(-half, half, -half, -half, rad); ctx.arcTo(-half, -half, half, -half, rad);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    const len = box * .22, off = box * .04;
+    ctx.strokeStyle = s.pre ? '#ffffff' : col;
+    ctx.lineWidth = Math.max(1.2, box * .045); ctx.lineCap = 'square';
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+      const cx = sx * (half + off), cy = sy * (half + off);
+      ctx.beginPath(); ctx.moveTo(cx - sx * len, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy - sy * len); ctx.stroke();
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 ' + Math.round(box * .56) + "px 'Russo One','Exo 2',sans-serif";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(s.letter || 'A', 0, box * .03);
+    ctx.restore();
+    return;
   }
+  const r = Math.max(9, W * 0.017 / Math.sqrt(Math.max(1, view)));
   ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = r * .55; ctx.shadowOffsetY = r * .12;
   ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832);
   ctx.fillStyle = '#0b1020'; ctx.fill();
@@ -1922,13 +1945,7 @@ function tacStamp(ctx, W, H, s, view) {
   ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.stroke();
   ctx.setLineDash([]);
   ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = col; ctx.fillStyle = col;
-  if (s.k === 'cap') {
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.fillStyle = col; ctx.fill();
-    ctx.fillStyle = '#08101f';
-    ctx.font = '700 ' + Math.round(r * 1.3) + "px 'Russo One','Exo 2',sans-serif";
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(s.letter || 'A', 0, r * .06);
-  } else if (s.k === 'rally') {
+  if (s.k === 'rally') {
     ctx.beginPath();
     ctx.moveTo(r * .14, -r * .62); ctx.lineTo(-r * .36, r * .06); ctx.lineTo(-r * .04, r * .06);
     ctx.lineTo(-r * .14, r * .62); ctx.lineTo(r * .38, -r * .12); ctx.lineTo(r * .06, -r * .12);
@@ -2065,7 +2082,7 @@ function viewTactics() {
     ctx.clearRect(0, 0, W, H);
     // Точки захвата задаются картой по умолчанию и не занимают место в плане.
     if (TAC.showCaps) (m.caps || []).forEach((c, i) => {
-      tacPaint(ctx, W, H, { t: 'stamp', k: 'cap', side: 'ally', pts: [c], letter: String.fromCharCode(65 + i) }, TAC.zoom);
+      tacPaint(ctx, W, H, { t: 'stamp', k: 'cap', side: 'ally', pts: [c], letter: String.fromCharCode(65 + i), pre: true }, TAC.zoom);
     });
     if (!TAC.visible) return;
     list.forEach(s => tacPaint(ctx, W, H, s, TAC.zoom));
@@ -2307,7 +2324,7 @@ function viewTactics() {
     const o = out.getContext('2d');
     try {
       o.drawImage(img, 0, 0, m.w, m.h);
-      if (TAC.showCaps) (m.caps || []).forEach((c, i) => tacPaint(o, m.w, m.h, { t: 'stamp', k: 'cap', side: 'ally', pts: [c], letter: String.fromCharCode(65 + i) }, 1));
+      if (TAC.showCaps) (m.caps || []).forEach((c, i) => tacPaint(o, m.w, m.h, { t: 'stamp', k: 'cap', side: 'ally', pts: [c], letter: String.fromCharCode(65 + i), pre: true }, 1));
       if (TAC.visible) list.forEach(s => tacPaint(o, m.w, m.h, s, 1));
       out.toBlob(blob => {
         if (!blob) return toast('Не удалось собрать PNG');
