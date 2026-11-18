@@ -1457,7 +1457,7 @@ async function syncRoster(members, profiles, players) {
     const nick = memberNick(m, profiles);
     if (!nick) continue;
     const p = byUser.get(m.user_id) || players.find(x => x.nick.toLowerCase() === nick.toLowerCase());
-    if (!p) add.push({ clan_id: clan.id, nick, user_id: m.user_id, active: true });
+    if (!p) add.push({ clan_id: clan.id, nick, user_id: m.user_id, active: true, joined_at: new Date().toISOString() });
     else if (!p.user_id) link.push({ id: p.id, user_id: m.user_id });
   }
   if (!add.length && !link.length) return { added: 0, error: '' };
