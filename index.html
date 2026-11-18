@@ -9,13 +9,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0f23;--card:#181634;--tx:#e8eaf6;--mut:#9aa3c7;--ac:#8b5cf6;--ac2:#a78bfa;--cta:#e11d48;--bd:#2c2854;--bd2:#3d376e;--bad:#f87171;--in:#121026;--in2:#0d0b1e;--ok:#34d399;--warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);--bad-bg:rgba(248,113,113,.12);--ring:rgba(139,92,246,.35);--glow:0 0 18px rgba(139,92,246,.35);--shadow:0 8px 24px rgba(5,4,18,.4);--g1:rgba(124,58,237,.16);--g2:rgba(244,63,94,.07)}
-[data-theme="light"]{--bg:#f4f3fa;--card:#fff;--tx:#201d2b;--mut:#67617d;--ac:#7c3aed;--ac2:#6d28d9;--cta:#be123c;--bd:#ddd8ea;--bd2:#c9c2de;--bad:#dc2626;--in:#fff;--in2:#f2f0f8;--ok:#059669;--warn:#b45309;--warn-bg:rgba(245,158,11,.14);--bad-bg:rgba(220,38,38,.10);--ring:rgba(124,58,237,.22);--glow:0 4px 14px rgba(124,58,237,.22);--shadow:0 6px 18px rgba(32,29,43,.08);--g1:rgba(124,58,237,.07);--g2:rgba(244,63,94,.05)}
+:root{--bg:#0f0f23;--card:#181634;--tx:#e8eaf6;--mut:#9aa3c7;--ac:#8b5cf6;--ac2:#a78bfa;--ac-rgb:139,92,246;--btn1:#7c3aed;--btn2:#6d28d9;--cta:#e11d48;--bd:#2c2854;--bd2:#3d376e;--bad:#f87171;--in:#121026;--in2:#0d0b1e;--ok:#34d399;--warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);--bad-bg:rgba(248,113,113,.12);--ring:rgba(var(--ac-rgb),.35);--glow:0 0 18px rgba(var(--ac-rgb),.35);--shadow:0 8px 24px rgba(5,4,18,.4);--g1:rgba(var(--ac-rgb),.16);--g2:rgba(244,63,94,.07)}
+[data-theme="light"]{--bg:#f4f3fa;--card:#fff;--tx:#201d2b;--mut:#67617d;--ac:#7c3aed;--ac2:#6d28d9;--ac-rgb:124,58,237;--cta:#be123c;--bd:#ddd8ea;--bd2:#c9c2de;--bad:#dc2626;--in:#fff;--in2:#f2f0f8;--ok:#059669;--warn:#b45309;--warn-bg:rgba(245,158,11,.14);--bad-bg:rgba(220,38,38,.10);--ring:rgba(var(--ac-rgb),.22);--glow:0 4px 14px rgba(var(--ac-rgb),.22);--shadow:0 6px 18px rgba(32,29,43,.08);--g1:rgba(var(--ac-rgb),.07);--g2:rgba(244,63,94,.05)}
+[data-accent="ocean"]{--ac:#3b82f6;--ac2:#60a5fa;--ac-rgb:59,130,246;--btn1:#2563eb;--btn2:#1d4ed8}
+[data-accent="emerald"]{--ac:#10b981;--ac2:#6ee7b7;--ac-rgb:16,185,129;--btn1:#059669;--btn2:#047857}
+[data-accent="amber"]{--ac:#f59e0b;--ac2:#fcd34d;--ac-rgb:245,158,11;--btn1:#b45309;--btn2:#92400e}
+[data-theme="light"][data-accent="ocean"]{--ac:#1d4ed8;--ac2:#1e40af;--ac-rgb:29,78,216;--btn1:#1d4ed8;--btn2:#1e3a8a}
+[data-theme="light"][data-accent="emerald"]{--ac:#047857;--ac2:#065f46;--ac-rgb:4,120,87;--btn1:#047857;--btn2:#065f46}
+[data-theme="light"][data-accent="amber"]{--ac:#b45309;--ac2:#92400e;--ac-rgb:180,83,9;--btn1:#b45309;--btn2:#92400e}
 *{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
-::selection{background:rgba(139,92,246,.45)}
+::selection{background:rgba(var(--ac-rgb),.45)}
 body{margin:0;font:15px/1.5 'Exo 2',system-ui,sans-serif;background:radial-gradient(1000px 520px at 85% -140px,var(--g1),transparent 60%),radial-gradient(800px 420px at -120px 35vh,var(--g2),transparent 55%),var(--bg);background-attachment:fixed;color:var(--tx)}
 main{max-width:880px;margin:0 auto;padding:16px}
 h1,h2{font-family:'Russo One','Exo 2',system-ui,sans-serif;font-weight:400;letter-spacing:.3px}
@@ -26,20 +32,20 @@ h1{font-size:20px;margin:0}h2{font-size:17px;margin:0 0 12px}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:none;border-radius:999px}
 button,input,select,textarea{font:inherit;color:var(--tx);background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:8px 12px}
-button{cursor:pointer;color:#fff;background:linear-gradient(135deg,#7c3aed,#6d28d9);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;font-weight:600;transition:transform .15s ease,box-shadow .15s ease,filter .15s ease,color .15s ease,border-color .15s ease,background-color .15s ease}
+button{cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--btn1),var(--btn2));border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 14px;font-weight:600;transition:transform .15s ease,box-shadow .15s ease,filter .15s ease,color .15s ease,border-color .15s ease,background-color .15s ease}
 button:hover{filter:brightness(1.08);box-shadow:var(--glow);transform:translateY(-1px)}
 button:active{transform:translateY(0);filter:brightness(.96)}
 :focus-visible{outline:2px solid var(--ac2);outline-offset:2px}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--ring)}
 button.ghost{background:transparent;border-color:var(--bd);color:var(--mut)}
 button.ghost:hover{border-color:var(--ac);color:var(--tx);box-shadow:none;filter:none}
-button.ghost.on{border-color:var(--ac);color:var(--tx);background:rgba(139,92,246,.15);box-shadow:inset 0 0 0 1px rgba(139,92,246,.35)}
+button.ghost.on{border-color:var(--ac);color:var(--tx);background:rgba(var(--ac-rgb),.15);box-shadow:inset 0 0 0 1px rgba(var(--ac-rgb),.35)}
 textarea{width:100%;min-height:120px}
 .wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
 th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap;transition:background-color .15s ease}
 th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-tr:hover td{background:rgba(139,92,246,.07)}
+tr:hover td{background:rgba(var(--ac-rgb),.07)}
 td input[type=number]{width:80px}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .dim td{color:var(--mut)}
@@ -69,8 +75,8 @@ button:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none;filter
 .msg p{margin:4px 0 0;white-space:pre-wrap;word-break:break-word}
 .msg .x{margin-left:auto;padding:2px 8px}
 .conv{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer;border-radius:8px;transition:background-color .15s ease}
-.conv:hover{background:rgba(139,92,246,.08)}
-.badge{background:linear-gradient(135deg,#e11d48,#7c3aed);color:#fff;border-radius:10px;padding:0 7px;font-size:12px;font-weight:700}
+.conv:hover{background:rgba(var(--ac-rgb),.08)}
+.badge{background:linear-gradient(135deg,var(--cta),var(--btn1));color:#fff;border-radius:10px;padding:0 7px;font-size:12px;font-weight:700}
 .badge:empty{display:none}
 .topr{display:flex;gap:8px;align-items:center;flex:none}
 .top .brand{min-width:0}
@@ -82,7 +88,7 @@ button:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none;filter
 .scrim.open{opacity:1;pointer-events:auto}
 .navi{display:flex;justify-content:space-between;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:10px 12px;color:var(--tx);font-weight:500}
 .navi:hover{background:var(--in);color:var(--ac2);box-shadow:none;transform:none;filter:none}
-.navi.on{background:rgba(139,92,246,.15);color:var(--ac2)}
+.navi.on{background:rgba(var(--ac-rgb),.15);color:var(--ac2)}
 .grp{margin:14px 0 6px;font-size:13px}
 #cmsg,#dmsg{min-height:56px}
 .sbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
@@ -97,7 +103,7 @@ button:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none;filter
 .chip{display:inline-block;border:1px solid var(--bd);border-radius:999px;padding:2px 10px;font-size:12px;color:var(--mut);margin:0 6px 6px 0;transition:border-color .15s ease,color .15s ease}
 a.chip{text-decoration:none}
 a.chip:hover{border-color:var(--ac);color:var(--tx)}
-.chip.ok{border-color:var(--ac);color:var(--tx);background:rgba(139,92,246,.12)}
+.chip.ok{border-color:var(--ac);color:var(--tx);background:rgba(var(--ac-rgb),.12)}
 .av.ph{display:flex;align-items:center;justify-content:center;background:var(--in2);color:var(--mut);font-weight:600}
 .av.lg{width:72px;height:72px;border-radius:14px;font-size:22px}
 .okc{color:var(--ac2)}
@@ -113,7 +119,7 @@ button.sm{padding:4px 10px;font-size:13px}
 .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
 .slot{position:relative;border:1px dashed var(--bd2);border-radius:8px;min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;text-align:center;font-size:11px;word-break:break-word}
 .slot.edit{cursor:pointer;transition:border-color .15s ease,background-color .15s ease}
-.slot.edit:hover{border-color:var(--ac);background:rgba(139,92,246,.06)}
+.slot.edit:hover{border-color:var(--ac);background:rgba(var(--ac-rgb),.06)}
 .slot .x{position:absolute;top:2px;right:2px;padding:0 6px;font-size:12px;line-height:18px}
 .gi.sm{width:34px;height:34px}
 .gtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
@@ -121,7 +127,7 @@ button.sm{padding:4px 10px;font-size:13px}
 .gi{width:52px;height:52px;object-fit:contain;flex:none;border-radius:8px;background:var(--in2)}
 .gi.ph{display:flex;align-items:center;justify-content:center;color:var(--mut)}
 .prow{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer;transition:background-color .15s ease}
-.prow:hover{background:rgba(139,92,246,.06)}
+.prow:hover{background:rgba(var(--ac-rgb),.06)}
 .cdet{padding:0 0 10px 58px}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
 .stat{background:var(--in);border:1px solid var(--bd);border-radius:10px;padding:10px;transition:border-color .15s ease}
@@ -145,7 +151,7 @@ a:hover{color:var(--ac)}
 .topcard{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .calgrid{display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));gap:6px;overflow-x:auto}
 .calday{background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:8px;min-height:92px;transition:border-color .15s ease}
-.calday.today{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac),0 0 14px rgba(139,92,246,.25)}
+.calday.today{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac),0 0 14px rgba(var(--ac-rgb),.25)}
 .calhead{font-size:12px;color:var(--mut);margin-bottom:6px}
 .calev{font-size:12px;background:var(--card);border-radius:6px;padding:4px 6px;margin-bottom:4px;overflow-wrap:anywhere;transition:background-color .15s ease}
 .calev:hover{background:var(--in2)}
@@ -165,19 +171,24 @@ a:hover{color:var(--ac)}
 /* ===== Каркас: сайдбар + топбар ===== */
 #app{max-width:none;margin:0;padding:0}
 .app{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh;align-items:start}
-.sidebar{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:12px;padding:16px 12px;background:linear-gradient(180deg,rgba(139,92,246,.11),transparent 240px),var(--in2);border-right:1px solid var(--bd);overflow-y:auto;z-index:6}
-[data-theme="light"] .sidebar{background:linear-gradient(180deg,rgba(124,58,237,.05),transparent 240px),var(--card)}
+.sidebar{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:12px;padding:16px 12px;background:linear-gradient(180deg,rgba(var(--ac-rgb),.11),transparent 240px),var(--in2);border-right:1px solid var(--bd);overflow-y:auto;z-index:6}
+[data-theme="light"] .sidebar{background:linear-gradient(180deg,rgba(var(--ac-rgb),.05),transparent 240px),var(--card)}
 .side-brand{display:flex;align-items:center;gap:10px;padding:4px 8px 12px;border-bottom:1px solid var(--bd);min-width:0}
-.side-brand .av{width:38px;height:38px;border-radius:11px;box-shadow:0 0 0 1px var(--bd2),0 0 16px rgba(139,92,246,.25)}
+.side-brand .av{width:38px;height:38px;border-radius:11px;box-shadow:0 0 0 1px var(--bd2),0 0 16px rgba(var(--ac-rgb),.25)}
 .side-brand span{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700}
 .side-brand b{display:block;font-family:'Russo One','Exo 2',sans-serif;font-weight:400;font-size:15px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .side-nav{flex:1;display:flex;flex-direction:column;gap:2px;min-height:0}
 .side-sec{padding:12px 10px 4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;opacity:.8}
 .side-foot{border-top:1px solid var(--bd);padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.acc-row{display:flex;align-items:center;gap:7px;padding:6px 4px 4px}
+.acc-row .alab{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-right:2px}
+.acsw{width:24px;height:24px;min-height:0;padding:0;border-radius:50%;border:2px solid transparent;box-shadow:0 0 0 1px var(--bd2);background:var(--sw);transform:none}
+.acsw:hover{transform:scale(1.12);box-shadow:0 0 0 1px var(--bd2);filter:none}
+.acsw.on{border-color:var(--card);box-shadow:0 0 0 2px var(--tx)}
 .sidebar .navi,.drawer .navi{padding:9px 10px;font-size:14px}
 .navi .nlabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .navi .badge{margin-left:6px}
-.navi.on{background:linear-gradient(90deg,rgba(139,92,246,.22),rgba(139,92,246,.04));box-shadow:inset 0 0 0 1px rgba(139,92,246,.28)}
+.navi.on{background:linear-gradient(90deg,rgba(var(--ac-rgb),.22),rgba(var(--ac-rgb),.04));box-shadow:inset 0 0 0 1px rgba(var(--ac-rgb),.28)}
 .navi.on svg{color:var(--ac2)}
 .main{display:flex;flex-direction:column;min-width:0;min-height:100vh}
 .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:11px clamp(14px,3vw,28px);background:rgba(13,11,30,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
@@ -193,15 +204,15 @@ a:hover{color:var(--ac)}
 .mob{display:none}
 
 /* ===== Дашборд ===== */
-.dash-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(225,29,72,.06) 55%,transparent),var(--card);border:1px solid var(--bd2);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
-.dash-hero:before{content:"";position:absolute;top:-45%;right:-8%;width:340px;height:340px;background:radial-gradient(circle,rgba(139,92,246,.28),transparent 65%);pointer-events:none}
+.dash-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(var(--ac-rgb),.18),rgba(225,29,72,.06) 55%,transparent),var(--card);border:1px solid var(--bd2);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.dash-hero:before{content:"";position:absolute;top:-45%;right:-8%;width:340px;height:340px;background:radial-gradient(circle,rgba(var(--ac-rgb),.28),transparent 65%);pointer-events:none}
 .dh-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;position:relative}
 .dh-kicker{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ac2);font-weight:700;margin-bottom:4px}
 .dash-hero h2{font-size:22px;margin:0}
-.dh-mark{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--ac2);background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.32);box-shadow:var(--glow)}
+.dh-mark{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--ac2);background:rgba(var(--ac-rgb),.12);border:1px solid rgba(var(--ac-rgb),.32);box-shadow:var(--glow)}
 .hero-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative}
 .hstat{background:rgba(9,8,22,.35);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;min-width:0}
-[data-theme="light"] .hstat{background:rgba(124,58,237,.04)}
+[data-theme="light"] .hstat{background:rgba(var(--ac-rgb),.04)}
 .hstat span{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:700}
 .hstat b{display:block;font-family:'Russo One','Exo 2',sans-serif;font-weight:400;font-size:24px;line-height:1.25;margin:2px 0}
 .hstat i{display:block;font-style:normal;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -224,8 +235,8 @@ a:hover{color:var(--ac)}
 .place.p3{background:linear-gradient(135deg,#fdba74,#c2410c);border-color:transparent;color:#2a1204}
 
 /* ===== Пустые состояния и тосты ===== */
-.empty{text-align:center;padding:30px 18px;border:1px dashed var(--bd2);border-radius:14px;background:linear-gradient(180deg,rgba(139,92,246,.06),transparent);color:var(--mut)}
-.empty .eico{width:46px;height:46px;margin:0 auto 10px;border-radius:12px;display:grid;place-items:center;color:var(--ac2);background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3)}
+.empty{text-align:center;padding:30px 18px;border:1px dashed var(--bd2);border-radius:14px;background:linear-gradient(180deg,rgba(var(--ac-rgb),.06),transparent);color:var(--mut)}
+.empty .eico{width:46px;height:46px;margin:0 auto 10px;border-radius:12px;display:grid;place-items:center;color:var(--ac2);background:rgba(var(--ac-rgb),.12);border:1px solid rgba(var(--ac-rgb),.3)}
 .empty h3{font-family:'Russo One','Exo 2',sans-serif;font-weight:400;color:var(--tx);font-size:16px;margin:0 0 6px}
 .empty p{margin:0 auto 12px;max-width:440px;font-size:13px}
 .toasts{position:fixed;right:16px;bottom:16px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:min(360px,calc(100vw - 32px))}
@@ -243,7 +254,7 @@ a:hover{color:var(--ac)}
 .bub.me{align-self:flex-end;flex-direction:row-reverse}
 .bub .av.sm{width:30px;height:30px;border-radius:50%}
 .bub .txt{background:var(--in);border:1px solid var(--bd);border-radius:14px 14px 14px 4px;padding:7px 11px;min-width:0}
-.bub.me .txt{background:linear-gradient(135deg,rgba(139,92,246,.38),rgba(139,92,246,.14));border-color:rgba(139,92,246,.42);border-radius:14px 14px 4px 14px}
+.bub.me .txt{background:linear-gradient(135deg,rgba(var(--ac-rgb),.38),rgba(var(--ac-rgb),.14));border-color:rgba(var(--ac-rgb),.42);border-radius:14px 14px 4px 14px}
 .bub .who{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mut)}
 .bub .who b{color:var(--tx);font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bub .who .x{margin-left:auto;padding:0 2px;background:transparent;border:0;color:var(--mut);box-shadow:none;transform:none;line-height:1}
@@ -268,14 +279,14 @@ a:hover{color:var(--ac)}
 .tac-map:hover{transform:none;box-shadow:0 0 0 1px var(--bd2);filter:none}
 .tac-map img{display:block;width:100%;height:72px;object-fit:cover;opacity:.8;transition:opacity .2s ease}
 .tac-map:hover img,.tac-map.on img{opacity:1}
-.tac-map.on{border-color:var(--ac);background:rgba(139,92,246,.12);box-shadow:0 0 0 1px var(--ac),var(--glow)}
+.tac-map.on{border-color:var(--ac);background:rgba(var(--ac-rgb),.12);box-shadow:0 0 0 1px var(--ac),var(--glow)}
 .tac-map .nm{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 10px;font-size:13px;line-height:1.25}
 .tac-map .nm b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tac-map .nm span{flex:none;font-size:11px;color:var(--mut);font-weight:400}
 .tac-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
 .tac-tool{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;min-height:36px;border-radius:9px;background:var(--in);border:1px solid var(--bd);color:var(--mut);font-weight:600;font-size:13px;box-shadow:none;transform:none;text-decoration:none}
 .tac-tool:hover{color:var(--tx);border-color:var(--ac);box-shadow:none;transform:none;filter:none}
-.tac-tool.on{color:var(--tx);border-color:var(--ac);background:rgba(139,92,246,.16);box-shadow:inset 0 0 0 1px rgba(139,92,246,.3)}
+.tac-tool.on{color:var(--tx);border-color:var(--ac);background:rgba(var(--ac-rgb),.16);box-shadow:inset 0 0 0 1px rgba(var(--ac-rgb),.3)}
 .tac-sep{width:1px;height:22px;background:var(--bd);margin:0 3px}
 .tac-colors{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
 .tac-color{width:28px;height:28px;min-height:0;padding:0;border-radius:50%;border:2px solid transparent;box-shadow:0 0 0 1px var(--bd2);transform:none}
@@ -284,12 +295,42 @@ a:hover{color:var(--ac)}
 .tac-size{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut)}
 .tac-size input[type=range]{width:92px;padding:0;background:transparent;border:0;box-shadow:none}
 .tac-size b{font-family:'Russo One','Exo 2',sans-serif;font-weight:400;font-size:13px;color:var(--tx);min-width:18px;text-align:center}
-.tac-stage{position:relative;display:flex;justify-content:center;border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:#080714}
+.tac-stage{position:relative;display:flex;justify-content:center;border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:#080714;touch-action:none}
 [data-theme="light"] .tac-stage{background:#e9e6f4}
-.tac-fit{position:relative;flex:none;max-width:100%}
+.tac-fit{position:relative;flex:none;max-width:100%;will-change:transform;transform-origin:50% 50%}
 .tac-fit img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none;pointer-events:none}
 .tac-fit canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .tac-hint{font-size:12px;color:var(--mut);margin:10px 0 0}
+.tac-markbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 10px;padding:8px;border:1px solid var(--bd);border-radius:10px;background:var(--in2)}
+.tac-markbar[hidden]{display:none}
+.tac-mlab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.tac-stamp svg{opacity:.8}
+.tac-stamp.on svg{opacity:1}
+.tac-sides{display:inline-flex;gap:4px;padding:2px;border:1px solid var(--bd);border-radius:9px;background:var(--in)}
+.tac-side-b{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:4px 10px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--mut);font-size:12px;font-weight:600;box-shadow:none;transform:none}
+.tac-side-b:hover{box-shadow:none;transform:none;filter:none;color:var(--tx)}
+.tac-side-b i{width:8px;height:8px;border-radius:50%;display:block}
+.tac-side-b.on{background:var(--card);border-color:var(--bd2);color:var(--tx)}
+.tac-side-b.ally.on{border-color:rgba(47,155,255,.6);box-shadow:inset 0 0 0 1px rgba(47,155,255,.28)}
+.tac-side-b.enemy.on{border-color:rgba(255,59,97,.6);box-shadow:inset 0 0 0 1px rgba(255,59,97,.28)}
+.tac-zoom{position:absolute;top:10px;right:10px;z-index:2;display:flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--bd);border-radius:10px;background:rgba(11,16,32,.78);backdrop-filter:blur(8px);box-shadow:var(--shadow)}
+[data-theme="light"] .tac-zoom{background:rgba(255,255,255,.9)}
+.tac-zoom button{min-width:34px;min-height:34px;padding:0 8px;border-radius:7px;background:transparent;border:0;color:var(--tx);font-weight:700;font-size:16px;box-shadow:none;transform:none;line-height:1}
+.tac-zoom button:hover{background:rgba(var(--ac-rgb),.18);box-shadow:none;transform:none;filter:none}
+.tac-zoom button#tac_zr{font-size:11px;color:var(--mut);padding:0 7px}
+.tac-zoom span{min-width:42px;text-align:center;font-size:11px;font-weight:600;color:var(--mut);font-variant-numeric:tabular-nums}
+.tac-dlg{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:18px;background:rgba(6,6,18,.62);backdrop-filter:blur(3px);opacity:0;transition:opacity .14s ease}
+.tac-dlg.on{opacity:1}
+.tac-dlg-box{width:min(420px,100%);background:linear-gradient(180deg,rgba(var(--ac-rgb),.12),transparent 120px),var(--card);border:1px solid var(--bd2);border-radius:16px;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.55);transform:translateY(10px) scale(.97);transition:transform .16s ease;text-align:center}
+.tac-dlg.on .tac-dlg-box{transform:none}
+.tac-dlg-ico{width:46px;height:46px;margin:0 auto 12px;border-radius:13px;display:grid;place-items:center;color:var(--bad);background:var(--bad-bg);border:1px solid rgba(248,113,113,.35)}
+.tac-dlg-box h3{margin:0 0 6px;font-size:17px}
+.tac-dlg-box p{margin:0 0 18px;color:var(--mut);font-size:13px;line-height:1.5}
+.tac-dlg-act{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tac-dlg-act button{min-width:120px}
+button.danger{background:linear-gradient(135deg,#e11d48,#be123c);border-color:rgba(255,255,255,.14)}
+button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
+@media (prefers-reduced-motion:reduce){.tac-dlg,.tac-dlg-box{transition:none}}
 
 /* ===== Мобильная раскладка ===== */
 @media (max-width:959px){
@@ -315,12 +356,15 @@ a:hover{color:var(--ac)}
   .tac-map .nm{flex:1;min-width:0}
   .tac-tool{min-height:44px}
   .tac-color{width:40px;height:40px}
+  .tac-side-b{min-height:40px;padding:6px 12px}
+  .tac-zoom button{min-width:40px;min-height:40px}
+  .acsw{width:32px;height:32px}
   .tac-size{width:100%}
   .tac-size input[type=range]{flex:1;width:auto}
   .tb-actions .ghost{min-width:40px;min-height:40px;justify-content:center}
 }
 </style>
-<script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
+<script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
 </head>
 <body>
 <main id="app"><p class="mut">Загрузка…</p></main>
@@ -434,6 +478,13 @@ const FACTIONS = { svoboda: 'Свобода', dolg: 'Долг', naemniki: 'На�
 const FCLASS = { svoboda: 'svoboda', dolg: 'dolg', naemniki: 'naemniki', zavet: 'zavet' };
 const factionChip = (f, any) => `<span class="chip faction ${FCLASS[f] || ''}">${FACTIONS[f] || any || 'Без фракции'}</span>`;
 const THEME_KEY = 'cp_theme';
+const ACCENTS = { violet: ['Фиолетовый', '#8b5cf6'], ocean: ['Океан', '#3b82f6'], emerald: ['Изумруд', '#10b981'], amber: ['Янтарь', '#f59e0b'] };
+const curAccent = () => document.documentElement.dataset.accent || 'violet';
+const setAccent = a => {
+  if (a && a !== 'violet') document.documentElement.dataset.accent = a;
+  else delete document.documentElement.dataset.accent;
+  try { localStorage.setItem('cp_accent', a || 'violet'); } catch (e) {}
+};
 const setTheme = t => { document.documentElement.dataset.theme = t; try { localStorage.setItem(THEME_KEY, t); } catch (e) {} const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#f4f3fa' : '#0f0f23'; };
 const svg = (w, d) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-${Math.round(w * 0.15)}px">${d}</svg>`;
 const TSVG = {
@@ -511,7 +562,9 @@ function shell(title, tabs, views, again, icon, primary) {
   const pageTitle = tab === 'player' ? 'Профиль игрока' : (label[tab] || title);
   const ava = md.avatar_url ? '<img class="av sm" referrerpolicy="no-referrer" src="' + esc(md.avatar_url) + '" alt="">' : 'Профиль';
   const quick = primary.filter(id => label[id]).map(id => `<button class="ghost ${tab === id ? 'on' : ''}" data-t="${id}">${label[id]}</button>`).join('');
-  const foot = `<button class="navi" data-theme-toggle><span class="ticon">${themeIcon}</span><span class="nlabel">Сменить тему</span></button>
+  const cur = curAccent();
+  const accRow = `<div class="acc-row" role="group" aria-label="Цветовая схема сайта"><span class="alab">Акцент</span>${Object.entries(ACCENTS).map(([k, v]) => `<button class="acsw ${cur === k ? 'on' : ''}" data-accent="${k}" style="--sw:${v[1]}" aria-label="Акцент: ${esc(v[0])}" aria-pressed="${cur === k}"></button>`).join('')}</div>`;
+  const foot = `${accRow}<button class="navi" data-theme-toggle><span class="ticon">${themeIcon}</span><span class="nlabel">Сменить тему</span></button>
     <button class="navi" data-out>${ICONS.logout}<span class="nlabel">Выйти</span></button>`;
   app.innerHTML = `<div class="app">
     <aside class="sidebar">
@@ -558,6 +611,15 @@ function shell(title, tabs, views, again, icon, primary) {
     setTheme(next);
     const ic = next === 'light' ? TSVG.sun : TSVG.moon;
     app.querySelectorAll('.ticon').forEach(el => { el.innerHTML = ic; });
+  });
+  app.querySelectorAll('[data-accent]').forEach(b => b.onclick = () => {
+    const a = b.dataset.accent;
+    setAccent(a);
+    app.querySelectorAll('[data-accent]').forEach(x => {
+      const on = x.dataset.accent === a;
+      x.classList.toggle('on', on);
+      x.setAttribute('aria-pressed', String(on));
+    });
   });
   app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { toggle(false); tab = b.dataset.t; again(); });
   views[tab]();
@@ -1757,7 +1819,7 @@ async function viewTeam() {
   });
 }
 
-// ===== Тактика: карты турниров и разметка =====
+// ===== Тактика: карты турниров, разметка и метки =====
 const TAC_MAPS = {
   berdovka: { name: 'Малая Бердовка', file: 'tactics/berdovka.jpg', w: 1615, h: 1070 },
   hvoiny: { name: 'Хвойный', file: 'tactics/hvoiny.jpg', w: 1297, h: 991 },
@@ -1765,8 +1827,16 @@ const TAC_MAPS = {
 };
 const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
   ['#29d3ff', 'голубой'], ['#b47cff', 'фиолетовый'], ['#ffffff', 'белый'], ['#0b1020', 'чёрный']];
-const TAC_TOOLS = [['brush', 'Кисть'], ['line', 'Линия'], ['arrow', 'Стрелка'], ['erase', 'Ластик']];
-const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true };
+const TAC_TOOLS = [['brush', 'Кисть'], ['line', 'Линия'], ['arrow', 'Стрелка'], ['erase', 'Ластик'], ['stamp', 'Метка'], ['pan', 'Рука']];
+// Метки-штампы: палатка (точка сбора/лагерь), ралик (скоростная сборка, «раллист»),
+// захват (зона удержания точки). Буква зоны для «захвата» подставляется автоматически.
+const TAC_STAMPS = {
+  tent: ['Палатка', '<path d="M3 20 12 4l9 16z"/><path d="M12 9v11"/>'],
+  rally: ['Ралик', '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>'],
+  cap: ['Захват', '<path d="M6 21V4"/><path d="M6 4h12l-2 4 2 4H6"/>']
+};
+const TAC_SIDE = { ally: ['Свой', '#2f9bff'], enemy: ['Враг', '#ff3b61'] };
+const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true, zoom: 1, px: 0, py: 0, stamp: 'tent', side: 'ally' };
 let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
 
 function tacPlan() {
@@ -1780,13 +1850,14 @@ function tacPlan() {
 function tacSave() {
   clearTimeout(TAC_SAVE);
   TAC_SAVE = setTimeout(() => {
-    try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 1, maps: TAC_PLAN.maps })); }
+    try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 2, maps: TAC_PLAN.maps })); }
     catch (e) { toast('Разметка не сохранилась: в браузере нет места'); }
   }, 300);
 }
 // Рисует одну метку. Координаты хранятся в долях карты (0..1), поэтому
 // разметка не зависит от размера экрана и resolution-independent при экспорте.
-function tacPaint(ctx, W, H, s) {
+function tacPaint(ctx, W, H, s, view) {
+  if (s.t === 'stamp') return tacStamp(ctx, W, H, s, view || 1);
   const pts = s.pts;
   if (!pts || !pts.length) return;
   const P = i => [pts[i][0] * W, pts[i][1] * H];
@@ -1816,19 +1887,116 @@ function tacPaint(ctx, W, H, s) {
   ctx.restore();
 }
 
+// Штамп-метка: цвет и тип кольца кодируют сторону (свой/враг), форма — тип метки.
+// view — текущий зум, чтобы на экране метка росла медленнее карты и не закрывала её.
+function tacStamp(ctx, W, H, s, view) {
+  const p = s.pts && s.pts[0];
+  if (!p) return;
+  const side = s.side === 'enemy' ? 'enemy' : 'ally';
+  const col = TAC_SIDE[side][1];
+  const r = Math.max(9, W * 0.017 / Math.sqrt(Math.max(1, view)));
+  ctx.save();
+  ctx.translate(p[0] * W, p[1] * H);
+  if (s.k === 'cap') {
+    const R = r * 1.95;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.2832);
+    ctx.fillStyle = side === 'enemy' ? 'rgba(255,59,97,.13)' : 'rgba(47,155,255,.13)'; ctx.fill();
+    ctx.setLineDash([Math.max(3, r * .5), Math.max(2.5, r * .35)]);
+    ctx.lineWidth = Math.max(1.2, r * .13); ctx.strokeStyle = col;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.2832); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = r * .55; ctx.shadowOffsetY = r * .12;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832);
+  ctx.fillStyle = '#0b1020'; ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  ctx.lineWidth = Math.max(1.5, r * .16); ctx.strokeStyle = col;
+  if (side === 'enemy') ctx.setLineDash([Math.max(2, r * .42), Math.max(2, r * .3)]);
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = col; ctx.fillStyle = col;
+  if (s.k === 'cap') {
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.fillStyle = col; ctx.fill();
+    ctx.fillStyle = '#08101f';
+    ctx.font = '700 ' + Math.round(r * 1.3) + "px 'Russo One','Exo 2',sans-serif";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(s.letter || 'A', 0, r * .06);
+  } else if (s.k === 'rally') {
+    ctx.beginPath();
+    ctx.moveTo(r * .14, -r * .62); ctx.lineTo(-r * .36, r * .06); ctx.lineTo(-r * .04, r * .06);
+    ctx.lineTo(-r * .14, r * .62); ctx.lineTo(r * .38, -r * .12); ctx.lineTo(r * .06, -r * .12);
+    ctx.closePath(); ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(0, -r * .62); ctx.lineTo(r * .66, r * .44); ctx.lineTo(-r * .66, r * .44);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, -r * .06); ctx.lineTo(r * .23, r * .44); ctx.lineTo(-r * .23, r * .44);
+    ctx.closePath(); ctx.fillStyle = '#0b1020'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-r * .82, r * .52); ctx.lineTo(r * .82, r * .52);
+    ctx.lineWidth = Math.max(1.2, r * .12); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function tacCountText(n) { return plural(n, 'отметка', 'отметки', 'отметок'); }
+
+// Красивый диалог подтверждения вместо нативного confirm.
+function tacConfirm(title, text, okText) {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.className = 'tac-dlg';
+    ov.innerHTML = `<div class="tac-dlg-box" role="dialog" aria-modal="true" aria-labelledby="tdlt" aria-describedby="tdld">
+      <div class="tac-dlg-ico">${svg(22, '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>')}</div>
+      <h3 id="tdlt">${esc(title)}</h3>
+      <p id="tdld">${esc(text)}</p>
+      <div class="tac-dlg-act"><button class="ghost" data-no>Отмена</button><button class="danger" data-yes>${esc(okText || 'Очистить')}</button></div>
+    </div>`;
+    document.body.append(ov);
+    const prev = document.activeElement;
+    const no = ov.querySelector('[data-no]'), yes = ov.querySelector('[data-yes]');
+    let done = false;
+    const close = ok => {
+      if (done) return;
+      done = true;
+      document.removeEventListener('keydown', onKey, true);
+      document.body.style.overflow = '';
+      ov.classList.remove('on');
+      setTimeout(() => ov.remove(), 140);
+      if (prev && prev.focus) { try { prev.focus(); } catch (e) {} }
+      resolve(ok);
+    };
+    const onKey = e => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return close(false); }
+      if (e.key !== 'Tab') return;
+      const items = [no, yes];
+      const i = items.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); yes.focus(); }
+      else if (!e.shiftKey && i === items.length - 1) { e.preventDefault(); no.focus(); }
+    };
+    document.addEventListener('keydown', onKey, true);
+    document.body.style.overflow = 'hidden';
+    ov.addEventListener('click', e => { if (e.target === ov) close(false); });
+    no.onclick = () => close(false);
+    yes.onclick = () => close(true);
+    requestAnimationFrame(() => { ov.classList.add('on'); no.focus(); });
+  });
+}
+
 function viewTactics() {
   const body = document.getElementById('body');
   const plan = tacPlan();
   if (!TAC_MAPS[TAC.map]) TAC.map = 'berdovka';
   const m = TAC_MAPS[TAC.map];
   const list = plan.maps[TAC.map];
-  const cntText = n => plural(n, 'метка', 'метки', 'меток');
   const tbtn = t => `<button class="tac-tool ${TAC.tool === t[0] ? 'on' : ''}" data-tool="${t[0]}" aria-pressed="${TAC.tool === t[0]}">${t[1]}</button>`;
+  const sbtn = ([k, v]) => `<button class="tac-tool tac-stamp ${TAC.stamp === k ? 'on' : ''}" data-stamp="${k}" aria-pressed="${TAC.stamp === k}">${svg(15, v[1])}<span>${v[0]}</span></button>`;
+  const sideBtn = ([k, v]) => `<button class="tac-side-b ${k} ${TAC.side === k ? 'on' : ''}" data-side="${k}" aria-pressed="${TAC.side === k}"><i style="background:${v[1]}"></i>${v[0]}</button>`;
   body.innerHTML = `<div class="card">
     <div class="row" style="justify-content:space-between;align-items:flex-start;margin:0 0 12px">
       <div style="min-width:0;flex:1 1 220px"><h2 style="margin:0">Карты турниров</h2>
-        <p class="mut" style="font-size:13px;margin:4px 0 0">Выбери карту и нарисуй план: маршруты, входы, укрытия. Рисовать можно мышью или пальцем.</p></div>
-      <span class="chip ok tac-count" id="tac_count" style="margin:0">${cntText(list.length)}</span>
+        <p class="mut" style="font-size:13px;margin:4px 0 0">Выбери карту и нарисуй план: маршруты, входы, укрытия, метки лагеря и захвата. Рисовать можно мышью или пальцем.</p></div>
+      <span class="chip ok tac-count" id="tac_count" style="margin:0">${tacCountText(list.length)}</span>
     </div>
     <div class="tac-maps">${Object.entries(TAC_MAPS).map(([k, v]) => `<button class="tac-map ${k === TAC.map ? 'on' : ''}" data-map="${k}" aria-pressed="${k === TAC.map}">
       <img src="${v.file}" alt="" loading="lazy" width="${v.w}" height="${v.h}">
@@ -1842,6 +2010,13 @@ function viewTactics() {
       <span class="tac-sep" aria-hidden="true"></span>
       <label class="tac-size"><span>Толщина</span><input type="range" id="tac_size" min="1" max="14" step="1" value="${TAC.size}" aria-label="Толщина линии"><b id="tac_sv">${TAC.size}</b></label>
     </div>
+    <div class="tac-markbar" id="tac_markbar" ${TAC.tool === 'stamp' ? '' : 'hidden'}>
+      <span class="tac-mlab">Метка</span>
+      ${Object.entries(TAC_STAMPS).map(sbtn).join('')}
+      <span class="tac-sep" aria-hidden="true"></span>
+      <span class="tac-mlab">Чья</span>
+      <div class="tac-sides" role="group" aria-label="Принадлежность метки">${Object.entries(TAC_SIDE).map(sideBtn).join('')}</div>
+    </div>
     <div class="tac-bar">
       <button class="tac-tool" id="tac_undo">Отменить</button>
       <button class="tac-tool" id="tac_clear">Очистить</button>
@@ -1853,67 +2028,172 @@ function viewTactics() {
     <div class="tac-stage" id="tac_stage"><div class="tac-fit" id="tac_fit">
       <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false">
       <canvas id="tac_cv" role="img" aria-label="Поле для рисования плана на карте «${esc(m.name)}»"></canvas>
+    </div>
+    <div class="tac-zoom" role="group" aria-label="Масштаб карты">
+      <button id="tac_zo" aria-label="Уменьшить масштаб">−</button>
+      <span id="tac_zl" aria-live="polite">${Math.round(TAC.zoom * 100)}%</span>
+      <button id="tac_zi" aria-label="Увеличить масштаб">+</button>
+      <button id="tac_zr" aria-label="Сбросить масштаб" title="Сбросить масштаб">1:1</button>
     </div></div>
-    <p class="tac-hint">Разметка сохраняется в этом браузере. Чтобы показать план клану, скачай PNG и отправь в чат. Отменить — Ctrl+Z.</p>
+    <p class="tac-hint">Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z.</p>
   </div>`;
 
   const stage = document.getElementById('tac_stage'), fit = document.getElementById('tac_fit');
   const img = document.getElementById('tac_img'), cv = document.getElementById('tac_cv');
   const ctx = cv.getContext('2d');
+  const zlab = document.getElementById('tac_zl');
+  const ZMIN = 1, ZMAX = 4;
+  let live = null, raf = 0, pw = 0, ph = 0;
 
-  function redraw() {
+  const redraw = () => {
     const dpr = cv._dpr || 1, W = cv.width / dpr, H = cv.height / dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     if (!TAC.visible) return;
-    list.forEach(s => tacPaint(ctx, W, H, s));
-  }
+    list.forEach(s => tacPaint(ctx, W, H, s, TAC.zoom));
+  };
+  const clampPan = () => {
+    const mx = pw * (TAC.zoom - 1) / 2, my = ph * (TAC.zoom - 1) / 2;
+    TAC.px = Math.max(-mx, Math.min(mx, TAC.px));
+    TAC.py = Math.max(-my, Math.min(my, TAC.py));
+  };
+  const applyZoom = () => {
+    fit.style.transform = 'translate(' + TAC.px.toFixed(1) + 'px,' + TAC.py.toFixed(1) + 'px) scale(' + TAC.zoom + ')';
+    zlab.textContent = Math.round(TAC.zoom * 100) + '%';
+  };
+  const resizeCanvas = () => {
+    const dpr0 = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, pw * TAC.zoom), h = Math.max(1, ph * TAC.zoom);
+    let d = dpr0;
+    if (w * h * d * d > 5200000) d = Math.max(1, Math.sqrt(5200000 / (w * h)));
+    cv.width = Math.max(1, Math.round(w * d));
+    cv.height = Math.max(1, Math.round(h * d));
+    cv._dpr = d;
+    redraw();
+  };
   function layout() {
     const avail = Math.max(200, stage.clientWidth - 2);
     let w = avail, h = w * m.h / m.w;
     const maxH = Math.max(230, Math.round(window.innerHeight * 0.66));
     if (h > maxH) { h = maxH; w = h * m.w / m.h; }
-    fit.style.width = Math.round(w) + 'px';
-    fit.style.height = Math.round(h) + 'px';
-    const r = fit.getBoundingClientRect();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    cv.width = Math.max(1, Math.round(r.width * dpr));
-    cv.height = Math.max(1, Math.round(r.height * dpr));
-    cv._dpr = dpr;
-    redraw();
+    pw = Math.round(w); ph = Math.round(h);
+    fit.style.width = pw + 'px';
+    fit.style.height = ph + 'px';
+    clampPan(); applyZoom(); resizeCanvas();
   }
+  const zoomAt = (clientX, clientY, k) => {
+    const r = cv.getBoundingClientRect();
+    const z0 = TAC.zoom, z1 = Math.max(ZMIN, Math.min(ZMAX, z0 * k));
+    if (Math.abs(z1 - z0) < .001) return;
+    const dx = clientX - (r.left + r.width / 2), dy = clientY - (r.top + r.height / 2), f = z1 / z0;
+    TAC.px = dx * (1 - f) + TAC.px * f;
+    TAC.py = dy * (1 - f) + TAC.py * f;
+    TAC.zoom = z1;
+    clampPan(); applyZoom(); resizeCanvas();
+  };
+  const zoomCenter = k => { const r = cv.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, k); };
+  const resetZoom = () => { TAC.px = 0; TAC.py = 0; TAC.zoom = 1; applyZoom(); resizeCanvas(); };
 
-  let live = null, raf = 0;
+  const cursorFor = () => TAC.tool === 'pan' ? 'grab' : TAC.tool === 'stamp' ? 'copy' : 'crosshair';
   const ptOf = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height)]; };
   const paintBase = () => { const dpr = cv._dpr || 1; ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalCompositeOperation = live.t === 'erase' ? 'destination-out' : 'source-over'; ctx.strokeStyle = live.c; ctx.fillStyle = live.c; ctx.lineWidth = Math.max(1, live.w * cv.width / dpr); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; return { W: cv.width / dpr, H: cv.height / dpr }; };
   const dot = p => { const { W, H } = paintBase(); ctx.beginPath(); ctx.arc(p[0] * W, p[1] * H, Math.max(1, ctx.lineWidth / 2), 0, 6.2832); ctx.fill(); ctx.restore(); };
   const seg = (a, b) => { const { W, H } = paintBase(); ctx.beginPath(); ctx.moveTo(a[0] * W, a[1] * H); ctx.lineTo(b[0] * W, b[1] * H); ctx.stroke(); ctx.restore(); };
-  const preview = () => { redraw(); if (live) tacPaint(ctx, cv.width / (cv._dpr || 1), cv.height / (cv._dpr || 1), live); };
+  const preview = () => { redraw(); if (live) tacPaint(ctx, cv.width / (cv._dpr || 1), cv.height / (cv._dpr || 1), live, TAC.zoom); };
   const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; preview(); }); };
 
-  cv.addEventListener('pointerdown', e => {
-    if (!TAC.visible) return toast('Разметка скрыта — нажми «Показать разметку»');
-    if (e.button) return;
+  const stampRadius = () => Math.max(9, cv.getBoundingClientRect().width * 0.017 / Math.sqrt(TAC.zoom));
+  const hitStamp = p => {
+    const r = cv.getBoundingClientRect(), rad = stampRadius() * 1.9;
+    let best = -1, bd = Infinity;
+    for (let i = list.length - 1; i >= 0; i--) {
+      const s = list[i];
+      if (s.t !== 'stamp' || !s.pts || !s.pts[0]) continue;
+      const d = Math.hypot((p[0] - s.pts[0][0]) * r.width, (p[1] - s.pts[0][1]) * r.height);
+      if (d <= rad && d < bd) { bd = d; best = i; }
+    }
+    return best;
+  };
+  const placeStamp = p => {
+    if (list.length >= 400) return toast('На карте уже 400 объектов — очисти лишнее');
+    const s = { t: 'stamp', k: TAC.stamp, side: TAC.side, pts: [p] };
+    if (TAC.stamp === 'cap') s.letter = String.fromCharCode(65 + list.filter(x => x.t === 'stamp' && x.k === 'cap').length % 26);
+    list.push(s); tacSave(); redraw(); counts();
+  };
+
+  const ptrs = new Map();
+  let drag = null, pinch = null;
+  const startPinch = () => {
+    const [a, b] = [...ptrs.values()];
+    pinch = { d: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), z: TAC.zoom, px: TAC.px, py: TAC.py, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    live = null; drag = null; redraw();
+  };
+
+  cv.addEventListener('wheel', e => {
+    if (!e.deltaY || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
     e.preventDefault();
-    try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+    zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.14 : 1 / 1.14);
+  }, { passive: false });
+
+  cv.addEventListener('pointerdown', e => {
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 2) { startPinch(); return; }
+    if (pinch) return;
+    if (TAC.tool === 'pan' || e.button === 1) {
+      e.preventDefault();
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, px: TAC.px, py: TAC.py };
+      try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+      cv.style.cursor = 'grabbing';
+      return;
+    }
+    if (e.button) return;
+    if (!TAC.visible) return toast('Разметка скрыта — нажми «Показать разметку»');
+    e.preventDefault();
     const p = ptOf(e);
+    if (TAC.tool === 'stamp') {
+      const idx = hitStamp(p);
+      if (idx >= 0) { list.splice(idx, 1); tacSave(); redraw(); counts(); toast('Метка убрана'); }
+      else placeStamp(p);
+      return;
+    }
+    try { cv.setPointerCapture(e.pointerId); } catch (er) {}
     live = { t: TAC.tool, c: TAC.color, w: TAC.size / 1000, pts: [p] };
     if (live.t === 'brush' || live.t === 'erase') dot(p); else preview();
   });
   cv.addEventListener('pointermove', e => {
+    if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch) {
+      const [a, b] = [...ptrs.values()];
+      if (!a || !b) return;
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      TAC.zoom = Math.max(ZMIN, Math.min(ZMAX, pinch.z * d / pinch.d));
+      TAC.px = pinch.px + ((a.x + b.x) / 2 - pinch.mx);
+      TAC.py = pinch.py + ((a.y + b.y) / 2 - pinch.my);
+      clampPan(); applyZoom();
+      return;
+    }
+    if (drag) {
+      TAC.px = drag.px + (e.clientX - drag.x);
+      TAC.py = drag.py + (e.clientY - drag.y);
+      clampPan(); applyZoom();
+      return;
+    }
     if (!live) return;
     const p = ptOf(e), prev = live.pts[live.pts.length - 1];
-    const d = Math.hypot((p[0] - prev[0]) * fit.clientWidth, (p[1] - prev[1]) * fit.clientHeight);
+    const d = Math.hypot((p[0] - prev[0]) * fit.clientWidth * TAC.zoom, (p[1] - prev[1]) * fit.clientHeight * TAC.zoom);
     if (d < 1.1) return;
     if (live.t === 'brush' || live.t === 'erase') { live.pts.push(p); seg(prev, p); }
     else { live.pts[1] = p; if (live.pts.length > 2) live.pts.length = 2; schedule(); }
   });
   const finish = e => {
+    ptrs.delete(e.pointerId);
+    if (pinch) { if (ptrs.size < 2) { pinch = null; resizeCanvas(); } return; }
+    if (drag) { if (drag.id === e.pointerId) { drag = null; cv.style.cursor = cursorFor(); } return; }
     if (!live) return;
     try { cv.releasePointerCapture(e.pointerId); } catch (er) {}
     if (live.t !== 'brush' && live.t !== 'erase' && live.pts.length < 2) live.t = 'brush';
     if (live.pts.length > 1200) { const step = Math.ceil(live.pts.length / 1200); live.pts = live.pts.filter((_, i) => i % step === 0); }
-    if (list.length >= 400) toast('На карте уже 400 меток — очисти лишнее');
+    if (list.length >= 400) toast('На карте уже 400 объектов — очисти лишнее');
     else { list.push(live); tacSave(); counts(); }
     live = null; redraw();
   };
@@ -1922,26 +2202,42 @@ function viewTactics() {
 
   const counts = () => {
     document.querySelectorAll('[data-mcount]').forEach(el => { el.textContent = plan.maps[el.dataset.mcount].length; });
-    const c = document.getElementById('tac_count'); if (c) c.textContent = cntText(list.length);
+    const c = document.getElementById('tac_count'); if (c) c.textContent = tacCountText(list.length);
   };
-  const markTools = () => body.querySelectorAll('[data-tool]').forEach(b => { const on = b.dataset.tool === TAC.tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  const markTools = () => {
+    body.querySelectorAll('[data-tool]').forEach(b => { const on = b.dataset.tool === TAC.tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    document.getElementById('tac_markbar').hidden = TAC.tool !== 'stamp';
+    cv.style.cursor = cursorFor();
+  };
   body.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { TAC.tool = b.dataset.tool; markTools(); });
   body.querySelectorAll('[data-color]').forEach(b => b.onclick = () => {
     TAC.color = b.dataset.color;
     body.querySelectorAll('[data-color]').forEach(x => { const on = x.dataset.color === TAC.color; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
     if (TAC.tool === 'erase') { TAC.tool = 'brush'; markTools(); }
   });
+  body.querySelectorAll('[data-stamp]').forEach(b => b.onclick = () => {
+    TAC.stamp = b.dataset.stamp;
+    body.querySelectorAll('[data-stamp]').forEach(x => { const on = x.dataset.stamp === TAC.stamp; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  });
+  body.querySelectorAll('[data-side]').forEach(b => b.onclick = () => {
+    TAC.side = b.dataset.side;
+    body.querySelectorAll('[data-side]').forEach(x => { const on = x.dataset.side === TAC.side; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  });
   const sizeEl = document.getElementById('tac_size');
   sizeEl.oninput = () => { TAC.size = Number(sizeEl.value) || 1; document.getElementById('tac_sv').textContent = TAC.size; };
-  body.querySelectorAll('[data-map]').forEach(b => b.onclick = () => { TAC.map = b.dataset.map; viewTactics(); });
+  body.querySelectorAll('[data-map]').forEach(b => b.onclick = () => { TAC.map = b.dataset.map; TAC.zoom = 1; TAC.px = TAC.py = 0; viewTactics(); });
+  document.getElementById('tac_zi').onclick = () => zoomCenter(1.25);
+  document.getElementById('tac_zo').onclick = () => zoomCenter(1 / 1.25);
+  document.getElementById('tac_zr').onclick = resetZoom;
 
   document.getElementById('tac_undo').onclick = () => {
     if (!list.length) return toast('Отменять нечего');
-    list.pop(); tacSave(); redraw(); counts(); toast('Последняя метка убрана');
+    list.pop(); tacSave(); redraw(); counts(); toast('Последняя отметка убрана');
   };
-  document.getElementById('tac_clear').onclick = () => {
+  document.getElementById('tac_clear').onclick = async () => {
     if (!list.length) return toast('Разметки нет');
-    if (!confirm('Очистить всю разметку на карте «' + m.name + '»?')) return;
+    const ok = await tacConfirm('Очистить карту?', 'С карты «' + m.name + '» будут удалены все рисунки и метки (' + list.length + '). Это действие нельзя отменить.', 'Очистить');
+    if (!ok) return;
     list.length = 0; tacSave(); redraw(); counts(); toast('Разметка очищена');
   };
   const hideBtn = document.getElementById('tac_hide');
@@ -1957,7 +2253,7 @@ function viewTactics() {
     const o = out.getContext('2d');
     try {
       o.drawImage(img, 0, 0, m.w, m.h);
-      if (TAC.visible) list.forEach(s => tacPaint(o, m.w, m.h, s));
+      if (TAC.visible) list.forEach(s => tacPaint(o, m.w, m.h, s, 1));
       out.toBlob(blob => {
         if (!blob) return toast('Не удалось собрать PNG');
         const a = document.createElement('a');
@@ -1977,6 +2273,7 @@ function viewTactics() {
   if (TAC_RESIZE) removeEventListener('resize', TAC_RESIZE);
   TAC_RESIZE = onResize;
   addEventListener('resize', onResize);
+  cv.style.cursor = cursorFor();
   layout();
 }
 
