@@ -304,6 +304,7 @@ a:hover{color:var(--ac)}
 [data-theme="light"] .tac-stage{background:#e9e6f4}
 .tac-fit{position:relative;flex:none;max-width:100%;will-change:transform;transform-origin:50% 50%}
 .tac-fit img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.tac-fit img[hidden]{display:none}
 .tac-fit canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .tac-hint{font-size:12px;color:var(--mut);margin:10px 0 0}
 .tac-markbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 10px;padding:8px;border:1px solid var(--bd);border-radius:10px;background:var(--in2)}
@@ -1830,11 +1831,11 @@ async function viewTeam() {
 const TAC_MAPS = {
   // Точки захвата взяты с игровых tactical-карт клановых боёв (гайд STALZONE),
   // координаты приведены к долям соответствующих изображений из tactics/.
-  berdovka: { name: 'Малая Бердовка', file: 'tactics/berdovka.jpg', w: 1615, h: 1070,
-    caps: [[0.350, 0.459], [0.477, 0.459], [0.436, 0.213], [0.590, 0.317], [0.589, 0.600], [0.435, 0.699]] },
-  hvoiny: { name: 'Хвойный', file: 'tactics/hvoiny.jpg', w: 1297, h: 991,
+  berdovka: { name: 'Малая Бердовка', file: 'tactics/berdovka.jpg', capsFile: 'tactics/berdovka_caps.webp', w: 1615, h: 1070,
+    caps: [[0.364, 0.533], [0.483, 0.525], [0.437, 0.332], [0.591, 0.407], [0.587, 0.640], [0.445, 0.699]] },
+  hvoiny: { name: 'Хвойный', file: 'tactics/hvoiny.jpg', capsFile: 'tactics/hvoiny_caps.webp', w: 1297, h: 991,
     caps: [[0.316, 0.484], [0.493, 0.479], [0.675, 0.484]] },
-  nizina: { name: 'Низина', file: 'tactics/nizina.jpg', w: 1847, h: 1172,
+  nizina: { name: 'Низина', file: 'tactics/nizina.jpg', capsFile: 'tactics/nizina_caps.webp', w: 1847, h: 1172,
     caps: [[0.500, 0.536], [0.395, 0.401], [0.500, 0.361], [0.602, 0.402], [0.590, 0.662], [0.501, 0.796], [0.409, 0.654]] }
 };
 const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
@@ -2057,7 +2058,8 @@ function viewTactics() {
       <a class="tac-tool" href="${m.file}" target="_blank" rel="noopener">Открыть карту</a>
     </div>
     <div class="tac-stage" id="tac_stage"><div class="tac-fit" id="tac_fit">
-      <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false">
+      <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? 'hidden' : ''}>
+      <img id="tac_img_caps" src="${m.capsFile}" alt="Карта «${esc(m.name)}» с точками захвата" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? '' : 'hidden'}>
       <canvas id="tac_cv" role="img" aria-label="Поле для рисования плана на карте «${esc(m.name)}»"></canvas>
     </div>
     <div class="tac-zoom" role="group" aria-label="Масштаб карты">
@@ -2080,10 +2082,6 @@ function viewTactics() {
     const dpr = cv._dpr || 1, W = cv.width / dpr, H = cv.height / dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    // Точки захвата задаются картой по умолчанию и не занимают место в плане.
-    if (TAC.showCaps) (m.caps || []).forEach((c, i) => {
-      tacPaint(ctx, W, H, { t: 'stamp', k: 'cap', side: 'ally', pts: [c], letter: String.fromCharCode(65 + i), pre: true }, TAC.zoom);
-    });
     if (!TAC.visible) return;
     list.forEach(s => tacPaint(ctx, W, H, s, TAC.zoom));
   };
@@ -2292,6 +2290,9 @@ function viewTactics() {
       x.setAttribute('aria-pressed', String(TAC.showCaps));
       x.textContent = TAC.showCaps ? 'Точки: видны' : 'Точки: скрыты';
     });
+    // Переключатель просто подменяет изображение: точки запечены в копию оригинала.
+    const clean = document.getElementById('tac_img'), marked = document.getElementById('tac_img_caps');
+    if (clean && marked) { clean.hidden = TAC.showCaps; marked.hidden = !TAC.showCaps; }
     redraw();
   });
   const sizeEl = document.getElementById('tac_size');
@@ -2319,12 +2320,12 @@ function viewTactics() {
     redraw();
   };
   document.getElementById('tac_png').onclick = () => {
-    if (!img.complete || !img.naturalWidth) return toast('Карта ещё загружается');
+    const base = TAC.showCaps ? document.getElementById('tac_img_caps') : img;
+    if (!base || !base.complete || !base.naturalWidth) return toast('Карта ещё загружается');
     const out = document.createElement('canvas'); out.width = m.w; out.height = m.h;
     const o = out.getContext('2d');
     try {
-      o.drawImage(img, 0, 0, m.w, m.h);
-      if (TAC.showCaps) (m.caps || []).forEach((c, i) => tacPaint(o, m.w, m.h, { t: 'stamp', k: 'cap', side: 'ally', pts: [c], letter: String.fromCharCode(65 + i), pre: true }, 1));
+      o.drawImage(base, 0, 0, m.w, m.h);
       if (TAC.visible) list.forEach(s => tacPaint(o, m.w, m.h, s, 1));
       out.toBlob(blob => {
         if (!blob) return toast('Не удалось собрать PNG');
