@@ -321,6 +321,8 @@ a:hover{color:var(--ac)}
 .tac-cur{position:absolute;width:14px;height:14px;border:2px solid var(--cc,#fff);border-radius:50% 50% 50% 0;transform:translate(-50%,-50%) rotate(-45deg);pointer-events:none;z-index:4;box-shadow:0 0 10px var(--cc,#fff)}
 .tac-cur span{position:absolute;left:10px;top:10px;transform:rotate(45deg);background:var(--cc,#fff);color:#0b1020;font:600 11px sans-serif;padding:2px 6px;border-radius:6px;white-space:nowrap}
 .tac-gallery-card{margin-bottom:16px}
+.tac-gallery{max-height:190px;overflow-y:auto;scrollbar-width:thin}
+.tac-gallery.expanded{max-height:none}
 .tac-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .tac-gitem{display:flex;gap:10px;padding:8px;border:1px solid var(--bd);border-radius:12px;background:var(--in);min-width:0}
 .tac-gthumb{width:110px;height:74px;flex:none;border:1px solid var(--bd);border-radius:8px;background:#0b1020;cursor:zoom-in}
@@ -2408,6 +2410,14 @@ function viewTactics() {
       <img src="${v.file}" alt="" loading="lazy" width="${v.w}" height="${v.h}">
       <span class="nm"><b>${esc(v.name)}</b><span data-mcount="${k}">${plan.maps[k].length}</span></span></button>`).join('')}</div>
   </div>
+  <div class="card tac-gallery-card">
+    <div class="row" style="justify-content:space-between;align-items:center;margin:0 0 12px">
+      <div><h2 style="margin:0">Галерея тактик клана</h2>
+        <p class="mut" style="font-size:13px;margin:4px 0 0">Опубликованные планы: название, заметки и разметка. Нажми на миниатюру, чтобы увеличить.</p></div>
+      <button class="ghost" id="tac_gallery_toggle">Развернуть</button>
+    </div>
+    <div class="tac-gallery compact" id="tac_gallery"><p class="mut">Загрузка…</p></div>
+  </div>
   <div class="card tac-work">
     <div class="tac-vtools" id="tac_vtools"></div>
     <div class="tac-work-main">
@@ -2443,15 +2453,14 @@ function viewTactics() {
     </div></div>
     <p class="tac-hint" id="tac_hint">Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z.</p>
     </div>
-  </div>
-  <div class="card tac-gallery-card">
-    <div class="row" style="justify-content:space-between;align-items:center;margin:0 0 12px">
-      <div><h2 style="margin:0">Галерея тактик клана</h2>
-        <p class="mut" style="font-size:13px;margin:4px 0 0">Опубликованные планы: название, заметки и разметка. Возьми любую тактику в свой план.</p></div>
-    </div>
-    <div class="tac-gallery" id="tac_gallery"><p class="mut">Загрузка…</p></div>
   </div>`;
   fillTools();
+  const gt = document.getElementById('tac_gallery_toggle');
+  if (gt) gt.onclick = () => {
+    const host = document.getElementById('tac_gallery');
+    const ex = host.classList.toggle('expanded');
+    gt.textContent = ex ? 'Свернуть' : 'Развернуть';
+  };
   tacStartRealtime();
   renderGallery();
   if (!TAC_REMOTE_INIT) {
