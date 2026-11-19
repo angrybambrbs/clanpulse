@@ -283,6 +283,11 @@ a:hover{color:var(--ac)}
 
 /* ===== Тактика: карты и разметка ===== */
 .tac-maps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tac-group{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:6px 2px 2px;background:transparent;border:0;color:var(--mut);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;box-shadow:none;transform:none;filter:none;cursor:pointer}
+.tac-group:hover{color:var(--ac2);box-shadow:none;transform:none;filter:none}
+.tac-group svg{transition:transform .15s ease}
+.tac-group[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.tac-maps .tac-map[hidden]{display:none}
 .tac-map{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;overflow:hidden;background:var(--in);border:1px solid var(--bd);border-radius:12px;text-align:left;color:var(--tx);box-shadow:none;transform:none;font-weight:500;min-width:0}
 .tac-map:hover{transform:none;box-shadow:0 0 0 1px var(--bd2);filter:none}
 .tac-map img{display:block;width:100%;height:72px;object-fit:cover;opacity:.8;transition:opacity .2s ease}
@@ -298,6 +303,8 @@ a:hover{color:var(--ac)}
 .tac-vtools .tac-tools{display:flex;flex-direction:column;gap:6px}
 .tac-vtools .tac-tool{width:100%;justify-content:flex-start;min-height:44px}
 .tac-vtools .tac-tool.on{box-shadow:inset 3px 0 0 var(--ac),inset 0 0 0 1px rgba(var(--ac-rgb),.42),0 0 14px rgba(var(--ac-rgb),.16)}
+.tac-vtools #tac_gallery_btn{background:linear-gradient(135deg,var(--btn1),var(--btn2));border-color:transparent;color:#fff;font-weight:600}
+.tac-vtools #tac_gallery_btn:hover{color:#fff;filter:brightness(1.12);box-shadow:var(--glow)}
 .tac-vtools .tac-markbar{flex-direction:column;align-items:stretch;margin:0;padding:8px;gap:6px}
 .tac-vtools .tac-sides{display:flex;flex-wrap:wrap}
 .tac-sep{width:1px;height:22px;background:var(--bd);margin:0 3px}
@@ -323,6 +330,7 @@ a:hover{color:var(--ac)}
 .tac-gallery-card{margin-bottom:16px}
 .tac-gallery{max-height:190px;overflow-y:auto;scrollbar-width:thin}
 .tac-gallery.expanded{max-height:none}
+.tac-prev-box .tac-gallery{max-height:55vh}
 .tac-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .tac-gitem{display:flex;gap:10px;padding:8px;border:1px solid var(--bd);border-radius:12px;background:var(--in);min-width:0}
 .tac-gthumb{width:110px;height:74px;flex:none;border:1px solid var(--bd);border-radius:8px;background:#0b1020;cursor:zoom-in}
@@ -1964,15 +1972,15 @@ async function viewTeam() {
 const TAC_MAPS = {
   // Точки захвата взяты с игровых tactical-карт клановых боёв (гайд STALZONE),
   // координаты приведены к долям соответствующих изображений из tactics/.
-  berdovka: { name: 'Малая Бердовка', file: 'tactics/berdovka.jpg', capsFile: 'tactics/berdovka_caps.webp', w: 1615, h: 1070,
+  berdovka: { name: 'Малая Бердовка', group: 'tour', file: 'tactics/berdovka.jpg', capsFile: 'tactics/berdovka_caps.webp', w: 1615, h: 1070,
     caps: [[0.364, 0.533], [0.483, 0.525], [0.437, 0.332], [0.591, 0.407], [0.587, 0.640], [0.445, 0.699]] },
-  hvoiny: { name: 'Хвойный', file: 'tactics/hvoiny.jpg', capsFile: 'tactics/hvoiny_caps.webp', w: 1297, h: 991,
+  hvoiny: { name: 'Хвойный', group: 'tour', file: 'tactics/hvoiny.jpg', capsFile: 'tactics/hvoiny_caps.webp', w: 1297, h: 991,
     caps: [[0.316, 0.560], [0.493, 0.555], [0.675, 0.560]] },
-  nizina: { name: 'Низина', file: 'tactics/nizina.jpg', capsFile: 'tactics/nizina_caps.webp', w: 1847, h: 1172,
+  nizina: { name: 'Низина', group: 'tour', file: 'tactics/nizina.jpg', capsFile: 'tactics/nizina_caps.webp', w: 1847, h: 1172,
     caps: [[0.423, 0.616], [0.431, 0.818], [0.431, 0.943]] },
-  kvartaly: { name: 'Кварталы', file: 'tactics/kvartaly_caps.webp', capsFile: 'tactics/kvartaly_caps.webp', w: 1080, h: 980,
+  kvartaly: { name: 'Кварталы', group: 'brawl', file: 'tactics/kvartaly_caps.webp', capsFile: 'tactics/kvartaly_caps.webp', w: 1080, h: 980,
     caps: [[0.255, 0.505], [0.404, 0.258], [0.403, 0.746], [0.501, 0.505], [0.600, 0.258], [0.606, 0.746], [0.744, 0.505]] },
-  roza: { name: 'Роза ветров', file: 'tactics/roza_caps.webp', capsFile: 'tactics/roza_caps.webp', w: 1080, h: 980,
+  roza: { name: 'Роза ветров', group: 'brawl', file: 'tactics/roza_caps.webp', capsFile: 'tactics/roza_caps.webp', w: 1080, h: 980,
     caps: [[0.411, 0.430], [0.411, 0.635], [0.607, 0.430], [0.607, 0.635], [0.505, 0.115], [0.887, 0.520], [0.130, 0.520], [0.505, 0.932], [0.505, 0.531]] }
 };
 const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
@@ -2008,6 +2016,8 @@ const TAC_SIDE = { ally: ['Свой', '#2f9bff'], enemy: ['Враг', '#ff3b61']
 const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true, zoom: 1, px: 0, py: 0, stamp: 'tent', side: 'ally', capPlacing: false, showCaps: true };
 let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
 let TAC_CHAN = null, TAC_CURSORS = {}, TAC_LIVE = {}, TAC_REMOTE_INIT = false, TAC_LAST_CURSOR = 0, TAC_LAST_LIVE = 0;
+const TAC_GROUPS = { tour: true, brawl: true };
+const TAC_GROUP_LABEL = { tour: 'Турниры и захваты', brawl: 'Потасовки' };
 const tacNick = () => ((user && (user.user_metadata || {}).nick) || (user && user.user_metadata && user.user_metadata.name) || (user && user.email || 'Игрок')).split('@')[0].slice(0, 24);
 const saveLocalPlan = () => {
   try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 3, maps: TAC_PLAN.maps, ver: TAC_PLAN.ver || {} })); }
@@ -2289,6 +2299,25 @@ function tacStartRealtime() {
     .subscribe();
 }
 
+function openGalleryModal() {
+  const ov = document.createElement('div');
+  ov.className = 'tac-dlg';
+  ov.innerHTML = `<div class="tac-dlg-box tac-prev-box" role="dialog" aria-modal="true" aria-label="Галерея тактик клана">
+    <h3>Галерея тактик клана</h3>
+    <p class="mut">Опубликованные планы клана. Нажми на миниатюру, чтобы увеличить.</p>
+    <div id="tac_gallery_modal" class="tac-gallery"><p class="mut">Загрузка…</p></div>
+    <div class="tac-dlg-act"><button class="ghost" data-no>Закрыть</button></div>
+  </div>`;
+  document.body.append(ov);
+  const close = () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; ov.classList.remove('on'); setTimeout(() => ov.remove(), 140); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  document.body.style.overflow = 'hidden';
+  ov.addEventListener('click', e => { if (e.target === ov || e.target.hasAttribute('data-no')) close(); });
+  requestAnimationFrame(() => ov.classList.add('on'));
+  renderGallery(ov.querySelector('#tac_gallery_modal'));
+}
+
 function tacGalleryPreview(g) {
   const map = TAC_MAPS[g.map_key];
   const ov = document.createElement('div');
@@ -2319,8 +2348,8 @@ function tacGalleryPreview(g) {
   if (map) img.src = map.file; else img.onerror();
 }
 
-async function renderGallery() {
-  const host = document.getElementById('tac_gallery');
+async function renderGallery(hostOverride) {
+  const host = hostOverride || document.getElementById('tac_gallery');
   if (!host) return;
   if (!sb || !clan) { host.innerHTML = '<p class="mut">Галерея доступна после входа в клан.</p>'; return; }
   const { data, error } = await sb.from('tactics_gallery')
@@ -2386,7 +2415,8 @@ function viewTactics() {
   const sideBtn = ([k, v]) => `<button type="button" class="tac-side-b ${k} ${TAC.side === k ? 'on' : ''}" data-side="${k}" aria-pressed="${TAC.side === k}"><i style="background:${v[1]}"></i>${v[0]}</button>`;
   // Инструменты — вертикальная панель слева от карты (как в графическом редакторе).
   const fillTools = () => {
-    const html = `<div class="tac-sec">Инструменты</div>
+    const html = `<button type="button" class="tac-tool" id="tac_gallery_btn">${TAC_ACT_ICON.share}<span>Галерея клана</span></button>
+      <div class="tac-sec">Инструменты</div>
       <div class="tac-tools">${TAC_TOOLS.map(t => `<button type="button" class="tac-tool ${TAC.tool === t[0] ? 'on' : ''}" data-tool="${t[0]}" aria-pressed="${TAC.tool === t[0]}">${TAC_TOOL_ICON[t[0]]}<span>${t[1]}</span></button>`).join('')}</div>
       <div class="tac-markbar" ${TAC.tool === 'stamp' ? '' : 'hidden'}>
         <span class="tac-mlab">Метки</span>
@@ -2406,9 +2436,11 @@ function viewTactics() {
         <p class="mut" style="font-size:13px;margin:4px 0 0">Выбери карту и нарисуй план: маршруты, входы, укрытия, метки лагеря и захвата. Рисовать можно мышью или пальцем.</p></div>
       <span class="chip ok tac-count" id="tac_count" style="margin:0">${tacCountText(list.length)}</span>
     </div>
-    <div class="tac-maps">${Object.entries(TAC_MAPS).map(([k, v]) => `<button class="tac-map ${k === TAC.map ? 'on' : ''}" data-map="${k}" aria-pressed="${k === TAC.map}">
-      <img src="${v.file}" alt="" loading="lazy" width="${v.w}" height="${v.h}">
-      <span class="nm"><b>${esc(v.name)}</b><span data-mcount="${k}">${plan.maps[k].length}</span></span></button>`).join('')}</div>
+    <div class="tac-maps">${Object.entries(TAC_GROUP_LABEL).map(([g, label]) => `
+      <button class="tac-group" data-group="${g}" aria-expanded="${TAC_GROUPS[g]}">${svg(12, '<path d="m6 9 6-6 6 6"/>')}${esc(label)}</button>
+      ${Object.entries(TAC_MAPS).filter(([, v]) => v.group === g).map(([k, v]) => `<button class="tac-map ${k === TAC.map ? 'on' : ''}" data-map="${k}" data-group="${g}" aria-pressed="${k === TAC.map}" ${TAC_GROUPS[g] ? '' : 'hidden'}>
+        <img src="${v.file}" alt="" loading="lazy" width="${v.w}" height="${v.h}">
+        <span class="nm"><b>${esc(v.name)}</b><span data-mcount="${k}">${plan.maps[k].length}</span></span></button>`).join('')}`).join('')}</div>
   </div>
   <div class="card tac-gallery-card">
     <div class="row" style="justify-content:space-between;align-items:center;margin:0 0 12px">
@@ -2455,6 +2487,8 @@ function viewTactics() {
     </div>
   </div>`;
   fillTools();
+  const gb = document.getElementById('tac_gallery_btn');
+  if (gb) gb.onclick = openGalleryModal;
   const gt = document.getElementById('tac_gallery_toggle');
   if (gt) gt.onclick = () => {
     const host = document.getElementById('tac_gallery');
@@ -2714,6 +2748,12 @@ function viewTactics() {
   });
   const sizeEl = document.getElementById('tac_size');
   sizeEl.oninput = () => { TAC.size = Number(sizeEl.value) || 1; document.getElementById('tac_sv').textContent = TAC.size; };
+  body.querySelectorAll('[data-group]').forEach(b => { if (b.classList.contains('tac-group')) b.onclick = () => {
+    const g = b.dataset.group;
+    TAC_GROUPS[g] = !TAC_GROUPS[g];
+    b.setAttribute('aria-expanded', String(TAC_GROUPS[g]));
+    body.querySelectorAll('.tac-map[data-group="' + g + '"]').forEach(x => { x.hidden = !TAC_GROUPS[g]; });
+  }; });
   body.querySelectorAll('[data-map]').forEach(b => b.onclick = () => { TAC.map = b.dataset.map; TAC.zoom = 1; TAC.px = TAC.py = 0; viewTactics(); });
   document.getElementById('tac_zi').onclick = () => zoomCenter(1.25);
   document.getElementById('tac_zo').onclick = () => zoomCenter(1 / 1.25);
