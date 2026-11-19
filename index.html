@@ -310,6 +310,21 @@ a:hover{color:var(--ac)}
 .tac-fit img[hidden]{display:none}
 .tac-fit canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .tac-hint{font-size:12px;color:var(--mut);margin:10px 0 0}
+.tac-dlg-fld{display:flex;flex-direction:column;gap:4px;text-align:left;margin:0 0 10px;font-size:12px;color:var(--mut)}
+.tac-dlg-fld input,.tac-dlg-fld textarea{width:100%;font-size:14px;color:var(--tx)}
+.tac-dlg-fld textarea{min-height:80px;resize:vertical}
+.tac-cur{position:absolute;width:14px;height:14px;border:2px solid var(--cc,#fff);border-radius:50% 50% 50% 0;transform:translate(-50%,-50%) rotate(-45deg);pointer-events:none;z-index:4;box-shadow:0 0 10px var(--cc,#fff)}
+.tac-cur span{position:absolute;left:10px;top:10px;transform:rotate(45deg);background:var(--cc,#fff);color:#0b1020;font:600 11px sans-serif;padding:2px 6px;border-radius:6px;white-space:nowrap}
+.tac-gallery-card{margin-bottom:16px}
+.tac-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.tac-gitem{display:flex;gap:10px;padding:8px;border:1px solid var(--bd);border-radius:12px;background:var(--in);min-width:0}
+.tac-gthumb{width:110px;height:74px;flex:none;border:1px solid var(--bd);border-radius:8px;background:#0b1020}
+.tac-gmeta{min-width:0;display:flex;flex-direction:column;gap:3px;font-size:12px}
+.tac-gmeta b{font-size:13px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tac-gmeta span{color:var(--mut);font-size:11px}
+.tac-gmeta p{margin:2px 0;color:var(--mut);white-space:pre-wrap;word-break:break-word;max-height:56px;overflow:hidden}
+.tac-gact{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.tac-gact .tac-tool{padding:4px 8px;min-height:30px;font-size:11px}
 .tac-markbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 10px;padding:8px;border:1px solid var(--bd);border-radius:10px;background:var(--in2)}
 .tac-markbar[hidden]{display:none}
 .tac-mlab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700}
@@ -559,7 +574,8 @@ const NAV_GROUP = {
 };
 
 function shell(title, tabs, views, again, icon, primary) {
-  stopChan(); dmListener = null;
+  stopChan(); tacStopRealtime(); dmListener = null;
+  if (tab === 'tactics') TAC_REMOTE_INIT = false;
   const md = user.user_metadata || {};
   const label = Object.fromEntries(tabs);
   const cnt = '<span class="badge dmcount">' + (unread || '') + '</span>';
@@ -1869,21 +1885,52 @@ const TAC_STAMPS = {
 const TAC_SIDE = { ally: ['Свой', '#2f9bff'], enemy: ['Враг', '#ff3b61'] };
 const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true, zoom: 1, px: 0, py: 0, stamp: 'tent', side: 'ally', capPlacing: false, showCaps: true };
 let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
+let TAC_CHAN = null, TAC_CURSORS = {}, TAC_LIVE = {}, TAC_REMOTE_INIT = false, TAC_LAST_CURSOR = 0, TAC_LAST_LIVE = 0;
+const tacNick = () => ((user && (user.user_metadata || {}).nick) || (user && user.user_metadata && user.user_metadata.name) || (user && user.email || 'Игрок')).split('@')[0].slice(0, 24);
+const saveLocalPlan = () => {
+  try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 3, maps: TAC_PLAN.maps, ver: TAC_PLAN.ver || {} })); }
+  catch (e) {}
+};
 
 function tacPlan() {
   if (TAC_PLAN) return TAC_PLAN;
   let o = null;
   try { o = JSON.parse(localStorage.getItem('cp_tac_' + clan.id) || 'null'); } catch (e) {}
-  TAC_PLAN = { maps: (o && o.maps) || {} };
+  TAC_PLAN = { maps: (o && o.maps) || {}, ver: (o && o.ver) || {} };
   Object.keys(TAC_MAPS).forEach(k => { if (!Array.isArray(TAC_PLAN.maps[k])) TAC_PLAN.maps[k] = []; });
   return TAC_PLAN;
 }
 function tacSave() {
   clearTimeout(TAC_SAVE);
+  saveLocalPlan();
   TAC_SAVE = setTimeout(() => {
-    try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 2, maps: TAC_PLAN.maps })); }
-    catch (e) { toast('Разметка не сохранилась: в браузере нет места'); }
-  }, 300);
+    if (!sb || !clan || !user) return;
+    const map = TAC.map;
+    sb.rpc('save_tactics_plan', { p_clan: clan.id, p_map: map, p_marks: TAC_PLAN.maps[map] || [] })
+      .then(({ data, error }) => {
+        if (!error) { if (typeof data === 'number') TAC_PLAN.ver[map] = data; }
+        else if (!TAC_SAVE_WARNED) { TAC_SAVE_WARNED = true; toast('Не удалось сохранить план на сервере — работает локально'); }
+      }).catch(() => {});
+  }, 500);
+}
+let TAC_SAVE_WARNED = false;
+
+// Загрузить общий план клана из базы. Возвращает true, если данные изменились.
+async function tacLoadRemote() {
+  if (!sb || !clan || !user) return false;
+  const { data, error } = await sb.from('tactics_plans').select('map_key,marks,version').eq('clan_id', clan.id);
+  if (error || !Array.isArray(data)) return false;
+  let changed = false;
+  TAC_PLAN = tacPlan(); TAC_PLAN.ver = TAC_PLAN.ver || {};
+  data.forEach(row => {
+    const key = String(row.map_key || ''), v = Number(row.version) || 1;
+    if (!TAC_MAPS[key] || v <= (Number(TAC_PLAN.ver[key]) || 0)) return;
+    TAC_PLAN.maps[key] = Array.isArray(row.marks) ? row.marks : [];
+    TAC_PLAN.ver[key] = v;
+    changed = true;
+  });
+  if (changed) saveLocalPlan();
+  return changed;
 }
 // Рисует одну метку. Координаты хранятся в долях карты (0..1), поэтому
 // разметка не зависит от размера экрана и resolution-independent при экспорте.
@@ -2026,6 +2073,151 @@ function tacConfirm(title, text, okText) {
   });
 }
 
+// Диалог публикации тактики в галерее клана.
+function tacShareDlg() {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.className = 'tac-dlg';
+    ov.innerHTML = `<div class="tac-dlg-box" role="dialog" aria-modal="true" aria-labelledby="tsh_title">
+      <div class="tac-dlg-ico">${svg(22, '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4m0-11-6.8 4"/>')}</div>
+      <h3 id="tsh_title">Поделиться с кланом</h3>
+      <p>Текущая разметка карты появится в галерее тактик клана.</p>
+      <label class="tac-dlg-fld">Название<input id="tac_sh_title" maxlength="80" placeholder="Например: защита точки B" autocomplete="off"></label>
+      <label class="tac-dlg-fld">Заметки<textarea id="tac_sh_notes" maxlength="2000" placeholder="Кто куда идёт, где ставить палатку…"></textarea></label>
+      <div class="tac-dlg-act"><button class="ghost" data-no>Отмена</button><button class="danger" data-yes>Опубликовать</button></div>
+    </div>`;
+    document.body.append(ov);
+    const titleEl = ov.querySelector('#tac_sh_title'), notesEl = ov.querySelector('#tac_sh_notes');
+    const no = ov.querySelector('[data-no]'), yes = ov.querySelector('[data-yes]');
+    let done = false;
+    const close = val => {
+      if (done) return;
+      done = true;
+      document.removeEventListener('keydown', onKey, true);
+      document.body.style.overflow = '';
+      ov.classList.remove('on');
+      setTimeout(() => ov.remove(), 140);
+      resolve(val);
+    };
+    const onKey = e => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return close(null); }
+      if (e.key !== 'Tab') return;
+      const items = [titleEl, notesEl, no, yes];
+      const i = items.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); yes.focus(); }
+      else if (!e.shiftKey && i === items.length - 1) { e.preventDefault(); titleEl.focus(); }
+    };
+    document.addEventListener('keydown', onKey, true);
+    document.body.style.overflow = 'hidden';
+    ov.addEventListener('click', e => { if (e.target === ov) close(null); });
+    no.onclick = () => close(null);
+    yes.onclick = () => {
+      const title = titleEl.value.trim();
+      if (!title) { titleEl.focus(); return; }
+      close({ title, notes: notesEl.value.trim() });
+    };
+    requestAnimationFrame(() => { ov.classList.add('on'); titleEl.focus(); });
+  });
+}
+
+function renderTacCursors() {
+  const host = document.getElementById('tac_cursors');
+  if (!host) return;
+  const now = Date.now();
+  const items = Object.entries(TAC_CURSORS).filter(([id, c]) => c.map === TAC.map && now - c.at < 9000);
+  host.innerHTML = items.map(([id, c]) => {
+    const hue = (String(id).charCodeAt(0) * 47) % 360;
+    return `<div class="tac-cur" style="left:${(c.x * 100).toFixed(2)}%;top:${(c.y * 100).toFixed(2)}%;--cc:hsl(${hue} 85% 62%)"><span>${esc(c.nick)}</span></div>`;
+  }).join('');
+}
+
+function tacStopRealtime() {
+  if (TAC_CHAN) { try { sb.removeChannel(TAC_CHAN); } catch (e) {} TAC_CHAN = null; }
+  TAC_CURSORS = {}; TAC_LIVE = {};
+}
+function tacStartRealtime() {
+  if (!sb || !clan || !user || TAC_CHAN) return;
+  TAC_CHAN = sb.channel('tactics-' + clan.id)
+    .on('broadcast', { event: 'cursor' }, ({ payload }) => {
+      if (!payload || payload.map !== TAC.map || payload.user_id === user.id) return;
+      TAC_CURSORS[payload.user_id] = { map: payload.map, x: Number(payload.x) || 0, y: Number(payload.y) || 0, nick: String(payload.nick || 'Игрок').slice(0, 24), at: Date.now() };
+      renderTacCursors();
+    })
+    .on('broadcast', { event: 'live' }, ({ payload }) => {
+      if (!payload || payload.map !== TAC.map || payload.user_id === user.id) return;
+      TAC_LIVE[payload.user_id] = payload.mark;
+      if (typeof window.tacPreviewLive === 'function') window.tacPreviewLive();
+    })
+    .on('broadcast', { event: 'live_end' }, ({ payload }) => {
+      if (!payload) return;
+      delete TAC_LIVE[payload.user_id];
+      if (typeof window.tacPreviewLive === 'function') window.tacPreviewLive();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_plans', filter: 'clan_id=eq.' + clan.id }, payload => {
+      const row = payload && payload.new;
+      if (!row || !TAC_MAPS[row.map_key]) return;
+      const v = Number(row.version) || 1;
+      if (v <= (Number(TAC_PLAN.ver[row.map_key]) || 0)) return;
+      TAC_PLAN.maps[row.map_key] = Array.isArray(row.marks) ? row.marks : [];
+      TAC_PLAN.ver[row.map_key] = v;
+      saveLocalPlan();
+      if (tab === 'tactics') viewTactics();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery', filter: 'clan_id=eq.' + clan.id }, () => renderGallery())
+    .subscribe();
+}
+
+async function renderGallery() {
+  const host = document.getElementById('tac_gallery');
+  if (!host) return;
+  if (!sb || !clan) { host.innerHTML = '<p class="mut">Галерея доступна после входа в клан.</p>'; return; }
+  const { data, error } = await sb.from('tactics_gallery')
+    .select('id,map_key,title,notes,marks,author_id,author_nick,created_at')
+    .eq('clan_id', clan.id).order('created_at', { ascending: false }).limit(30);
+  if (error || !Array.isArray(data)) {
+    host.innerHTML = '<p class="mut">Галерея недоступна — примени в Supabase SQL-файл <b>tactics_collab.sql</b>.</p>';
+    return;
+  }
+  if (!data.length) {
+    host.innerHTML = '<p class="mut">Тактик пока нет. Нажми «Поделиться с кланом», чтобы опубликовать текущий план.</p>';
+    return;
+  }
+  host.innerHTML = data.map(g => `<div class="tac-gitem" data-gid="${esc(g.id)}">
+    <canvas class="tac-gthumb" width="200" height="130"></canvas>
+    <div class="tac-gmeta"><b>${esc(g.title)}</b>
+      <span>${esc(TAC_MAPS[g.map_key] ? TAC_MAPS[g.map_key].name : g.map_key)} · ${esc(g.author_nick || 'Игрок')} · ${esc(new Date(g.created_at).toLocaleString('ru-RU'))}</span>
+      ${g.notes ? `<p>${esc(g.notes)}</p>` : ''}
+      <div class="tac-gact"><button class="tac-tool" data-gload="${esc(g.id)}">Взять в план</button>${g.author_id === user.id ? `<button class="tac-tool" data-gdel="${esc(g.id)}">Удалить</button>` : ''}</div>
+    </div>
+  </div>`).join('');
+  host.querySelectorAll('.tac-gitem').forEach(item => {
+    const g = data.find(x => x.id === item.dataset.gid);
+    if (!g) return;
+    const c = item.querySelector('canvas'), cx = c.getContext('2d');
+    cx.fillStyle = '#0b1020'; cx.fillRect(0, 0, c.width, c.height);
+    (Array.isArray(g.marks) ? g.marks : []).forEach(s => tacPaint(cx, c.width, c.height, s, 1));
+  });
+  host.querySelectorAll('[data-gload]').forEach(b => b.onclick = async () => {
+    const g = data.find(x => x.id === b.dataset.gload);
+    if (!g) return;
+    const ok = await tacConfirm('Взять тактику в план?', 'Текущая разметка карты «' + (TAC_MAPS[g.map_key] ? TAC_MAPS[g.map_key].name : g.map_key) + '» будет заменена опубликованной.', 'Взять');
+    if (!ok) return;
+    TAC.map = g.map_key;
+    tacPlan().maps[g.map_key] = Array.isArray(g.marks) ? JSON.parse(JSON.stringify(g.marks)) : [];
+    tacSave();
+    viewTactics();
+    toast('Тактика загружена в план');
+  });
+  host.querySelectorAll('[data-gdel]').forEach(b => b.onclick = async () => {
+    const ok = await tacConfirm('Удалить тактику?', 'Публикация исчезнет из галереи клана.', 'Удалить');
+    if (!ok) return;
+    const { error } = await sb.from('tactics_gallery').delete().eq('id', b.dataset.gdel);
+    if (error) return toast('Не удалось удалить');
+    renderGallery();
+    toast('Тактика удалена');
+  });
+}
+
 function viewTactics() {
   const body = document.getElementById('body');
   const plan = tacPlan();
@@ -2076,6 +2268,7 @@ function viewTactics() {
       ${m.capsFile !== m.file ? `<button class="tac-tool" data-capview aria-pressed="${TAC.showCaps}">${TAC.showCaps ? 'Точки: видны' : 'Точки: скрыты'}</button>` : ''}
       <span class="tac-sep" aria-hidden="true"></span>
       <button class="tac-tool" id="tac_png">Скачать PNG</button>
+      <button class="tac-tool" id="tac_share">Поделиться с кланом</button>
       <button class="tac-tool" id="tac_json_exp">Экспорт JSON</button>
       <button class="tac-tool" id="tac_json_imp">Импорт JSON</button>
       <input type="file" id="tac_json_file" accept=".json,application/json" hidden>
@@ -2085,6 +2278,7 @@ function viewTactics() {
       <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? 'hidden' : ''}>
       <img id="tac_img_caps" src="${m.capsFile}" alt="Карта «${esc(m.name)}» с точками захвата" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? '' : 'hidden'}>
       <canvas id="tac_cv" role="img" aria-label="Поле для рисования плана на карте «${esc(m.name)}»"></canvas>
+      <div class="tac-cursors" id="tac_cursors"></div>
     </div>
     <div class="tac-zoom" role="group" aria-label="Масштаб карты">
       <button id="tac_zo" aria-label="Уменьшить масштаб">−</button>
@@ -2094,8 +2288,21 @@ function viewTactics() {
     </div></div>
     <p class="tac-hint" id="tac_hint">Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z.</p>
     </div>
+  </div>
+  <div class="card tac-gallery-card">
+    <div class="row" style="justify-content:space-between;align-items:center;margin:0 0 12px">
+      <div><h2 style="margin:0">Галерея тактик клана</h2>
+        <p class="mut" style="font-size:13px;margin:4px 0 0">Опубликованные планы: название, заметки и разметка. Возьми любую тактику в свой план.</p></div>
+    </div>
+    <div class="tac-gallery" id="tac_gallery"><p class="mut">Загрузка…</p></div>
   </div>`;
   fillTools();
+  tacStartRealtime();
+  renderGallery();
+  if (!TAC_REMOTE_INIT) {
+    TAC_REMOTE_INIT = true;
+    tacLoadRemote().then(changed => { if (changed && tab === 'tactics') viewTactics(); });
+  }
 
   const stage = document.getElementById('tac_stage'), fit = document.getElementById('tac_fit');
   const img = document.getElementById('tac_img'), cv = document.getElementById('tac_cv');
@@ -2159,6 +2366,11 @@ function viewTactics() {
   const dot = p => { const { W, H } = paintBase(); ctx.beginPath(); ctx.arc(p[0] * W, p[1] * H, Math.max(1, ctx.lineWidth / 2), 0, 6.2832); ctx.fill(); ctx.restore(); };
   const seg = (a, b) => { const { W, H } = paintBase(); ctx.beginPath(); ctx.moveTo(a[0] * W, a[1] * H); ctx.lineTo(b[0] * W, b[1] * H); ctx.stroke(); ctx.restore(); };
   const preview = () => { redraw(); if (live) tacPaint(ctx, cv.width / (cv._dpr || 1), cv.height / (cv._dpr || 1), live, TAC.zoom); };
+  window.tacPreviewLive = () => {
+    preview();
+    const W = cv.width / (cv._dpr || 1), H = cv.height / (cv._dpr || 1);
+    Object.values(TAC_LIVE).forEach(mark => { if (mark && mark.map === TAC.map) tacPaint(ctx, W, H, mark, TAC.zoom); });
+  };
   const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; preview(); }); };
 
   const stampRadius = () => Math.max(9, cv.getBoundingClientRect().width * 0.017 / Math.sqrt(TAC.zoom));
@@ -2229,6 +2441,14 @@ function viewTactics() {
   });
   cv.addEventListener('pointermove', e => {
     if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!pinch && !drag && TAC_CHAN && typeof TAC_CHAN.send === 'function') {
+      const now = Date.now();
+      if (now - TAC_LAST_CURSOR > 70) {
+        TAC_LAST_CURSOR = now;
+        const cp = ptOf(e);
+        try { TAC_CHAN.send({ type: 'broadcast', event: 'cursor', payload: { user_id: user.id, nick: tacNick(), map: TAC.map, x: cp[0], y: cp[1] } }); } catch (er) {}
+      }
+    }
     if (pinch) {
       const [a, b] = [...ptrs.values()];
       if (!a || !b) return;
@@ -2251,6 +2471,10 @@ function viewTactics() {
     if (d < 1.1) return;
     if (live.t === 'brush' || live.t === 'erase') { live.pts.push(p); seg(prev, p); }
     else { live.pts[1] = p; if (live.pts.length > 2) live.pts.length = 2; schedule(); }
+    if (TAC_CHAN && typeof TAC_CHAN.send === 'function' && Date.now() - TAC_LAST_LIVE > 90) {
+      TAC_LAST_LIVE = Date.now();
+      try { TAC_CHAN.send({ type: 'broadcast', event: 'live', payload: { user_id: user.id, map: TAC.map, mark: JSON.parse(JSON.stringify(live)) } }); } catch (er) {}
+    }
   });
   const finish = e => {
     ptrs.delete(e.pointerId);
@@ -2262,6 +2486,9 @@ function viewTactics() {
     if (live.pts.length > 1200) { const step = Math.ceil(live.pts.length / 1200); live.pts = live.pts.filter((_, i) => i % step === 0); }
     if (list.length >= 400) toast('На карте уже 400 объектов — очисти лишнее');
     else { list.push(live); tacSave(); counts(); }
+    if (TAC_CHAN && typeof TAC_CHAN.send === 'function') {
+      try { TAC_CHAN.send({ type: 'broadcast', event: 'live_end', payload: { user_id: user.id, map: TAC.map } }); } catch (er) {}
+    }
     live = null; redraw();
   };
   cv.addEventListener('pointerup', finish);
@@ -2365,6 +2592,18 @@ function viewTactics() {
     } catch (er) { toast('Браузер не разрешил сохранить картинку'); }
   };
 
+  document.getElementById('tac_share').onclick = async () => {
+    if (!sb || !clan || !user) return toast('Нужно войти в клан');
+    const res = await tacShareDlg();
+    if (!res) return;
+    const { error } = await sb.from('tactics_gallery').insert({
+      clan_id: clan.id, map_key: TAC.map, title: res.title, notes: res.notes,
+      marks: JSON.parse(JSON.stringify(list)), author_id: user.id, author_nick: tacNick()
+    });
+    if (error) return toast('Не удалось опубликовать — примени SQL-миграцию tactics_collab.sql');
+    toast('Тактика опубликована в галерее клана');
+    renderGallery();
+  };
   document.getElementById('tac_json_exp').onclick = () => {
     const plan = { app: 'ClanPulse', v: 3, clan: clan.name, map: TAC.map, exported_at: new Date().toISOString(), maps: {} };
     Object.keys(TAC_MAPS).forEach(k => { plan.maps[k] = (TAC_PLAN.maps[k] || []).map(s => JSON.parse(JSON.stringify(s))); });
