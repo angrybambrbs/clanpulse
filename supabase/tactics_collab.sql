@@ -3,13 +3,24 @@
 -- После применения включи Realtime для новых таблиц (см. конец файла).
 
 -- Проверка членства в клане на уровне базы (клиенту нельзя подделать).
-create or replace function public.is_clan_member(p_clan uuid)
-returns boolean language sql stable security definer set search_path = public as $$
-  select exists (
-    select 1 from public.clan_members
-    where clan_id = p_clan and user_id = auth.uid()
-  );
-$$;
+-- Функция уже может существовать в проекте — тогда не трогаем её.
+do $do$
+begin
+  if not exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'is_clan_member' and p.pronargs = 1
+  ) then
+    create function public.is_clan_member(cid uuid)
+    returns boolean language sql stable security definer set search_path = public
+    as $func$
+      select exists (
+        select 1 from public.clan_members
+        where clan_id = cid and user_id = auth.uid()
+      );
+    $func$;
+  end if;
+end $do$;
 
 -- 1) Общий план клана: по одной строке на карту.
 create table if not exists public.tactics_plans (
