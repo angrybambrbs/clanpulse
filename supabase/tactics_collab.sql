@@ -38,9 +38,18 @@ drop policy if exists "tactics_plans_read" on public.tactics_plans;
 drop policy if exists "tactics_plans_write" on public.tactics_plans;
 create policy "tactics_plans_read" on public.tactics_plans
   for select using (public.is_clan_member(clan_id));
+-- Менять план могут только лидер и офицеры.
+create or replace function public.can_edit_tactics(p_clan uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.clan_members
+    where clan_id = p_clan and user_id = auth.uid() and role in ('owner', 'officer')
+  );
+$$;
+drop policy if exists "tactics_plans_write" on public.tactics_plans;
 create policy "tactics_plans_write" on public.tactics_plans
-  for all using (public.is_clan_member(clan_id))
-  with check (public.is_clan_member(clan_id));
+  for all using (public.can_edit_tactics(clan_id))
+  with check (public.can_edit_tactics(clan_id));
 
 -- 2) Галерея опубликованных тактик клана.
 create table if not exists public.tactics_gallery (
@@ -52,8 +61,10 @@ create table if not exists public.tactics_gallery (
   marks      jsonb not null default '[]'::jsonb,
   author_id  uuid not null references auth.users(id) on delete cascade,
   author_nick text not null default '',
+  pinned     boolean not null default false,
   created_at timestamptz not null default now()
 );
+alter table public.tactics_gallery add column if not exists pinned boolean not null default false;
 
 alter table public.tactics_gallery enable row level security;
 drop policy if exists "tactics_gallery_read" on public.tactics_gallery;
@@ -65,13 +76,26 @@ create policy "tactics_gallery_insert" on public.tactics_gallery
   for insert with check (public.is_clan_member(clan_id) and author_id = auth.uid());
 create policy "tactics_gallery_delete" on public.tactics_gallery
   for delete using (
-    author_id = auth.uid() or exists (
-      select 1 from public.clan_members m
-      where m.clan_id = tactics_gallery.clan_id
-        and m.user_id = auth.uid()
-        and m.role in ('owner', 'officer')
-    )
+    author_id = auth.uid() or public.can_edit_tactics(clan_id)
   );
+create policy "tactics_gallery_pin" on public.tactics_gallery
+  for update using (public.can_edit_tactics(clan_id))
+  with check (public.can_edit_tactics(clan_id));
+
+-- Лайки тактик (один лайк от пользователя).
+create table if not exists public.tactics_gallery_likes (
+  gallery_id uuid not null references public.tactics_gallery(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (gallery_id, user_id)
+);
+alter table public.tactics_gallery_likes enable row level security;
+drop policy if exists "tactics_likes_read" on public.tactics_gallery_likes;
+drop policy if exists "tactics_likes_write" on public.tactics_gallery_likes;
+create policy "tactics_likes_read" on public.tactics_gallery_likes
+  for select using (exists (select 1 from public.tactics_gallery g where g.id = gallery_id and public.is_clan_member(g.clan_id)));
+create policy "tactics_likes_write" on public.tactics_gallery_likes
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create index if not exists tactics_gallery_clan_idx
   on public.tactics_gallery (clan_id, created_at desc);
@@ -82,7 +106,7 @@ create or replace function public.save_tactics_plan(p_clan uuid, p_map text, p_m
 returns integer language plpgsql security definer set search_path = public as $$
 declare v integer;
 begin
-  if not public.is_clan_member(p_clan) then
+  if not public.can_edit_tactics(p_clan) then
     raise exception 'not allowed';
   end if;
   insert into public.tactics_plans (clan_id, map_key, marks, updated_by)
@@ -108,5 +132,10 @@ begin
                  where pubname = 'supabase_realtime'
                    and schemaname = 'public' and tablename = 'tactics_gallery') then
     alter publication supabase_realtime add table public.tactics_gallery;
+  end if;
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime'
+                   and schemaname = 'public' and tablename = 'tactics_gallery_likes') then
+    alter publication supabase_realtime add table public.tactics_gallery_likes;
   end if;
 end $$;

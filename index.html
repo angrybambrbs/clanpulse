@@ -2006,6 +2006,8 @@ const TAC_ACT_ICON = {
   ext: svg(15, '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
   redo: svg(15, '<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>')
 };
+const TAC_HEART = svg(14, '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.7-7.5 1.1-1.1a5.5 5.5 0 0 0 0-7.8z"/>');
+const TAC_PIN = svg(14, '<path d="m12 2 3.1 6.4 7 1-5.1 4.9 1.2 7-6.2-3.3L5.8 21.3l1.2-7L2 9.4l7-1z"/>');
 // Метки-штампы: палатка (точка сбора/лагерь), ралик (скоростная сборка, «раллист»),
 // захват (зона удержания точки). Буква зоны для «захвата» подставляется автоматически.
 const TAC_STAMPS = {
@@ -2303,6 +2305,7 @@ function tacStartRealtime() {
       if (tab === 'tactics' && typeof window.tacRefreshCanvas === 'function') window.tacRefreshCanvas();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery', filter: 'clan_id=eq.' + clan.id }, () => renderGallery())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery_likes' }, () => renderGallery())
     .subscribe();
 }
 
@@ -2359,9 +2362,14 @@ async function renderGallery(hostOverride) {
   const host = hostOverride || document.getElementById('tac_gallery');
   if (!host) return;
   if (!sb || !clan) { host.innerHTML = '<p class="mut">Галерея доступна после входа в клан.</p>'; return; }
+  const lk = user ? await sb.from('tactics_gallery_likes').select('gallery_id').eq('user_id', user.id) : { data: [] };
+  const liked = new Set((lk.data || []).map(x => x.gallery_id));
+  const lc = await sb.from('tactics_gallery_likes').select('gallery_id');
+  const likeCounts = {};
+  (lc.data || []).forEach(x => { likeCounts[x.gallery_id] = (likeCounts[x.gallery_id] || 0) + 1; });
   const { data, error } = await sb.from('tactics_gallery')
-    .select('id,map_key,title,notes,marks,author_id,author_nick,created_at')
-    .eq('clan_id', clan.id).order('created_at', { ascending: false }).limit(30);
+    .select('id,map_key,title,notes,marks,author_id,author_nick,created_at,pinned')
+    .eq('clan_id', clan.id).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(30);
   if (error || !Array.isArray(data)) {
     host.innerHTML = '<p class="mut">Галерея недоступна — примени в Supabase SQL-файл <b>tactics_collab.sql</b>.</p>';
     return;
@@ -2370,14 +2378,21 @@ async function renderGallery(hostOverride) {
     host.innerHTML = '<p class="mut">Тактик пока нет. Нажми «Поделиться с кланом», чтобы опубликовать текущий план.</p>';
     return;
   }
-  host.innerHTML = data.map(g => `<div class="tac-gitem" data-gid="${esc(g.id)}">
+  host.innerHTML = data.map(g => {
+    const likes = likeCounts[g.id] || 0;
+    return `<div class="tac-gitem" data-gid="${esc(g.id)}">
     <canvas class="tac-gthumb" width="200" height="130"></canvas>
-    <div class="tac-gmeta"><b>${esc(g.title)}</b>
+    <div class="tac-gmeta"><b>${esc(g.title)}</b>${g.pinned ? '<span class="chip ok" style="margin:0">Закреплено</span>' : ''}
       <span>${esc(TAC_MAPS[g.map_key] ? TAC_MAPS[g.map_key].name : g.map_key)} · ${esc(g.author_nick || 'Игрок')} · ${esc(new Date(g.created_at).toLocaleString('ru-RU'))}</span>
       ${g.notes ? `<p>${esc(g.notes)}</p>` : ''}
-      <div class="tac-gact"><button class="tac-tool" data-gload="${esc(g.id)}">Взять в план</button>${g.author_id === user.id ? `<button class="tac-tool" data-gdel="${esc(g.id)}">Удалить</button>` : ''}</div>
+      <div class="tac-gact">
+        <button class="tac-tool ${liked.has(g.id) ? 'on' : ''}" data-glike="${esc(g.id)}" aria-label="Нравится">${TAC_HEART}<span>${likes}</span></button>
+        ${canEdit() ? `<button class="tac-tool ${g.pinned ? 'on' : ''}" data-gpin="${esc(g.id)}">${TAC_PIN}<span>${g.pinned ? 'Открепить' : 'Закрепить'}</span></button>` : ''}
+        <button class="tac-tool" data-gload="${esc(g.id)}">Взять в план</button>${g.author_id === user.id || canEdit() ? `<button class="tac-tool" data-gdel="${esc(g.id)}">Удалить</button>` : ''}
+      </div>
     </div>
-  </div>`).join('');
+  </div>`;
+  }).join('');
   host.querySelectorAll('.tac-gitem').forEach(item => {
     const g = data.find(x => x.id === item.dataset.gid);
     if (!g) return;
@@ -2389,6 +2404,26 @@ async function renderGallery(hostOverride) {
     img.onerror = () => { cx.fillStyle = '#0b1020'; cx.fillRect(0, 0, c.width, c.height); drawMarks(); };
     if (map) img.src = map.file; else img.onerror();
     c.onclick = () => tacGalleryPreview(g);
+  });
+  host.querySelectorAll('[data-glike]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.glike;
+    if (!user) return;
+    if (liked.has(id)) {
+      await sb.from('tactics_gallery_likes').delete().eq('gallery_id', id).eq('user_id', user.id);
+      liked.delete(id);
+    } else {
+      const { error: e } = await sb.from('tactics_gallery_likes').insert({ gallery_id: id, user_id: user.id });
+      if (!e) liked.add(id);
+      else toast('Не удалось поставить лайк');
+    }
+    renderGallery(hostOverride);
+  });
+  host.querySelectorAll('[data-gpin]').forEach(b => b.onclick = async () => {
+    const g = data.find(x => x.id === b.dataset.gpin);
+    if (!g) return;
+    const { error: e } = await sb.from('tactics_gallery').update({ pinned: !g.pinned }).eq('id', g.id);
+    if (e) return toast('Не удалось изменить закрепление');
+    renderGallery(hostOverride);
   });
   host.querySelectorAll('[data-gload]').forEach(b => b.onclick = async () => {
     const g = data.find(x => x.id === b.dataset.gload);
@@ -2417,6 +2452,7 @@ function viewTactics() {
   if (!TAC_MAPS[TAC.map]) TAC.map = 'berdovka';
   const m = TAC_MAPS[TAC.map];
   const list = plan.maps[TAC.map];
+  const editable = canEdit();
   const safeName = s => String(s || 'plan').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40);
   const sbtn = ([k, v]) => `<button type="button" class="tac-tool tac-stamp ${TAC.stamp === k ? 'on' : ''}" data-stamp="${k}" aria-pressed="${TAC.stamp === k}">${svg(15, v[1])}<span>${v[0]}</span></button>`;
   const sideBtn = ([k, v]) => `<button type="button" class="tac-side-b ${k} ${TAC.side === k ? 'on' : ''}" data-side="${k}" aria-pressed="${TAC.side === k}"><i style="background:${v[1]}"></i>${v[0]}</button>`;
@@ -2424,15 +2460,15 @@ function viewTactics() {
   const fillTools = () => {
     const html = `<button type="button" class="tac-tool" id="tac_gallery_btn">${TAC_ACT_ICON.share}<span>Галерея клана</span></button>
       <div class="tac-sec">Инструменты</div>
-      <div class="tac-tools">${TAC_TOOLS.map(t => `<button type="button" class="tac-tool ${TAC.tool === t[0] ? 'on' : ''}" data-tool="${t[0]}" aria-pressed="${TAC.tool === t[0]}">${TAC_TOOL_ICON[t[0]]}<span>${t[1]}</span></button>`).join('')}</div>
+      <div class="tac-tools">${TAC_TOOLS.map(t => `<button type="button" class="tac-tool ${TAC.tool === t[0] ? 'on' : ''}" data-tool="${t[0]}" aria-pressed="${TAC.tool === t[0]}" ${editable ? '' : 'disabled'}>${TAC_TOOL_ICON[t[0]]}<span>${t[1]}</span></button>`).join('')}</div>
       <div class="tac-markbar" ${TAC.tool === 'stamp' ? '' : 'hidden'}>
         <span class="tac-mlab">Метки</span>
-        ${Object.entries(TAC_STAMPS).map(sbtn).join('')}
+        ${Object.entries(TAC_STAMPS).map(k => `<button type="button" class="tac-tool tac-stamp ${TAC.stamp === k[0] ? 'on' : ''}" data-stamp="${k[0]}" aria-pressed="${TAC.stamp === k[0]}" ${editable ? '' : 'disabled'}>${svg(15, k[1][1])}<span>${k[1][0]}</span></button>`).join('')}
         <span class="tac-sep" aria-hidden="true"></span>
         <span class="tac-mlab">Чья</span>
-        <div class="tac-sides" role="group" aria-label="Принадлежность метки">${Object.entries(TAC_SIDE).map(sideBtn).join('')}</div>
+        <div class="tac-sides" role="group" aria-label="Принадлежность метки">${Object.entries(TAC_SIDE).map(k => `<button type="button" class="tac-side-b ${k[0]} ${TAC.side === k[0] ? 'on' : ''}" data-side="${k[0]}" aria-pressed="${TAC.side === k[0]}" ${editable ? '' : 'disabled'}><i style="background:${k[1][1]}"></i>${k[1][0]}</button>`).join('')}</div>
         <span class="tac-sep" aria-hidden="true"></span>
-        <button type="button" class="tac-tool ${TAC.capPlacing ? 'on' : ''}" data-cappl="${TAC.capPlacing ? 'true' : 'false'}" aria-pressed="${TAC.capPlacing}">${TAC.capPlacing ? 'Захват: вручную' : 'Захват: по карте'}</button>
+        <button type="button" class="tac-tool ${TAC.capPlacing ? 'on' : ''}" data-cappl="${TAC.capPlacing ? 'true' : 'false'}" aria-pressed="${TAC.capPlacing}" ${editable ? '' : 'disabled'}>${TAC.capPlacing ? 'Захват: вручную' : 'Захват: по карте'}</button>
       </div>`;
     const host = document.getElementById('tac_vtools');
     if (host) host.innerHTML = html;
@@ -2442,6 +2478,7 @@ function viewTactics() {
       <div style="min-width:0;flex:1 1 220px"><h2 style="margin:0">Карты турниров</h2>
         <p class="mut" style="font-size:13px;margin:4px 0 0">Выбери карту и нарисуй план: маршруты, входы, укрытия, метки лагеря и захвата. Рисовать можно мышью или пальцем.</p></div>
       <span class="chip ok tac-count" id="tac_count" style="margin:0">${tacCountText(list.length)}</span>
+      ${editable ? '' : '<span class="chip" style="margin:0">Только чтение: меняют лидер и офицеры</span>'}
     </div>
     <div class="tac-maps">${Object.entries(TAC_GROUP_LABEL).map(([g, label]) => `
       <button class="tac-group" data-group="${g}" aria-expanded="${TAC_GROUPS[g]}">${svg(12, '<path d="m6 9 6-6 6 6"/>')}${esc(label)}</button>
@@ -2466,9 +2503,9 @@ function viewTactics() {
       <label class="tac-size"><span>Толщина</span><input type="range" id="tac_size" min="1" max="14" step="1" value="${TAC.size}" aria-label="Толщина линии"><b id="tac_sv">${TAC.size}</b></label>
     </div>
     <div class="tac-bar">
-      <button class="tac-tool" id="tac_undo">${TAC_ACT_ICON.undo}<span>Отменить</span></button>
+      ${editable ? `<button class="tac-tool" id="tac_undo">${TAC_ACT_ICON.undo}<span>Отменить</span></button>
       <button class="tac-tool" id="tac_redo">${TAC_ACT_ICON.redo}<span>Повторить</span></button>
-      <button class="tac-tool" id="tac_clear">${TAC_ACT_ICON.clear}<span>Очистить</span></button>
+      <button class="tac-tool" id="tac_clear">${TAC_ACT_ICON.clear}<span>Очистить</span></button>` : ''}
       <button class="tac-tool" id="tac_hide" aria-pressed="${!TAC.visible}">${TAC_ACT_ICON.hide}<span>${TAC.visible ? 'Скрыть разметку' : 'Показать разметку'}</span></button>
       ${m.capsFile !== m.file ? `<button class="tac-tool" data-capview aria-pressed="${TAC.showCaps}">${TAC_ACT_ICON.caps}<span>${TAC.showCaps ? 'Точки: видны' : 'Точки: скрыты'}</span></button>` : ''}
       <span class="tac-sep" aria-hidden="true"></span>
@@ -2632,6 +2669,7 @@ function viewTactics() {
       return;
     }
     if (e.button) return;
+    if (!editable) return toast('Менять план могут только лидер и офицеры');
     if (!TAC.visible) return toast('Разметка скрыта — нажми «Показать разметку»');
     e.preventDefault();
     const p = ptOf(e);
@@ -2768,18 +2806,21 @@ function viewTactics() {
   document.getElementById('tac_zo').onclick = () => zoomCenter(1 / 1.25);
   document.getElementById('tac_zr').onclick = resetZoom;
 
-  document.getElementById('tac_undo').onclick = () => {
+  const undoBtn = document.getElementById('tac_undo');
+  if (undoBtn) undoBtn.onclick = () => {
     if (!list.length) return toast('Отменять нечего');
     const removed = list.pop();
     TAC_REDO.push(removed);
     tacSave(true); redraw(); counts(); toast('Последняя отметка убрана');
   };
-  document.getElementById('tac_redo').onclick = () => {
+  const redoBtn = document.getElementById('tac_redo');
+  if (redoBtn) redoBtn.onclick = () => {
     if (!TAC_REDO.length) return toast('Нечего повторять');
     list.push(TAC_REDO.pop());
     tacSave(true); redraw(); counts(); toast('Действие повторено');
   };
-  document.getElementById('tac_clear').onclick = async () => {
+  const clearBtn = document.getElementById('tac_clear');
+  if (clearBtn) clearBtn.onclick = async () => {
     if (!list.length) return toast('Разметки нет');
     const ok = await tacConfirm('Очистить карту?', 'С карты «' + m.name + '» будут удалены все рисунки и метки (' + list.length + '). Это действие нельзя отменить.', 'Очистить');
     if (!ok) return;
