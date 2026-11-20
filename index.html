@@ -2536,6 +2536,7 @@ function viewTactics() {
         <p class="mut" style="font-size:13px;margin:4px 0 0">Выбери карту и нарисуй план: маршруты, входы, укрытия, метки лагеря и захвата. Рисовать можно мышью или пальцем.</p></div>
       <span class="chip ok tac-count" id="tac_count" style="margin:0">${tacCountText(list.length)}</span>
       ${editable ? '' : '<span class="chip" style="margin:0">Только чтение: меняют лидер и офицеры</span>'}
+      ${myRole === 'owner' ? '<button class="ghost" id="tac_roles" style="margin:0">Права доступа</button>' : ''}
     </div>
     <div class="tac-online" id="tac_online"></div>
     <div class="tac-maps">${Object.entries(TAC_GROUP_LABEL).map(([g, label]) => `
@@ -2590,6 +2591,8 @@ function viewTactics() {
     </div>
   </div>`;
   fillTools();
+  const rb = document.getElementById('tac_roles');
+  if (rb) rb.onclick = () => { tab = 'team'; render(); };
   const gb = document.getElementById('tac_gallery_btn');
   if (gb) gb.onclick = openGalleryModal;
   const gt = document.getElementById('tac_gallery_toggle');
