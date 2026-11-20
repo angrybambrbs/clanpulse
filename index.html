@@ -383,7 +383,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
   .tb-kicker{font-size:9px}
   .tb-title h1{font-size:16px}
   .tb-actions .ghost{padding:6px 8px}
-  .tb-profile,.tb-theme{display:none}
+  .tb-profile,.tb-theme,.tb-actions .tb-profile,.tb-actions .tb-theme{display:none}
   .tabs{padding:12px 14px 0}
   .content{padding:12px 14px 48px}
   .hero-stats{grid-template-columns:1fr 1fr}
@@ -2003,7 +2003,8 @@ const TAC_ACT_ICON = {
   share: svg(15, '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4m0-11-6.8 4"/>'),
   exp: svg(15, '<path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 15v5h16v-5"/>'),
   imp: svg(15, '<path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 15v5h16v-5"/>'),
-  ext: svg(15, '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>')
+  ext: svg(15, '<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+  redo: svg(15, '<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>')
 };
 // Метки-штампы: палатка (точка сбора/лагерь), ралик (скоростная сборка, «раллист»),
 // захват (зона удержания точки). Буква зоны для «захвата» подставляется автоматически.
@@ -2018,6 +2019,7 @@ let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
 let TAC_CHAN = null, TAC_CURSORS = {}, TAC_LIVE = {}, TAC_REMOTE_INIT = false, TAC_LAST_CURSOR = 0, TAC_LAST_LIVE = 0;
 const TAC_GROUPS = { tour: true, brawl: true };
 const TAC_GROUP_LABEL = { tour: 'Турниры и захваты', brawl: 'Потасовки' };
+let TAC_REDO = [], TAC_PAN_PREV = 'brush';
 const tacNick = () => ((user && (user.user_metadata || {}).nick) || (user && user.user_metadata && user.user_metadata.name) || (user && user.email || 'Игрок')).split('@')[0].slice(0, 24);
 const saveLocalPlan = () => {
   try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 3, maps: TAC_PLAN.maps, ver: TAC_PLAN.ver || {} })); }
@@ -2032,7 +2034,8 @@ function tacPlan() {
   Object.keys(TAC_MAPS).forEach(k => { if (!Array.isArray(TAC_PLAN.maps[k])) TAC_PLAN.maps[k] = []; });
   return TAC_PLAN;
 }
-function tacSave() {
+function tacSave(keepRedo) {
+  if (!keepRedo) TAC_REDO = [];
   clearTimeout(TAC_SAVE);
   saveLocalPlan();
   TAC_SAVE = setTimeout(() => {
@@ -2288,12 +2291,16 @@ function tacStartRealtime() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_plans', filter: 'clan_id=eq.' + clan.id }, payload => {
       const row = payload && payload.new;
       if (!row || !TAC_MAPS[row.map_key]) return;
+      // Supabase присылает событие и автору изменения — игнорируем его,
+      // иначе вкладка перерисовывается на каждом собственном сохранении.
+      if (user && row.updated_by === user.id) return;
       const v = Number(row.version) || 1;
       if (v <= (Number(TAC_PLAN.ver[row.map_key]) || 0)) return;
       TAC_PLAN.maps[row.map_key] = Array.isArray(row.marks) ? row.marks : [];
       TAC_PLAN.ver[row.map_key] = v;
       saveLocalPlan();
-      if (tab === 'tactics') viewTactics();
+      // Обновляем только canvas — без пересборки DOM, курсоры не дёргаются.
+      if (tab === 'tactics' && typeof window.tacRefreshCanvas === 'function') window.tacRefreshCanvas();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery', filter: 'clan_id=eq.' + clan.id }, () => renderGallery())
     .subscribe();
@@ -2460,6 +2467,7 @@ function viewTactics() {
     </div>
     <div class="tac-bar">
       <button class="tac-tool" id="tac_undo">${TAC_ACT_ICON.undo}<span>Отменить</span></button>
+      <button class="tac-tool" id="tac_redo">${TAC_ACT_ICON.redo}<span>Повторить</span></button>
       <button class="tac-tool" id="tac_clear">${TAC_ACT_ICON.clear}<span>Очистить</span></button>
       <button class="tac-tool" id="tac_hide" aria-pressed="${!TAC.visible}">${TAC_ACT_ICON.hide}<span>${TAC.visible ? 'Скрыть разметку' : 'Показать разметку'}</span></button>
       ${m.capsFile !== m.file ? `<button class="tac-tool" data-capview aria-pressed="${TAC.showCaps}">${TAC_ACT_ICON.caps}<span>${TAC.showCaps ? 'Точки: видны' : 'Точки: скрыты'}</span></button>` : ''}
@@ -2483,7 +2491,7 @@ function viewTactics() {
       <button id="tac_zi" aria-label="Увеличить масштаб">+</button>
       <button id="tac_zr" aria-label="Сбросить масштаб" title="Сбросить масштаб">1:1</button>
     </div></div>
-    <p class="tac-hint" id="tac_hint">Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z.</p>
+    <p class="tac-hint" id="tac_hint">Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z, повторить — Ctrl+Shift+Z. Клавиши 1–6 — инструменты, Space — рука.</p>
     </div>
   </div>`;
   fillTools();
@@ -2696,11 +2704,12 @@ function viewTactics() {
     document.querySelectorAll('[data-mcount]').forEach(el => { el.textContent = plan.maps[el.dataset.mcount].length; });
     const c = document.getElementById('tac_count'); if (c) c.textContent = tacCountText(list.length);
   };
+  window.tacRefreshCanvas = () => { redraw(); counts(); };
   const markTools = () => {
     document.querySelectorAll('[data-tool]').forEach(b => { const on = b.dataset.tool === TAC.tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     document.querySelectorAll('.tac-markbar').forEach(mb => { mb.hidden = TAC.tool !== 'stamp'; });
     document.querySelectorAll('[data-cappl]').forEach(b => { const on = b.dataset.cappl === 'true'; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
-    const hintBase = 'Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z.';
+    const hintBase = 'Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z, повторить — Ctrl+Shift+Z. Клавиши 1–6 — инструменты, Space — рука.';
     const hintEl = document.getElementById('tac_hint');
     if (hintEl) hintEl.textContent = TAC.stamp === 'cap'
       ? (TAC.capPlacing ? 'Захват ставится кликом по карте, буква зоны подставляется автоматически. ' + hintBase
@@ -2761,7 +2770,14 @@ function viewTactics() {
 
   document.getElementById('tac_undo').onclick = () => {
     if (!list.length) return toast('Отменять нечего');
-    list.pop(); tacSave(); redraw(); counts(); toast('Последняя отметка убрана');
+    const removed = list.pop();
+    TAC_REDO.push(removed);
+    tacSave(true); redraw(); counts(); toast('Последняя отметка убрана');
+  };
+  document.getElementById('tac_redo').onclick = () => {
+    if (!TAC_REDO.length) return toast('Нечего повторять');
+    list.push(TAC_REDO.pop());
+    tacSave(true); redraw(); counts(); toast('Действие повторено');
   };
   document.getElementById('tac_clear').onclick = async () => {
     if (!list.length) return toast('Разметки нет');
@@ -2866,11 +2882,33 @@ function viewTactics() {
 }
 
 document.addEventListener('keydown', e => {
-  if (tab !== 'tactics' || !(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return;
+  if (tab !== 'tactics') return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
-  const b = document.getElementById('tac_undo');
-  if (!b) return;
-  e.preventDefault(); b.click();
+  const k = (e.key || '').toLowerCase(), mod = e.ctrlKey || e.metaKey;
+  const clickTool = key => { const b = document.querySelector('[data-tool="' + key + '"]'); if (b) b.click(); };
+  if (mod && e.shiftKey && k === 'z') {
+    const b = document.getElementById('tac_redo'); if (b) { e.preventDefault(); b.click(); }
+    return;
+  }
+  if (mod && k === 'y') {
+    const b = document.getElementById('tac_redo'); if (b) { e.preventDefault(); b.click(); }
+    return;
+  }
+  if (mod && k === 'z') {
+    const b = document.getElementById('tac_undo'); if (b) { e.preventDefault(); b.click(); }
+    return;
+  }
+  if (mod || e.altKey) return;
+  if (/^[1-6]$/.test(e.key)) {
+    const t = TAC_TOOLS[Number(e.key) - 1];
+    if (t) { e.preventDefault(); clickTool(t[0]); }
+    return;
+  }
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (TAC.tool === 'pan') clickTool(TAC_PAN_PREV || 'brush');
+    else { TAC_PAN_PREV = TAC.tool; clickTool('pan'); }
+  }
 });
 
 const stopChan = () => { if (chan) { sb.removeChannel(chan); chan = null; } };
