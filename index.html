@@ -2413,8 +2413,14 @@ async function renderGallery(hostOverride) {
       liked.delete(id);
     } else {
       const { error: e } = await sb.from('tactics_gallery_likes').insert({ gallery_id: id, user_id: user.id });
-      if (!e) liked.add(id);
-      else toast('Не удалось поставить лайк');
+      if (!e) {
+        liked.add(id);
+        const g = data.find(x => x.id === id);
+        if (g && g.author_id && g.author_id !== user.id) {
+          sb.from('notifications').insert({ user_id: g.author_id, type: 'like', title: 'Лайк тактики',
+            body: tacNick() + ' оценил тактику «' + g.title + '»', href: 'tactics', actor_id: user.id }).then(() => {}).catch(() => {});
+        }
+      } else toast('Не удалось поставить лайк');
     }
     renderGallery(hostOverride);
   });
@@ -2423,6 +2429,10 @@ async function renderGallery(hostOverride) {
     if (!g) return;
     const { error: e } = await sb.from('tactics_gallery').update({ pinned: !g.pinned }).eq('id', g.id);
     if (e) return toast('Не удалось изменить закрепление');
+    if (!g.pinned && g.author_id && g.author_id !== user.id) {
+      sb.from('notifications').insert({ user_id: g.author_id, type: 'pin', title: 'Тактика закреплена',
+        body: tacNick() + ' закрепил тактику «' + g.title + '»', href: 'tactics', actor_id: user.id }).then(() => {}).catch(() => {});
+    }
     renderGallery(hostOverride);
   });
   host.querySelectorAll('[data-gload]').forEach(b => b.onclick = async () => {
@@ -2573,8 +2583,11 @@ function viewTactics() {
   const resizeCanvas = () => {
     const dpr0 = Math.min(2, window.devicePixelRatio || 1);
     const w = Math.max(1, pw * TAC.zoom), h = Math.max(1, ph * TAC.zoom);
+    // Жёсткий лимит ~4 млн пикселей: d может быть < 1, тогда canvas
+    // рисуется в меньшем разрешении и растягивается CSS — память экономится.
+    const MAX = 4000000;
     let d = dpr0;
-    if (w * h * d * d > 5200000) d = Math.max(1, Math.sqrt(5200000 / (w * h)));
+    if (w * h * d * d > MAX) d = Math.max(0.4, Math.sqrt(MAX / (w * h)));
     cv.width = Math.max(1, Math.round(w * d));
     cv.height = Math.max(1, Math.round(h * d));
     cv._dpr = d;
@@ -2972,7 +2985,11 @@ function startNotifSub() {
   notifChanUser = user.id;
   notifChan = sb.channel('notifs-' + user.id).on('postgres_changes',
     { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + user.id },
-    () => { notifCount++; setUnread(); }).subscribe();
+    pl => {
+      notifCount++; setUnread();
+      const n = pl && pl.new;
+      if (n && n.title) toast(n.title + (n.body ? ': ' + n.body : ''));
+    }).subscribe();
 }
 
 async function viewNotifs() {
@@ -2980,7 +2997,7 @@ async function viewNotifs() {
   const { data, error } = await sb.from('notifications').select('*').eq('user_id', user.id)
     .order('created_at', { ascending: false }).limit(50);
   if (error) return body.innerHTML = failBox(error);
-  const ICON = { application: ICONS.list, dm: ICONS.mail, rsvp: ICONS.cal, verification: ICONS.shield, digest: ICONS.chart };
+  const ICON = { application: ICONS.list, dm: ICONS.mail, rsvp: ICONS.cal, verification: ICONS.shield, digest: ICONS.chart, like: TAC_HEART, pin: TAC_PIN };
   const LABEL = { application: 'Заявка', dm: 'Сообщение', rsvp: 'Событие', verification: 'Верификация', digest: 'Сводка' };
   body.innerHTML = `<div class="card"><div class="top"><h2>Уведомления</h2>
     ${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">Прочитать все</button>' : ''}</div>
