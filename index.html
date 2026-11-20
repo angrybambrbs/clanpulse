@@ -2073,7 +2073,9 @@ async function tacLoadRemote() {
     if (row.map_key === TAC.map && row.updated_at) TAC_LAST_EDIT = row.updated_at;
     const key = String(row.map_key || ''), v = Number(row.version) || 1;
     if (!TAC_MAPS[key] || v <= (Number(TAC_PLAN.ver[key]) || 0)) return;
-    TAC_PLAN.maps[key] = Array.isArray(row.marks) ? row.marks : [];
+    const arr = TAC_PLAN.maps[key] || (TAC_PLAN.maps[key] = []);
+    arr.length = 0;
+    (Array.isArray(row.marks) ? row.marks : []).forEach(s => arr.push(s));
     TAC_PLAN.ver[key] = v;
     changed = true;
   });
@@ -2096,7 +2098,10 @@ function tacPaint(ctx, W, H, s, view) {
     const a = P(0), b = P(pts.length - 1);
     ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
     if (s.t === 'arrow') {
-      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), L = Math.max(10, ctx.lineWidth * 3.4);
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      // Головка не должна быть больше самой линии (особенно при толстой кисти).
+      const L = Math.max(10, Math.min(ctx.lineWidth * 2.2, len * 0.45));
       ctx.beginPath(); ctx.moveTo(b[0], b[1]);
       ctx.lineTo(b[0] - L * Math.cos(ang - 0.45), b[1] - L * Math.sin(ang - 0.45));
       ctx.lineTo(b[0] - L * Math.cos(ang + 0.45), b[1] - L * Math.sin(ang + 0.45));
@@ -2333,12 +2338,17 @@ function tacStartRealtime() {
       if (user && row.updated_by === user.id) return;
       const v = Number(row.version) || 1;
       if (v <= (Number(TAC_PLAN.ver[row.map_key]) || 0)) return;
-      TAC_PLAN.maps[row.map_key] = Array.isArray(row.marks) ? row.marks : [];
+      const arr = TAC_PLAN.maps[row.map_key] || (TAC_PLAN.maps[row.map_key] = []);
+      const next = Array.isArray(row.marks) ? row.marks : [];
+      // Важно: меняем массив на месте — canvas держит ссылку на него.
+      if (JSON.stringify(arr) !== JSON.stringify(next)) {
+        arr.length = 0;
+        next.forEach(s => arr.push(s));
+        if (tab === 'tactics' && typeof window.tacRefreshCanvas === 'function') window.tacRefreshCanvas();
+      }
       TAC_PLAN.ver[row.map_key] = v;
       saveLocalPlan();
-      if (row.updated_at) TAC_LAST_EDIT = row.updated_at;
-      // Обновляем только canvas — без пересборки DOM, курсоры не дёргаются.
-      if (tab === 'tactics' && typeof window.tacRefreshCanvas === 'function') window.tacRefreshCanvas();
+      if (row.updated_at) { TAC_LAST_EDIT = row.updated_at; renderTacOnline(); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery', filter: 'clan_id=eq.' + clan.id }, () => renderGallery())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery_likes' }, () => renderGallery())
@@ -2613,7 +2623,7 @@ function viewTactics() {
     <div class="tac-bar" role="toolbar" aria-label="Настройки разметки">
       <div class="tac-colors" role="group" aria-label="Цвет разметки">${TAC_COLORS.map(c => `<button class="tac-color ${c[0] === TAC.color ? 'on' : ''}" data-color="${c[0]}" style="background:${c[0]}" aria-label="Цвет: ${c[1]}" aria-pressed="${c[0] === TAC.color}"></button>`).join('')}</div>
       <span class="tac-sep" aria-hidden="true"></span>
-      <label class="tac-size"><span>Толщина</span><input type="range" id="tac_size" min="1" max="14" step="1" value="${TAC.size}" aria-label="Толщина линии"><b id="tac_sv">${TAC.size}</b></label>
+      <label class="tac-size"><span>Толщина</span><input type="range" id="tac_size" min="1" max="50" step="1" value="${TAC.size}" aria-label="Толщина линии"><b id="tac_sv">${TAC.size}</b></label>
     </div>
     <div class="tac-bar">
       ${editable ? `<button class="tac-tool" id="tac_undo">${TAC_ACT_ICON.undo}<span>Отменить</span></button>
@@ -2729,10 +2739,15 @@ function viewTactics() {
   const dot = p => { const { W, H } = paintBase(); ctx.beginPath(); ctx.arc(p[0] * W, p[1] * H, Math.max(1, ctx.lineWidth / 2), 0, 6.2832); ctx.fill(); ctx.restore(); };
   const seg = (a, b) => { const { W, H } = paintBase(); ctx.beginPath(); ctx.moveTo(a[0] * W, a[1] * H); ctx.lineTo(b[0] * W, b[1] * H); ctx.stroke(); ctx.restore(); };
   const preview = () => { redraw(); if (live) tacPaint(ctx, cv.width / (cv._dpr || 1), cv.height / (cv._dpr || 1), live, TAC.zoom); };
+  let liveRaf = 0;
   window.tacPreviewLive = () => {
-    preview();
-    const W = cv.width / (cv._dpr || 1), H = cv.height / (cv._dpr || 1);
-    Object.values(TAC_LIVE).forEach(mark => { if (mark && mark.map === TAC.map) tacPaint(ctx, W, H, mark, TAC.zoom); });
+    if (liveRaf) return;
+    liveRaf = requestAnimationFrame(() => {
+      liveRaf = 0;
+      preview();
+      const W = cv.width / (cv._dpr || 1), H = cv.height / (cv._dpr || 1);
+      Object.values(TAC_LIVE).forEach(mark => { if (mark && mark.map === TAC.map) tacPaint(ctx, W, H, mark, TAC.zoom); });
+    });
   };
   const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; preview(); }); };
 
