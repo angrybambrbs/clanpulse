@@ -289,6 +289,9 @@ a:hover{color:var(--ac)}
 .tac-group svg{transition:transform .15s ease}
 .tac-group[aria-expanded="false"] svg{transform:rotate(-90deg)}
 .tac-maps .tac-map[hidden]{display:none}
+.tac-online{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-2px 0 10px;font-size:11px}
+.tac-who{display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 2px;border:1px solid var(--bd);border-radius:999px;background:var(--in)}
+.tac-who i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:#fff;font-style:normal;font-size:10px;font-weight:700}
 .tac-map{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;overflow:hidden;background:var(--in);border:1px solid var(--bd);border-radius:12px;text-align:left;color:var(--tx);box-shadow:none;transform:none;font-weight:500;min-width:0}
 .tac-map:hover{transform:none;box-shadow:0 0 0 1px var(--bd2);filter:none}
 .tac-map img{display:block;width:100%;height:72px;object-fit:cover;opacity:.8;transition:opacity .2s ease}
@@ -2023,7 +2026,7 @@ let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
 let TAC_CHAN = null, TAC_CURSORS = {}, TAC_LIVE = {}, TAC_REMOTE_INIT = false, TAC_LAST_CURSOR = 0, TAC_LAST_LIVE = 0;
 const TAC_GROUPS = { tour: true, brawl: true };
 const TAC_GROUP_LABEL = { tour: 'Турниры и захваты', brawl: 'Потасовки' };
-let TAC_REDO = [], TAC_PAN_PREV = 'brush';
+let TAC_REDO = [], TAC_PAN_PREV = 'brush', TAC_ONLINE = {}, TAC_LAST_EDIT = null;
 const tacNick = () => ((user && (user.user_metadata || {}).nick) || (user && user.user_metadata && user.user_metadata.name) || (user && user.email || 'Игрок')).split('@')[0].slice(0, 24);
 const saveLocalPlan = () => {
   try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 3, maps: TAC_PLAN.maps, ver: TAC_PLAN.ver || {} })); }
@@ -2057,11 +2060,12 @@ let TAC_SAVE_WARNED = false;
 // Загрузить общий план клана из базы. Возвращает true, если данные изменились.
 async function tacLoadRemote() {
   if (!sb || !clan || !user) return false;
-  const { data, error } = await sb.from('tactics_plans').select('map_key,marks,version').eq('clan_id', clan.id);
+  const { data, error } = await sb.from('tactics_plans').select('map_key,marks,version,updated_at').eq('clan_id', clan.id);
   if (error || !Array.isArray(data)) return false;
   let changed = false;
   TAC_PLAN = tacPlan(); TAC_PLAN.ver = TAC_PLAN.ver || {};
   data.forEach(row => {
+    if (row.map_key === TAC.map && row.updated_at) TAC_LAST_EDIT = row.updated_at;
     const key = String(row.map_key || ''), v = Number(row.version) || 1;
     if (!TAC_MAPS[key] || v <= (Number(TAC_PLAN.ver[key]) || 0)) return;
     TAC_PLAN.maps[key] = Array.isArray(row.marks) ? row.marks : [];
@@ -2260,6 +2264,19 @@ function tacShareDlg(heading, description, initial) {
   });
 }
 
+function renderTacOnline() {
+  const host = document.getElementById('tac_online');
+  if (!host || !user) return;
+  const items = [{ id: user.id, nick: tacNick() + ' (вы)' }];
+  Object.entries(TAC_ONLINE).forEach(([id, p]) => {
+    if (id !== user.id && p.map === TAC.map && Date.now() - (p.at || 0) < 90000) items.push({ id, nick: p.nick || 'Игрок' });
+  });
+  const when = TAC_LAST_EDIT ? ' · изменено ' + fmtTime(TAC_LAST_EDIT) : '';
+  host.innerHTML = '<span class="mut">На карте:</span>' + items.map(x =>
+    `<span class="tac-who" title="${esc(x.nick)}"><i>${esc(String(x.nick).slice(0, 1).toUpperCase())}</i>${esc(x.nick)}</span>`).join('') +
+    `<span class="mut">${esc(when)}</span>`;
+}
+
 function renderTacCursors() {
   const host = document.getElementById('tac_cursors');
   if (!host) return;
@@ -2278,6 +2295,16 @@ function tacStopRealtime() {
 function tacStartRealtime() {
   if (!sb || !clan || !user || TAC_CHAN) return;
   TAC_CHAN = sb.channel('tactics-' + clan.id)
+    .on('presence', { event: 'sync' }, () => {
+      try {
+        const state = TAC_CHAN.presenceState() || {};
+        TAC_ONLINE = {};
+        Object.values(state).forEach(list => (list || []).forEach(p => {
+          if (p && p.user_id) TAC_ONLINE[p.user_id] = { nick: String(p.nick || 'Игрок').slice(0, 24), map: p.map, at: Date.now() };
+        }));
+        renderTacOnline();
+      } catch (e) {}
+    })
     .on('broadcast', { event: 'cursor' }, ({ payload }) => {
       if (!payload || payload.map !== TAC.map || payload.user_id === user.id) return;
       TAC_CURSORS[payload.user_id] = { map: payload.map, x: Number(payload.x) || 0, y: Number(payload.y) || 0, nick: String(payload.nick || 'Игрок').slice(0, 24), at: Date.now() };
@@ -2304,12 +2331,17 @@ function tacStartRealtime() {
       TAC_PLAN.maps[row.map_key] = Array.isArray(row.marks) ? row.marks : [];
       TAC_PLAN.ver[row.map_key] = v;
       saveLocalPlan();
+      if (row.updated_at) TAC_LAST_EDIT = row.updated_at;
       // Обновляем только canvas — без пересборки DOM, курсоры не дёргаются.
       if (tab === 'tactics' && typeof window.tacRefreshCanvas === 'function') window.tacRefreshCanvas();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery', filter: 'clan_id=eq.' + clan.id }, () => renderGallery())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tactics_gallery_likes' }, () => renderGallery())
-    .subscribe();
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED' && TAC_CHAN && typeof TAC_CHAN.track === 'function') {
+        TAC_CHAN.track({ user_id: user.id, nick: tacNick(), map: TAC.map }).catch(() => {});
+      }
+    });
 }
 
 function openGalleryModal() {
@@ -2505,6 +2537,7 @@ function viewTactics() {
       <span class="chip ok tac-count" id="tac_count" style="margin:0">${tacCountText(list.length)}</span>
       ${editable ? '' : '<span class="chip" style="margin:0">Только чтение: меняют лидер и офицеры</span>'}
     </div>
+    <div class="tac-online" id="tac_online"></div>
     <div class="tac-maps">${Object.entries(TAC_GROUP_LABEL).map(([g, label]) => `
       <button class="tac-group" data-group="${g}" aria-expanded="${TAC_GROUPS[g]}">${svg(12, '<path d="m6 9 6-6 6 6"/>')}${esc(label)}</button>
       ${Object.entries(TAC_MAPS).filter(([, v]) => v.group === g).map(([k, v]) => `<button class="tac-map ${k === TAC.map ? 'on' : ''}" data-map="${k}" data-group="${g}" aria-pressed="${k === TAC.map}" ${TAC_GROUPS[g] ? '' : 'hidden'}>
@@ -2566,6 +2599,8 @@ function viewTactics() {
     gt.textContent = ex ? 'Свернуть' : 'Развернуть';
   };
   tacStartRealtime();
+  if (TAC_CHAN && typeof TAC_CHAN.track === 'function') TAC_CHAN.track({ user_id: user.id, nick: tacNick(), map: TAC.map }).catch(() => {});
+  renderTacOnline();
   renderGallery();
   if (!TAC_REMOTE_INIT) {
     TAC_REMOTE_INIT = true;
@@ -2770,7 +2805,7 @@ function viewTactics() {
     document.querySelectorAll('[data-mcount]').forEach(el => { el.textContent = plan.maps[el.dataset.mcount].length; });
     const c = document.getElementById('tac_count'); if (c) c.textContent = tacCountText(list.length);
   };
-  window.tacRefreshCanvas = () => { redraw(); counts(); };
+  window.tacRefreshCanvas = () => { redraw(); counts(); renderTacOnline(); };
   const markTools = () => {
     document.querySelectorAll('[data-tool]').forEach(b => { const on = b.dataset.tool === TAC.tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     document.querySelectorAll('.tac-markbar').forEach(mb => { mb.hidden = TAC.tool !== 'stamp'; });
