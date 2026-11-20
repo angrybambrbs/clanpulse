@@ -78,6 +78,7 @@ create policy "tactics_gallery_delete" on public.tactics_gallery
   for delete using (
     author_id = auth.uid() or public.can_edit_tactics(clan_id)
   );
+drop policy if exists "tactics_gallery_pin" on public.tactics_gallery;
 create policy "tactics_gallery_pin" on public.tactics_gallery
   for update using (public.can_edit_tactics(clan_id))
   with check (public.can_edit_tactics(clan_id));
@@ -118,6 +119,23 @@ begin
         version = public.tactics_plans.version + 1
   returning version into v;
   return v;
+end $$;
+
+-- Редактирование названия и заметок своей тактики (или офицером).
+create or replace function public.update_tactics_meta(p_id uuid, p_title text, p_notes text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare r public.tactics_gallery;
+begin
+  select * into r from public.tactics_gallery where id = p_id;
+  if not found then return false; end if;
+  if r.author_id <> auth.uid() and not public.can_edit_tactics(r.clan_id) then
+    return false;
+  end if;
+  update public.tactics_gallery
+     set title = left(coalesce(nullif(btrim(p_title), ''), r.title), 80),
+         notes = left(coalesce(p_notes, ''), 2000)
+   where id = p_id;
+  return true;
 end $$;
 
 -- 3) Realtime: чтобы изменения приходили другим участникам без перезагрузки.

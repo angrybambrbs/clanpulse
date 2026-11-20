@@ -266,6 +266,7 @@ a:hover{color:var(--ac)}
 .gavatar{background:transparent;border:0;padding:0;line-height:0;cursor:pointer;box-shadow:none;transform:none;filter:none}
 .gnick{background:transparent;border:0;padding:0;color:var(--tx);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:transparent;box-shadow:none;transform:none;filter:none}
 .gnick:hover{color:var(--ac2);text-decoration-color:var(--ac2)}
+.mention{color:var(--ac2);font-weight:600;background:rgba(var(--ac-rgb),.12);padding:0 3px;border-radius:4px}
 .bub .who .x:hover{color:var(--bad)}
 .bub p{margin:3px 0 0;white-space:pre-wrap;word-break:break-word;font-size:14px}
 .chatform{display:flex;gap:8px;align-items:flex-end;margin-top:12px}
@@ -963,7 +964,7 @@ async function viewGlobalChat() {
   body.innerHTML = `<div class="card"><div class="top" style="margin-bottom:8px"><h2 style="margin:0">Глобальный чат</h2>
       <span class="mut" style="font-size:12px">Общий чат всех игроков сайта</span></div>
     <div class="log chat" id="glog"></div>
-    <div class="chatform"><textarea id="gmsg" rows="1" placeholder="Сообщение (Enter — отправить, Shift+Enter — новая строка)"></textarea><button id="gsend">${ICONS.send} Отправить</button></div></div>`;
+    <div class="chatform"><textarea id="gmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упомянуть)"></textarea><button id="gsend">${ICONS.send} Отправить</button></div></div>`;
   const log = document.getElementById('glog');
   const paint = list => {
     log.innerHTML = list.length ? list.map(m => {
@@ -972,7 +973,7 @@ async function viewGlobalChat() {
         <button class="gavatar" data-user="${esc(m.user_id)}" aria-label="Профиль игрока">${avImg(m.avatar_url, 'sm') || `<span class="av ph sm">${esc((m.nick || 'И').slice(0, 2).toUpperCase())}</span>`}</button>
         <div class="txt"><div class="who"><button class="gnick" data-user="${esc(m.user_id)}">${esc(m.nick || 'игрок')}</button><span>${fmtTime(m.created_at)}</span>
         ${mine ? `<button class="ghost x" data-delmsg="${esc(m.id)}" aria-label="Удалить">${ICONS.x}</button>` : `<button class="ghost x" data-dm="${esc(m.user_id)}" aria-label="Написать">${ICONS.mail}</button>`}</div>
-        <p>${esc(m.body)}</p></div></div>`;
+        <p>${fmtMentions(m.body)}</p></div></div>`;
     }).join('') : `<div class="empty"><div class="eico">${ICONS.chat}</div><h3>Тишина в эфире</h3><p>Напиши первым — сообщение увидят все пользователи сайта.</p></div>`;
     log.scrollTop = log.scrollHeight;
     log.querySelectorAll('[data-user]').forEach(b => b.onclick = () => { stopGlobalChan(); viewUserCard(b.dataset.user, () => { tab = 'global'; render(); }); });
@@ -995,6 +996,7 @@ async function viewGlobalChat() {
       avatar_url: (user.user_metadata || {}).avatar_url || null, body: t
     });
     if (e) return alert(e.message);
+    notifyMentions(t, 'global');
     document.getElementById('gmsg').value = '';
     load();
   };
@@ -2211,17 +2213,18 @@ function tacConfirm(title, text, okText) {
 }
 
 // Диалог публикации тактики в галерее клана.
-function tacShareDlg() {
+function tacShareDlg(heading, description, initial) {
+  const init = initial || {}, editing = !!init.title;
   return new Promise(resolve => {
     const ov = document.createElement('div');
     ov.className = 'tac-dlg';
     ov.innerHTML = `<div class="tac-dlg-box" role="dialog" aria-modal="true" aria-labelledby="tsh_title">
       <div class="tac-dlg-ico">${svg(22, '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4m0-11-6.8 4"/>')}</div>
-      <h3 id="tsh_title">Поделиться с кланом</h3>
-      <p>Текущая разметка карты появится в галерее тактик клана.</p>
-      <label class="tac-dlg-fld">Название<input id="tac_sh_title" maxlength="80" placeholder="Например: защита точки B" autocomplete="off"></label>
-      <label class="tac-dlg-fld">Заметки<textarea id="tac_sh_notes" maxlength="2000" placeholder="Кто куда идёт, где ставить палатку…"></textarea></label>
-      <div class="tac-dlg-act"><button class="ghost" data-no>Отмена</button><button class="danger" data-yes>Опубликовать</button></div>
+      <h3 id="tsh_title">${esc(heading || 'Поделиться с кланом')}</h3>
+      <p>${esc(description || 'Текущая разметка карты появится в галерее тактик клана.')}</p>
+      <label class="tac-dlg-fld">Название<input id="tac_sh_title" maxlength="80" value="${esc(init.title || '')}" placeholder="Например: защита точки B" autocomplete="off"></label>
+      <label class="tac-dlg-fld">Заметки<textarea id="tac_sh_notes" maxlength="2000" placeholder="Кто куда идёт, где ставить палатку…">${esc(init.notes || '')}</textarea></label>
+      <div class="tac-dlg-act"><button class="ghost" data-no>Отмена</button><button class="danger" data-yes>${editing ? 'Сохранить' : 'Опубликовать'}</button></div>
     </div>`;
     document.body.append(ov);
     const titleEl = ov.querySelector('#tac_sh_title'), notesEl = ov.querySelector('#tac_sh_notes');
@@ -2388,7 +2391,9 @@ async function renderGallery(hostOverride) {
       <div class="tac-gact">
         <button class="tac-tool ${liked.has(g.id) ? 'on' : ''}" data-glike="${esc(g.id)}" aria-label="Нравится">${TAC_HEART}<span>${likes}</span></button>
         ${canEdit() ? `<button class="tac-tool ${g.pinned ? 'on' : ''}" data-gpin="${esc(g.id)}">${TAC_PIN}<span>${g.pinned ? 'Открепить' : 'Закрепить'}</span></button>` : ''}
-        <button class="tac-tool" data-gload="${esc(g.id)}">Взять в план</button>${g.author_id === user.id || canEdit() ? `<button class="tac-tool" data-gdel="${esc(g.id)}">Удалить</button>` : ''}
+        <button class="tac-tool" data-gload="${esc(g.id)}">Взять в план</button>
+        ${g.author_id === user.id || canEdit() ? `<button class="tac-tool" data-gedit="${esc(g.id)}">Изменить</button>` : ''}
+        ${g.author_id === user.id || canEdit() ? `<button class="tac-tool" data-gdel="${esc(g.id)}">Удалить</button>` : ''}
       </div>
     </div>
   </div>`;
@@ -2433,6 +2438,16 @@ async function renderGallery(hostOverride) {
       sb.from('notifications').insert({ user_id: g.author_id, type: 'pin', title: 'Тактика закреплена',
         body: tacNick() + ' закрепил тактику «' + g.title + '»', href: 'tactics', actor_id: user.id }).then(() => {}).catch(() => {});
     }
+    renderGallery(hostOverride);
+  });
+  host.querySelectorAll('[data-gedit]').forEach(b => b.onclick = async () => {
+    const g = data.find(x => x.id === b.dataset.gedit);
+    if (!g) return;
+    const res = await tacShareDlg('Редактировать тактику', 'Измени название и заметки — разметка останется прежней.', { title: g.title, notes: g.notes || '' });
+    if (!res) return;
+    const { data: ok, error } = await sb.rpc('update_tactics_meta', { p_id: g.id, p_title: res.title, p_notes: res.notes });
+    if (error || !ok) return toast('Не удалось сохранить изменения');
+    toast('Тактика обновлена');
     renderGallery(hostOverride);
   });
   host.querySelectorAll('[data-gload]').forEach(b => b.onclick = async () => {
@@ -2968,6 +2983,21 @@ document.addEventListener('keydown', e => {
 const stopChan = () => { if (chan) { sb.removeChannel(chan); chan = null; } };
 const dmLabel = () => 'Сообщения' + (unread ? ' (' + unread + ')' : '');
 const fmtTime = iso => new Date(iso).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
+const fmtMentions = t => esc(t || '').replace(/(@[\p{L}\p{N}_.-]{2,32})/gu, m => '<span class="mention">' + m + '</span>');
+async function notifyMentions(text, href) {
+  if (!user || !text) return;
+  const names = [...new Set((String(text).match(/@([\p{L}\p{N}_.-]{2,32})/gu) || []).map(s => s.slice(1)))];
+  for (const nick of names) {
+    try {
+      const { data: uid } = await sb.rpc('find_user_by_nick', { p_nick: nick });
+      if (!uid || uid === user.id) continue;
+      await sb.from('notifications').insert({
+        user_id: uid, type: 'mention', title: 'Упоминание в чате',
+        body: tacNick() + ': ' + String(text).slice(0, 120), href: href || 'chat', actor_id: user.id
+      });
+    } catch (e) {}
+  }
+}
 
 function setUnread() {
   document.querySelectorAll('.dmcount').forEach(el => { el.textContent = unread || ''; });
@@ -2997,7 +3027,7 @@ async function viewNotifs() {
   const { data, error } = await sb.from('notifications').select('*').eq('user_id', user.id)
     .order('created_at', { ascending: false }).limit(50);
   if (error) return body.innerHTML = failBox(error);
-  const ICON = { application: ICONS.list, dm: ICONS.mail, rsvp: ICONS.cal, verification: ICONS.shield, digest: ICONS.chart, like: TAC_HEART, pin: TAC_PIN };
+  const ICON = { application: ICONS.list, dm: ICONS.mail, rsvp: ICONS.cal, verification: ICONS.shield, digest: ICONS.chart, like: TAC_HEART, pin: TAC_PIN, mention: ICONS.chat };
   const LABEL = { application: 'Заявка', dm: 'Сообщение', rsvp: 'Событие', verification: 'Верификация', digest: 'Сводка' };
   body.innerHTML = `<div class="card"><div class="top"><h2>Уведомления</h2>
     ${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">Прочитать все</button>' : ''}</div>
@@ -3049,7 +3079,7 @@ async function viewChat() {
   body.innerHTML = `<div class="card"><div class="top" style="margin-bottom:8px"><h2 style="margin:0">Чат клана</h2><span class="mut" style="font-size:12px">${plural(r.data.length, 'сообщение', 'сообщения', 'сообщений')}</span></div>
     ${canPost ? '' : '<p class="mut">В этом чате пишут только владелец и офицеры, остальные читают объявления.</p>'}
     <div class="log chat" id="log"></div>
-    ${canPost ? '<div class="chatform"><textarea id="cmsg" rows="1" placeholder="Сообщение (Enter — отправить, Shift+Enter — новая строка)"></textarea><button id="csend">' + ICONS.send + ' Отправить</button></div>' : ''}</div>`;
+    ${canPost ? '<div class="chatform"><textarea id="cmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упомянуть)"></textarea><button id="csend">' + ICONS.send + ' Отправить</button></div>' : ''}</div>`;
   const log = document.getElementById('log');
   const paint = list => {
     log.innerHTML = list.length ? list.map(m => {
@@ -3057,7 +3087,7 @@ async function viewChat() {
       return `<div class="bub ${mine ? 'me' : ''}">${avImg(m.user_cards && m.user_cards.avatar_url, 'sm')}
         <div class="txt"><div class="who"><b>${esc(m.user_cards ? m.user_cards.name : 'игрок')}</b><span>${fmtTime(m.created_at)}</span>
         ${mine || canEdit() ? `<button class="ghost x" data-delmsg="${m.id}" aria-label="Удалить">${ICONS.x}</button>` : ''}</div>
-        <p>${esc(m.body)}</p></div></div>`;
+        <p>${fmtMentions(m.body)}</p></div></div>`;
     }).join('')
       : `<div class="empty"><div class="eico">${ICONS.chat}</div><h3>Тишина в эфире</h3><p>Напиши первым — сообщение увидят все участники клана.</p></div>`;
     log.scrollTop = log.scrollHeight;
@@ -3076,6 +3106,7 @@ async function viewChat() {
     const t = val('cmsg').trim(); if (!t) return;
     const { error } = await sb.from('clan_messages').insert({ clan_id: clan.id, user_id: user.id, body: t });
     if (error) return alert(error.message);
+    notifyMentions(t, 'chat');
     document.getElementById('cmsg').value = '';
     load();
   };
@@ -3126,7 +3157,7 @@ async function viewThread(body) {
       const mine = m.sender_id === user.id;
       return `<div class="bub ${mine ? 'me' : ''}">${mine ? '' : avImg(card && card.avatar_url, 'sm')}
         <div class="txt"><div class="who"><b>${mine ? 'Ты' : esc(card ? card.name : 'Собеседник')}</b><span>${fmtTime(m.created_at)}</span></div>
-        <p>${esc(m.body)}</p></div></div>`;
+        <p>${fmtMentions(m.body)}</p></div></div>`;
     }).join('')
       : `<div class="empty"><div class="eico">${ICONS.mail}</div><h3>Начни диалог</h3><p>Напиши первое сообщение — оно появится здесь.</p></div>`;
     log.scrollTop = log.scrollHeight;
