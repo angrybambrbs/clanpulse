@@ -267,6 +267,11 @@ a:hover{color:var(--ac)}
 .gnick{background:transparent;border:0;padding:0;color:var(--tx);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:transparent;box-shadow:none;transform:none;filter:none}
 .gnick:hover{color:var(--ac2);text-decoration-color:var(--ac2)}
 .mention{color:var(--ac2);font-weight:600;background:rgba(var(--ac-rgb),.12);padding:0 3px;border-radius:4px}
+.tac-msg-card{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--bd2);border-radius:10px;background:rgba(var(--ac-rgb),.08);min-width:190px}
+.tac-msg-card>svg{color:var(--ac2);flex:none}
+.tac-msg-card div{display:flex;flex-direction:column;min-width:0}
+.tac-msg-card b{font-size:13px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tac-msg-card span{font-size:11px;color:var(--mut)}
 .bub .who .x:hover{color:var(--bad)}
 .bub p{margin:3px 0 0;white-space:pre-wrap;word-break:break-word;font-size:14px}
 .chatform{display:flex;gap:8px;align-items:flex-end;margin-top:12px}
@@ -976,7 +981,7 @@ async function viewGlobalChat() {
         <button class="gavatar" data-user="${esc(m.user_id)}" aria-label="Профиль игрока">${avImg(m.avatar_url, 'sm') || `<span class="av ph sm">${esc((m.nick || 'И').slice(0, 2).toUpperCase())}</span>`}</button>
         <div class="txt"><div class="who"><button class="gnick" data-user="${esc(m.user_id)}">${esc(m.nick || 'игрок')}</button><span>${fmtTime(m.created_at)}</span>
         ${mine ? `<button class="ghost x" data-delmsg="${esc(m.id)}" aria-label="Удалить">${ICONS.x}</button>` : `<button class="ghost x" data-dm="${esc(m.user_id)}" aria-label="Написать">${ICONS.mail}</button>`}</div>
-        <p>${fmtMentions(m.body)}</p></div></div>`;
+        <p>${fmtMessage(m.body)}</p></div></div>`;
     }).join('') : `<div class="empty"><div class="eico">${ICONS.chat}</div><h3>Тишина в эфире</h3><p>Напиши первым — сообщение увидят все пользователи сайта.</p></div>`;
     log.scrollTop = log.scrollHeight;
     log.querySelectorAll('[data-user]').forEach(b => b.onclick = () => { stopGlobalChan(); viewUserCard(b.dataset.user, () => { tab = 'global'; render(); }); });
@@ -2393,6 +2398,48 @@ function tacGalleryPreview(g) {
   if (map) img.src = map.file; else img.onerror();
 }
 
+function tacSendDlg() {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.className = 'tac-dlg';
+    ov.innerHTML = `<div class="tac-dlg-box" role="dialog" aria-modal="true" aria-label="Отправить тактику">
+      <h3>Отправить тактику</h3>
+      <p>Карточка тактики появится в выбранном чате.</p>
+      <label class="tac-dlg-fld">Куда<select id="tac_send_to"><option value="clan">Чат клана</option></select></label>
+      <div class="tac-dlg-act"><button class="ghost" data-no>Отмена</button><button class="danger" data-yes>Отправить</button></div>
+    </div>`;
+    document.body.append(ov);
+    const sel = ov.querySelector('#tac_send_to');
+    const close = v => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; ov.classList.remove('on'); setTimeout(() => ov.remove(), 140); resolve(v); };
+    const onKey = e => { if (e.key === 'Escape') close(null); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.hasAttribute('data-no')) close(null); });
+    ov.querySelector('[data-yes]').onclick = () => close(sel.value);
+    requestAnimationFrame(() => ov.classList.add('on'));
+    if (clan && user && sb) {
+      sb.from('clan_members').select('user_id,display_name').eq('clan_id', clan.id).then(({ data }) => {
+        (data || []).filter(m => m.user_id !== user.id).forEach(m => {
+          const o = document.createElement('option');
+          o.value = 'dm:' + m.user_id;
+          o.textContent = 'ЛС: ' + (m.display_name || m.user_id);
+          sel.append(o);
+        });
+      }).catch(() => {});
+    }
+  });
+}
+
+async function sendTacticCard(g, to) {
+  const body = 'TACTIC|' + String(g.title || 'Тактика').replace(/[|\r\n]/g, ' ').slice(0, 80) + '|' + g.map_key;
+  const dm = String(to || '').startsWith('dm:');
+  const { error } = dm
+    ? await sb.from('direct_messages').insert({ sender_id: user.id, recipient_id: to.slice(3), body })
+    : await sb.from('clan_messages').insert({ clan_id: clan.id, user_id: user.id, body });
+  if (error) return toast('Не удалось отправить тактику');
+  toast('Тактика отправлена в чат');
+}
+
 async function renderGallery(hostOverride) {
   const host = hostOverride || document.getElementById('tac_gallery');
   if (!host) return;
@@ -2424,6 +2471,7 @@ async function renderGallery(hostOverride) {
         <button class="tac-tool ${liked.has(g.id) ? 'on' : ''}" data-glike="${esc(g.id)}" aria-label="Нравится">${TAC_HEART}<span>${likes}</span></button>
         ${canEdit() ? `<button class="tac-tool ${g.pinned ? 'on' : ''}" data-gpin="${esc(g.id)}">${TAC_PIN}<span>${g.pinned ? 'Открепить' : 'Закрепить'}</span></button>` : ''}
         <button class="tac-tool" data-gload="${esc(g.id)}">Взять в план</button>
+        <button class="tac-tool" data-gchat="${esc(g.id)}">В чат</button>
         ${g.author_id === user.id || canEdit() ? `<button class="tac-tool" data-gedit="${esc(g.id)}">Изменить</button>` : ''}
         ${g.author_id === user.id || canEdit() ? `<button class="tac-tool" data-gdel="${esc(g.id)}">Удалить</button>` : ''}
       </div>
@@ -2471,6 +2519,12 @@ async function renderGallery(hostOverride) {
         body: tacNick() + ' закрепил тактику «' + g.title + '»', href: 'tactics', actor_id: user.id }).then(() => {}).catch(() => {});
     }
     renderGallery(hostOverride);
+  });
+  host.querySelectorAll('[data-gchat]').forEach(b => b.onclick = async () => {
+    const g = data.find(x => x.id === b.dataset.gchat);
+    if (!g) return;
+    const to = await tacSendDlg();
+    if (to) await sendTacticCard(g, to);
   });
   host.querySelectorAll('[data-gedit]').forEach(b => b.onclick = async () => {
     const g = data.find(x => x.id === b.dataset.gedit);
@@ -2907,6 +2961,14 @@ function viewTactics() {
     try {
       o.drawImage(base, 0, 0, m.w, m.h);
       if (TAC.visible) list.forEach(s => tacPaint(o, m.w, m.h, s, 1));
+      const fs = Math.max(16, Math.round(m.w * 0.017));
+      const label = 'ClanPulse · ' + clan.name + ' · ' + m.name + ' · ' + new Date().toLocaleDateString('ru-RU');
+      o.font = '600 ' + fs + "px 'Russo One','Exo 2',sans-serif";
+      const tw = o.measureText(label).width, pad = fs, boxW = tw + pad * 2, boxH = fs * 2.2;
+      o.fillStyle = 'rgba(6,8,16,.72)';
+      o.fillRect(pad, m.h - boxH - pad, boxW, boxH);
+      o.fillStyle = '#fff'; o.textBaseline = 'middle';
+      o.fillText(label, pad * 2, m.h - boxH / 2 - pad);
       out.toBlob(blob => {
         if (!blob) return toast('Не удалось собрать PNG');
         const a = document.createElement('a');
@@ -2988,6 +3050,11 @@ function viewTactics() {
   layout();
 }
 
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest && e.target.closest('[data-open-gallery]');
+  if (b) { e.preventDefault(); openGalleryModal(); }
+});
+
 document.addEventListener('keydown', e => {
   if (tab !== 'tactics') return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
@@ -3022,6 +3089,14 @@ const stopChan = () => { if (chan) { sb.removeChannel(chan); chan = null; } };
 const dmLabel = () => 'Сообщения' + (unread ? ' (' + unread + ')' : '');
 const fmtTime = iso => new Date(iso).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
 const fmtMentions = t => esc(t || '').replace(/(@[\p{L}\p{N}_.-]{2,32})/gu, m => '<span class="mention">' + m + '</span>');
+const fmtMessage = t => {
+  const s = String(t || '');
+  if (s.startsWith('TACTIC|')) {
+    const p = s.split('|'), map = TAC_MAPS[p[2]];
+    return `<div class="tac-msg-card">${TAC_PIN}<div><b>${esc(p[1] || 'Тактика')}</b><span>${esc(map ? map.name : 'Карта')}</span></div><button class="tac-tool" data-open-gallery>Открыть</button></div>`;
+  }
+  return fmtMentions(t);
+};
 async function notifyMentions(text, href) {
   if (!user || !text) return;
   const names = [...new Set((String(text).match(/@([\p{L}\p{N}_.-]{2,32})/gu) || []).map(s => s.slice(1)))];
@@ -3125,7 +3200,7 @@ async function viewChat() {
       return `<div class="bub ${mine ? 'me' : ''}">${avImg(m.user_cards && m.user_cards.avatar_url, 'sm')}
         <div class="txt"><div class="who"><b>${esc(m.user_cards ? m.user_cards.name : 'игрок')}</b><span>${fmtTime(m.created_at)}</span>
         ${mine || canEdit() ? `<button class="ghost x" data-delmsg="${m.id}" aria-label="Удалить">${ICONS.x}</button>` : ''}</div>
-        <p>${fmtMentions(m.body)}</p></div></div>`;
+        <p>${fmtMessage(m.body)}</p></div></div>`;
     }).join('')
       : `<div class="empty"><div class="eico">${ICONS.chat}</div><h3>Тишина в эфире</h3><p>Напиши первым — сообщение увидят все участники клана.</p></div>`;
     log.scrollTop = log.scrollHeight;
@@ -3195,7 +3270,7 @@ async function viewThread(body) {
       const mine = m.sender_id === user.id;
       return `<div class="bub ${mine ? 'me' : ''}">${mine ? '' : avImg(card && card.avatar_url, 'sm')}
         <div class="txt"><div class="who"><b>${mine ? 'Ты' : esc(card ? card.name : 'Собеседник')}</b><span>${fmtTime(m.created_at)}</span></div>
-        <p>${fmtMentions(m.body)}</p></div></div>`;
+        <p>${fmtMessage(m.body)}</p></div></div>`;
     }).join('')
       : `<div class="empty"><div class="eico">${ICONS.mail}</div><h3>Начни диалог</h3><p>Напиши первое сообщение — оно появится здесь.</p></div>`;
     log.scrollTop = log.scrollHeight;
