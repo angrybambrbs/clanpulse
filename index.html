@@ -22,7 +22,7 @@
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
 ::selection{background:rgba(var(--ac-rgb),.45)}
-body{margin:0;font:15px/1.5 'Exo 2',system-ui,sans-serif;background:radial-gradient(1000px 520px at 85% -140px,var(--g1),transparent 60%),radial-gradient(800px 420px at -120px 35vh,var(--g2),transparent 55%),var(--bg);background-attachment:fixed;color:var(--tx)}
+body{margin:0;font:16px/1.5 'Exo 2',system-ui,sans-serif;background:radial-gradient(1000px 520px at 85% -140px,var(--g1),transparent 60%),radial-gradient(800px 420px at -120px 35vh,var(--g2),transparent 55%),var(--bg);background-attachment:fixed;color:var(--tx)}
 main{max-width:880px;margin:0 auto;padding:16px}
 h1,h2{font-family:'Russo One','Exo 2',system-ui,sans-serif;font-weight:400;letter-spacing:.3px}
 h1{font-size:20px;margin:0}h2{font-size:17px;margin:0 0 12px}
@@ -196,11 +196,11 @@ a:hover{color:var(--ac)}
 .navi.on{background:linear-gradient(90deg,rgba(var(--ac-rgb),.22),rgba(var(--ac-rgb),.04));box-shadow:inset 0 0 0 1px rgba(var(--ac-rgb),.28)}
 .navi.on svg{color:var(--ac2)}
 .main{display:flex;flex-direction:column;min-width:0;min-height:100vh}
-.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:11px clamp(14px,3vw,28px);background:rgba(13,11,30,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
-[data-theme="light"] .topbar{background:rgba(255,255,255,.82)}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:11px clamp(14px,3vw,28px);background:linear-gradient(90deg,rgba(var(--ac-rgb),.16),rgba(var(--ac-rgb),.03) 55%),var(--bg);backdrop-filter:blur(14px);border-bottom:1px solid rgba(var(--ac-rgb),.32);box-shadow:0 4px 18px rgba(var(--ac-rgb),.08)}
+[data-theme="light"] .topbar{background:linear-gradient(90deg,rgba(var(--ac-rgb),.10),rgba(var(--ac-rgb),.02) 55%),var(--bg)}
 .tb-title{flex:1;min-width:0}
-.tb-kicker{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tb-title h1{font-size:18px;line-height:1.2;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-kicker{display:block;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-title h1{font-size:20px;line-height:1.2;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-actions{display:flex;align-items:center;gap:4px;flex:none}
 .tb-actions .ghost{display:inline-flex;align-items:center;gap:6px;padding:7px 9px;border-radius:9px;line-height:1}
 .tb-actions .avb{padding:3px 6px}
@@ -504,6 +504,65 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
   .tac-size input[type=range]{flex:1;width:auto}
   .tb-actions .ghost{min-width:40px;min-height:40px;justify-content:center}
 }
+/* ===== Чаты: печатают, упоминания, вложения ===== */
+.bub{transition:opacity .25s ease,transform .25s ease,max-height .25s ease,margin .25s ease}
+.bub.deleting{opacity:0;transform:translateX(18px) scale(.96);max-height:0;overflow:hidden;margin:0;padding:0}
+.typing{display:flex;align-items:center;gap:8px;padding:4px 2px 8px;color:var(--mut);font-size:12px;min-height:24px}
+.typing .dots{display:inline-flex;gap:3px}
+.typing .dots i{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:typingBounce 1.1s infinite ease-in-out}
+.typing .dots i:nth-child(2){animation-delay:.15s}.typing .dots i:nth-child(3){animation-delay:.3s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+.mention{padding:1px 5px;border-radius:6px;color:var(--ac2);background:rgba(var(--ac-rgb),.16);font-weight:600}
+.mdrop{position:absolute;bottom:calc(100% + 6px);left:0;z-index:20;min-width:210px;max-height:220px;overflow:auto;padding:5px;border:1px solid var(--bd2);border-radius:12px;background:var(--card);box-shadow:var(--shadow)}
+.mdrop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:7px;font-size:13px}
+.mdrop button:hover,.mdrop button.on{background:rgba(var(--ac-rgb),.16);color:var(--tx)}
+.chatform{position:relative;display:flex;gap:8px;align-items:flex-end}
+.attach-wrap{position:relative;flex:none}
+.attach-btn{width:46px;height:46px;display:grid;place-items:center;border-radius:12px;font-size:24px;line-height:1;padding:0}
+.attach-menu{position:absolute;bottom:calc(100% + 8px);left:0;z-index:30;width:320px;max-width:80vw;padding:10px;border:1px solid var(--bd2);border-radius:14px;background:var(--card);box-shadow:var(--shadow)}
+.attach-menu h4{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--mut)}
+.gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px}
+.gif-grid img{width:100%;height:62px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--bd)}
+.gif-grid img:hover{border-color:var(--ac)}
+.attach-menu .row input{flex:1;min-width:0;font-size:12px}
+.tac-list{max-height:190px;overflow:auto;margin-bottom:8px}
+.tac-list button{display:block;width:100%;text-align:left;margin-bottom:4px;padding:6px 8px;font-size:12px}
+.msg-gif{max-width:260px;border-radius:10px;overflow:hidden;display:block;margin-top:4px}
+.msg-gif img{display:block;width:100%}
+.msg-tactic{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--ac);border-radius:12px;background:rgba(var(--ac-rgb),.10);margin-top:4px;max-width:270px}
+.msg-tactic b{display:block;font-size:13px}.msg-tactic span{font-size:11px;color:var(--mut)}
+/* ===== Главная страница ===== */
+.land{min-height:100vh;overflow:hidden;position:relative;background:radial-gradient(900px 520px at 78% -80px,rgba(var(--ac-rgb),.26),transparent 62%),radial-gradient(700px 460px at -100px 40vh,rgba(244,63,94,.14),transparent 60%),var(--bg)}
+.land:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(var(--ac-rgb),.05) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--ac-rgb),.05) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent 70%);pointer-events:none}
+.land-nav{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px clamp(18px,5vw,54px);border-bottom:1px solid var(--bd2);backdrop-filter:blur(10px)}
+.land-nav .logo{display:flex;align-items:center;gap:10px;font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:.6px;color:var(--tx)}
+.land-nav .logo i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--btn1),var(--btn2));box-shadow:var(--glow);font-style:normal}
+.land-nav .lbtns{display:flex;gap:8px;flex-wrap:wrap}
+.land-hero{position:relative;max-width:1180px;margin:0 auto;padding:clamp(48px,8vw,96px) clamp(18px,5vw,54px) 40px;text-align:center}
+.land-hero .kick{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border:1px solid rgba(var(--ac-rgb),.45);border-radius:999px;background:rgba(var(--ac-rgb),.1);color:var(--ac2);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.land-hero h1{margin:18px 0 14px;font-size:clamp(38px,6.5vw,76px);line-height:1.02;letter-spacing:-1px;text-transform:uppercase;text-shadow:0 0 38px rgba(var(--ac-rgb),.28)}
+.land-hero h1 em{font-style:normal;color:var(--ac2)}
+.land-hero p{max-width:690px;margin:0 auto;font-size:clamp(15px,2vw,19px);color:var(--mut)}
+.land-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.land-cta button{padding:14px 26px;font-size:16px;border-radius:12px}
+.land-cta .sec{background:transparent;border-color:var(--bd2);color:var(--tx)}
+.land-stats{display:flex;justify-content:center;gap:clamp(18px,5vw,60px);flex-wrap:wrap;margin-top:46px}
+.land-stats div{min-width:110px}.land-stats b{display:block;font-family:'Russo One',sans-serif;font-size:clamp(26px,4vw,40px);color:var(--ac2)}
+.land-stats span{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)}
+.land-sec{position:relative;max-width:1180px;margin:0 auto;padding:44px clamp(18px,5vw,54px)}
+.land-sec>h2{text-align:center;font-size:clamp(26px,4vw,42px);text-transform:uppercase;margin-bottom:8px}
+.land-sec>.sub{text-align:center;color:var(--mut);margin-bottom:30px}
+.land-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.land-card{padding:22px;border:1px solid var(--bd2);border-radius:18px;background:linear-gradient(160deg,rgba(var(--ac-rgb),.10),transparent 60%),var(--card);transition:transform .25s,border-color .25s,box-shadow .25s}
+.land-card:hover{transform:translateY(-5px);border-color:var(--ac);box-shadow:var(--glow)}
+.land-card .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(var(--ac-rgb),.14);color:var(--ac2);margin-bottom:14px}
+.land-card h3{margin:0 0 8px;font-size:18px}.land-card p{margin:0;color:var(--mut);font-size:14px}
+.land-steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.land-step{padding:20px;border-left:3px solid var(--ac);border-radius:0 14px 14px 0;background:var(--card)}
+.land-step b{display:block;color:var(--ac2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.land-foot{text-align:center;padding:36px 18px 46px;color:var(--mut);border-top:1px solid var(--bd2)}
+@media(max-width:600px){.land-nav .lbtns button{font-size:13px;padding:8px 10px}}
+@media(prefers-reduced-motion:reduce){.typing .dots i,.land-card,.bub{animation:none!important;transition:none!important}}
 </style>
 <script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
 </head>
@@ -570,7 +629,7 @@ const clearInvite = () => { try { sessionStorage.removeItem('cp_invite'); } catc
 async function init() {
   grabInvite();
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) return showLogin(oauthError(), !!pendingInvite());
+  if (!session) return showLanding(oauthError(), !!pendingInvite());
   user = session.user;
   isAdmin = (await sb.rpc('is_platform_admin')).data === true;
   sb.rpc('touch_card').then(() => {});
@@ -599,31 +658,64 @@ function oauthError() {
   return q.get('error_description') || h.get('error_description') || '';
 }
 
-function showLogin(errText, invited) {
-  app.innerHTML = `<div class="hero">
-    <div class="logo">ClanPulse</div>
-    ${invited ? '<p><b>Вас пригласили в клан.</b> Войдите через Discord, чтобы вступить.</p>' : ''}
-    <h1>Учёт активности клана без таблиц</h1>
-    <p class="mut">Посещаемость боёв, рейтинг игроков и отряды в одном месте.</p>
-    <ul class="feats">
-      <li>Кто был в бою и как часто: за неделю, месяц и всё время</li>
-      <li>Отряды и состав клана под рукой у офицеров</li>
-      <li>Вход через Discord, пароль не нужен</li>
-    </ul>
-    <div><button id="login" class="discord">Войти через Discord</button></div>
-    <p id="lerr" class="err">${esc(errText || '')}</p>
+function showLanding(errText, invited) {
+  const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
+  const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
+  const feat = [
+    [ICONS.chart, 'Аналитика без таблиц', 'Явка, винрейт, K/D и KDA считаются автоматически из записанных боёв. Фильтры по периоду, режиму и отрядам.'],
+    [ICONS.users, 'Отряды и состав', 'Цветные карточки отрядов, свободные слоты, лавка и быстрая рассадка игроков одной кнопкой.'],
+    [ICONS.shield, 'Общая тактика', 'Пять карт, маршруты и метки, совместное рисование с кланом, галерея планов и экспорт в PNG/JSON.'],
+    [ICONS.cal, 'Календарь и Зона', 'Турниры, хроноразломы и аирдропы. Напоминания за день и RSVP прямо в календаре.'],
+    [ICONS.chat, 'Связь', 'Чат клана, глобальный чат, личные сообщения, @упоминания и уведомления.'],
+    [ICONS.user, 'Профиль игрока', 'Снаряга, показатели, статистика по режимам и ссылка на профиль каждого участника клана.']
+  ].map(([ic, t, d]) => `<article class="land-card"><span class="ic">${ic}</span><h3>${t}</h3><p>${d}</p></article>`).join('');
+  const hooks = [
+    ['Винрейт всегда на виду', 'Цифра обновляется после каждого боя — клан видит прогресс и хочет его сохранить.'],
+    ['Пьедестал из топ-3', 'Три игрока на подиуме создают здоровое соревнование без сложных рейтингов.'],
+    ['Пропуски подсвечены', 'Жёлтый и красный цвет мягко давят на явку, не превращая это в скандал.'],
+    ['KPI вместо протоколов', 'Четыре карточки дают дофамин быстрее, чем длинная таблица с итогами.'],
+    ['Отряд вместо списка', 'Цветная карточка с именами вызывает чувство принадлежности сильнее, чем строка в таблице.'],
+    ['Точки на карте', 'Буквы A/B/C превращают абстрактную карту в конкретную задачу отряда.']
+  ].map(([t, d]) => `<div class="land-step"><b>${t}</b><span>${d}</span></div>`).join('');
+  app.innerHTML = `<div class="land">
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
+      <div class="lbtns">${back}<button data-land-login>${loginLabel}</button></div></nav>
+    <header class="land-hero">
+      <span class="kick">• Система управления кланом</span>
+      <h1>Пульс твоего <em>клана</em></h1>
+      <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
+      <div class="land-cta"><button data-land-login>${loginLabel}</button><button class="sec" data-land-scroll>Узнать подробнее</button></div>
+      <div class="land-stats"><div><b>5</b><span>Тактических карт</span></div><div><b>15</b><span>Разделов</span></div><div><b>0</b><span>Таблиц</span></div><div><b>1</b><span>Вход через Discord</span></div></div>
+    </header>
+    <section class="land-sec" id="land-features"><h2>Что внутри</h2><p class="sub">Шесть систем, которые закрывают весь цикл жизни клана.</p><div class="land-grid">${feat}</div></section>
+    <section class="land-sec"><h2>Системы и показатели</h2><p class="sub">Всё считается само — из боёв, которые вносит клан.</p>
+      <div class="land-grid">
+        <article class="land-card"><h3>K/D и KDA</h3><p>Отношение убийств к смертям и убийств с помощью к смертям. Отдельно по потасовкам, турнирам и захвату базы.</p></article>
+        <article class="land-card"><h3>Винрейт и явка</h3><p>Процент побед и посещаемости с учётом даты вступления игрока в клан.</p></article>
+        <article class="land-card"><h3>Приведёнка и скорость</h3><p>Общая живучесть и скорость передвижения — помогают собрать сбалансированный отряд.</p></article>
+        <article class="land-card"><h3>Хроно и аирдропы</h3><p>Хроноустановки дают хроносферу и пыль. Аирдропы бывают обычные, сахарные и золотые.</p></article>
+      </div></section>
+    <section class="land-sec"><h2>Хуки и психология</h2><p class="sub">Интерфейс настроен так, чтобы клан играл чаще и с удовольствием.</p><div class="land-steps">${hooks}</div></section>
+    <section class="land-sec" style="text-align:center"><h2>Готов играть вместе?</h2>
+      <p class="sub">Войди через Discord — пароль не нужен.</p>
+      <div class="land-cta"><button data-land-login>${loginLabel}</button></div>
+      <p class="err" id="lerr">${esc(errText || (invited ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p></section>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе</footer>
   </div>`;
-  const btn = document.getElementById('login');
-  btn.onclick = async () => {
-    btn.disabled = true; btn.textContent = 'Переходим в Discord…';
+  app.querySelectorAll('[data-land-login]').forEach(b => b.onclick = async () => {
+    if (user) { (clan ? render : renderHub)(); return; }
+    b.disabled = true; b.textContent = 'Переходим в Discord…';
     const { error } = await sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: location.origin + location.pathname } });
     if (error) {
-      btn.disabled = false; btn.textContent = 'Войти через Discord';
-      document.getElementById('lerr').textContent = 'Не удалось войти: ' + error.message;
+      b.disabled = false; b.textContent = loginLabel;
+      const el = document.getElementById('lerr'); if (el) el.textContent = 'Не удалось войти: ' + error.message;
     }
-  };
+  });
+  const bk = app.querySelector('[data-land-back]');
+  if (bk) bk.onclick = () => (clan ? render : renderHub)();
+  const sc = app.querySelector('[data-land-scroll]');
+  if (sc) sc.onclick = () => app.querySelector('#land-features').scrollIntoView({ behavior: 'smooth' });
 }
-
 let hubNote = '';
 let isAdmin = false;
 let unread = 0, chan = null, dmPartner = null, dmListener = null, dmChan = null, dmChanUser = null;
@@ -668,7 +760,8 @@ const ICONS = {
   plus: svg(16, '<path d="M12 5v14M5 12h14"/>'),
   send: svg(14, '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>'),
   x: svg(12, '<path d="M18 6 6 18M6 6l12 12"/>'),
-  logout: svg(16, '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>')
+  logout: svg(16, '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>'),
+  home: svg(17, '<path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>')
 };
 const GOALS = { tournaments: 'Рейтинговые турниры', brawls: 'Потасовки', bases: 'Захват баз', chrono: 'Хроноразломы и аирдропы', open: 'Открытый мир и фарм', casual: 'Без напряга' };
 const GEAR = { 1: 'Ветеранская', 2: 'Мастерская', 3: 'Мастерская +10', 4: 'Мастерская +15' };
@@ -736,6 +829,7 @@ function shell(title, tabs, views, again, icon, primary) {
         <button class="ghost mob" id="menu" aria-label="Меню">${ICONS.menu}</button>
         <div class="tb-title"><span class="tb-kicker ${clan ? 'clan-link' : ''}" ${clan ? 'data-clan-card role="button" tabindex="0"' : ''}>ClanPulse${tab === 'player' ? ' · Профиль' : ' · ' + esc(title)}</span><h1>${esc(pageTitle)}</h1></div>
         <div class="tb-actions">
+          <button class="ghost" data-home aria-label="Главная страница">${ICONS.home}</button>
           <button class="ghost ${tab === 'dm' ? 'on' : ''}" data-t="dm" aria-label="Сообщения">${ICONS.mail}${cnt}</button>
           <button class="ghost ${tab === 'notifs' ? 'on' : ''}" data-t="notifs" aria-label="Уведомления">${ICONS.bell}${ncnt}</button>
           <button class="ghost tb-theme" data-theme-toggle aria-label="Сменить тему"><span class="ticon">${themeIcon}</span></button>
@@ -781,6 +875,7 @@ function shell(title, tabs, views, again, icon, primary) {
     });
   });
   app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { toggle(false); tab = b.dataset.t; again(); });
+  app.querySelectorAll('[data-home]').forEach(b => b.onclick = () => { toggle(false); showLanding(); });
   app.querySelectorAll('[data-clan-card]').forEach(b => {
     const go = () => { toggle(false); viewClanCard(clan.id, () => render()); };
     b.onclick = go;
@@ -1046,7 +1141,11 @@ function viewClanProfile(body, c, prof, applied) {
 
 async function viewClanCard(cid, backFn) {
   const body = document.getElementById('body');
-  const { data: c, error } = await sb.from('clan_directory').select('*').eq('id', cid).maybeSingle();
+  let { data: c, error } = await sb.from('clan_directory').select('*').eq('id', cid).maybeSingle();
+  if (!c) {
+    const r = await sb.from('clans').select('*').eq('id', cid).maybeSingle();
+    if (r.data) { c = r.data; error = null; }
+  }
   if (error || !c) { body.innerHTML = '<div class="card mut">Клан не найден.</div>'; return; }
   body.innerHTML = `<button class="ghost" id="ccback">← Назад</button>
     <div class="card" style="margin-top:12px"><div class="brand" style="align-items:flex-start;gap:14px">${clanAv(c, 'lg')}
@@ -1062,6 +1161,10 @@ async function viewClanCard(cid, backFn) {
 async function viewUserCard(uid, backFn) {
   const body = document.getElementById('body');
   if (!uid || uid === user.id) { tab = 'profile'; return render(); }
+  if (clan) {
+    const pl = await sb.from('players').select('id').eq('clan_id', clan.id).eq('user_id', uid).maybeSingle();
+    if (pl.data) return openPlayer(pl.data.id, backFn);
+  }
   const [pr, cm, st] = await Promise.all([
     sb.from('profiles').select('*').eq('user_id', uid).maybeSingle(),
     sb.from('clan_members').select('clan_id,role,clans(id,name,avatar_url,faction)').eq('user_id', uid).limit(1),
@@ -1073,7 +1176,8 @@ async function viewUserCard(uid, backFn) {
   body.innerHTML = `<button class="ghost" id="ucback">← Назад</button>
     <div class="card" style="margin-top:12px"><div class="brand" style="gap:14px">${avImg(p.avatar_url, 'lg') || `<div class="av ph lg">${esc((p.nickname || 'И').slice(0, 2).toUpperCase())}</div>`}
       <div><h2 style="margin:0 0 6px">${esc(p.nickname || 'Игрок')}</h2>${p.faction ? factionChip(p.faction) : ''}
-      ${c ? `<button class="ghost" id="ucclan">Клан: ${esc(c.name)}</button>` : `<span class="chip">${esc(st.data || 'Без клана')}</span>`}</div></div>
+      ${c ? `<button class="ghost" id="ucclan">Клан: ${esc(c.name)}</button>` : `<span class="chip">${esc(st.data || 'Без клана')}</span>`}
+      ${p.nickname ? '' : '<span class="chip">Профиль на сайте не заполнен</span>'}</div></div>
       <div class="row" style="margin-top:10px"><button class="ghost" id="ucdm">${ICONS.mail} Написать</button></div>
       ${p.about ? `<p style="margin-top:10px">${esc(p.about)}</p>` : ''}
       <div class="stats" style="margin-top:10px">${stat(p.kd, 'K/D')}${stat(p.ehp, 'приведёнка')}${stat(p.speed, 'скорость')}${stat(GEAR[p.gear_level], 'снаряга')}</div>
@@ -1084,6 +1188,108 @@ async function viewUserCard(uid, backFn) {
   if (cc) cc.onclick = () => viewClanCard(c.id, () => viewUserCard(uid, backFn));
 }
 
+const CHAT_GIFS = [
+  { t: 'Огонь', u: 'https://media.giphy.com/media/3o7aTskHEUdgCQAXde/giphy.gif' },
+  { t: 'Танцы', u: 'https://media.giphy.com/media/l0HlHFRbmaZtBRhXG/giphy.gif' },
+  { t: 'Окей', u: 'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif' },
+  { t: 'Опять', u: 'https://media.giphy.com/media/12yR7ZmYCI6qXe/giphy.gif' },
+  { t: 'Давай', u: 'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif' },
+  { t: 'Сила', u: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif' }
+];
+const safeMedia = u => { const s = String(u || '').trim(); return /^https?:\/\/\S+$/i.test(s) ? s : ''; };
+const mentionDropdown = (input, getNames) => {
+  let box = null, active = -1;
+  const close = () => { if (box) box.remove(); box = null; active = -1; };
+  const pick = n => {
+    const v = input.value, i = v.lastIndexOf('@');
+    if (i < 0) return close();
+    input.value = v.slice(0, i) + '@' + n + ' ';
+    close(); input.focus();
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  const show = q => {
+    const list = [...new Set(typeof getNames === 'function' ? getNames() : getNames)].filter(n => n && n.toLowerCase().includes(q)).slice(0, 8);
+    if (!list.length) return close();
+    if (!box) { box = document.createElement('div'); box.className = 'mdrop'; input.parentElement.appendChild(box); }
+    const paint = () => {
+      box.innerHTML = list.map((n, i) => `<button class="${i === active ? 'on' : ''}" data-m="${esc(n)}">@${esc(n)}</button>`).join('');
+      box.querySelectorAll('button').forEach(b => b.onclick = () => pick(b.dataset.m));
+    };
+    paint();
+  };
+  input.addEventListener('input', () => {
+    const upto = input.value.slice(0, input.selectionStart);
+    const m = upto.match(/@([\p{L}\p{N}_.-]{0,32})$/u);
+    if (m) show(m[1]); else close();
+  });
+  input.addEventListener('keydown', e => {
+    if (!box) return;
+    const items = [...box.querySelectorAll('button')];
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); active = (active + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length;
+      items.forEach((b, i) => b.classList.toggle('on', i === active));
+    } else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); pick(items[active].dataset.m); }
+    else if (e.key === 'Escape') close();
+  });
+  input.addEventListener('blur', () => setTimeout(close, 160));
+};
+const wireTyping = (channel, input, indicator, key, onEvent) => {
+  if (!indicator) return () => {};
+  let last = 0, timer = null;
+  const show = nick => {
+    indicator.innerHTML = `<span class="dots"><i></i><i></i><i></i></span>${esc(nick)} печатает…`;
+    indicator.hidden = false; clearTimeout(timer);
+    timer = setTimeout(() => { indicator.hidden = true; }, 2400);
+  };
+  input.addEventListener('input', () => {
+    const now = Date.now();
+    if (now - last > 900 && channel && typeof channel.send === 'function') {
+      last = now;
+      try { channel.send({ type: 'broadcast', event: 'typing', payload: { nick: tacNick(), key } }).catch(() => {}); } catch (e) {}
+    }
+  });
+  onEvent(show);
+  return () => { indicator.hidden = true; clearTimeout(timer); };
+};
+const attachMenu = (host, onSend, allowTactic) => {
+  if (!host) return;
+  const btn = host.querySelector('.attach-btn');
+  const menu = document.createElement('div'); menu.className = 'attach-menu'; menu.hidden = true; host.appendChild(menu);
+  const close = () => { menu.hidden = true; };
+  const render = () => {
+    menu.innerHTML = `<h4>Гифки</h4><div class="gif-grid">${CHAT_GIFS.map(g => `<img src="${g.u}" alt="${esc(g.t)}" data-gif="${esc(g.u)}">`).join('')}</div>
+      <div class="row"><input id="gifurl" placeholder="Ссылка на GIF"><button class="ghost" id="gifadd">OK</button></div>
+      ${allowTactic ? '<h4 style="margin-top:12px">Тактики клана</h4><div class="tac-list">Загрузка…</div>' : '<p class="mut" style="font-size:11px;margin:10px 0 0">Тактики клана могут кидать только офицеры и выше.</p>'}`;
+    menu.querySelectorAll('[data-gif]').forEach(im => im.onclick = () => { onSend('GIF|' + im.dataset.gif); close(); });
+    const add = menu.querySelector('#gifadd');
+    if (add) add.onclick = () => {
+      const u = safeMedia(menu.querySelector('#gifurl').value);
+      if (!u) return alert('Нужна ссылка вида https://…');
+      onSend('GIF|' + u); close();
+    };
+    if (allowTactic) {
+      sb.from('tactics_gallery').select('id,title,map_key').eq('clan_id', clan.id).order('created_at', { ascending: false }).limit(30).then(r => {
+        const host2 = menu.querySelector('.tac-list'); if (!host2) return;
+        host2.innerHTML = (r.data || []).length
+          ? r.data.map(t => `<button data-tid="${esc(t.id)}">${esc(t.title || 'Тактика')} · ${esc((TAC_MAPS[t.map_key] || {}).name || t.map_key || 'карта')}</button>`).join('')
+          : '<p class="mut" style="font-size:11px">В галерее пока нет тактик.</p>';
+        host2.querySelectorAll('[data-tid]').forEach(b => b.onclick = async () => {
+          const t = (r.data || []).find(x => x.id === b.dataset.tid); if (!t) return;
+          onSend('TACTIC|' + String(t.title || 'Тактика').replace(/\|/g, ' ') + '|' + t.map_key + '|' + t.id);
+          close();
+        });
+      });
+    }
+  };
+  btn.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) render(); };
+  document.addEventListener('click', e => { if (!menu.hidden && !host.contains(e.target)) close(); });
+};
+const animateDelete = (btn, doDelete) => {
+  const bub = btn.closest('.bub');
+  if (!bub) return doDelete();
+  bub.classList.add('deleting');
+  setTimeout(doDelete, 260);
+};
 let globalChan = null;
 function stopGlobalChan() { if (globalChan) { try { sb.removeChannel(globalChan); } catch (e) {} globalChan = null; } }
 
@@ -1095,8 +1301,12 @@ async function viewGlobalChat() {
   body.innerHTML = `<div class="card"><div class="top" style="margin-bottom:8px"><h2 style="margin:0">Глобальный чат</h2>
       <span class="mut" style="font-size:12px">Общий чат всех игроков сайта</span></div>
     <div class="log chat" id="glog"></div>
-    <div class="chatform"><textarea id="gmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упомянуть)"></textarea><button id="gsend">${ICONS.send} Отправить</button></div></div>`;
+    <div class="typing" id="gtyping" hidden></div>
+    <div class="chatform"><div class="attach-wrap"><button class="ghost attach-btn" id="gattach" aria-label="Добавить гифку или тактику">＋</button></div>
+      <textarea id="gmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упомянуть)"></textarea><button id="gsend">${ICONS.send} Отправить</button></div></div>`;
   const log = document.getElementById('glog');
+  const typing = document.getElementById('gtyping');
+  let chatNames = [];
   const paint = list => {
     log.innerHTML = list.length ? list.map(m => {
       const mine = m.user_id === user.id;
@@ -1109,32 +1319,44 @@ async function viewGlobalChat() {
     log.scrollTop = log.scrollHeight;
     log.querySelectorAll('[data-user]').forEach(b => b.onclick = () => { stopGlobalChan(); viewUserCard(b.dataset.user, () => { tab = 'global'; render(); }); });
     log.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { stopGlobalChan(); openDm(b.dataset.dm); });
-    log.querySelectorAll('[data-delmsg]').forEach(b => b.onclick = async () => {
+    log.querySelectorAll('[data-delmsg]').forEach(b => b.onclick = () => animateDelete(b, async () => {
       const { error } = await sb.from('global_messages').delete().eq('id', b.dataset.delmsg);
       if (error) return alert(error.message);
       load();
-    });
+    }));
   };
-  const load = async () => { const r = await sb.from('global_messages').select('id,user_id,nick,avatar_url,body,created_at').order('created_at', { ascending: false }).limit(100); if (r.data) paint(r.data.slice().reverse()); };
+  const load = async () => {
+    const r = await sb.from('global_messages').select('id,user_id,nick,avatar_url,body,created_at').order('created_at', { ascending: false }).limit(100);
+    if (r.data) { chatNames = [...new Set(r.data.map(m => m.nick).filter(Boolean))]; paint(r.data.slice().reverse()); }
+  };
   paint((data || []).slice().reverse());
   stopGlobalChan();
-  globalChan = sb.channel('global-chat').on('postgres_changes',
-    { event: 'INSERT', schema: 'public', table: 'global_messages' }, () => load()).subscribe();
-  const send = async () => {
-    const t = val('gmsg').trim(); if (!t) return;
+  let showTyping = () => {};
+  globalChan = sb.channel('global-chat')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, () => load())
+    .on('broadcast', { event: 'typing' }, p => {
+      const v = p.payload || {};
+      if (v.nick && v.nick !== tacNick()) showTyping(v.nick);
+    }).subscribe();
+  showTyping = wireTyping(globalChan, document.getElementById('gmsg'), typing, 'global', fn => { showTyping = fn; });
+  mentionDropdown(document.getElementById('gmsg'), () => chatNames);
+  attachMenu(document.querySelector('#gattach').parentElement, sendRaw, canEdit());
+  const send = async () => { sendRaw(val('gmsg').trim()); };
+  async function sendRaw(t) {
+    if (!t) return;
     const { error: e } = await sb.from('global_messages').insert({
       user_id: user.id, nick: tacNick(),
       avatar_url: (user.user_metadata || {}).avatar_url || null, body: t
     });
     if (e) return alert(e.message);
     notifyMentions(t, 'global');
-    document.getElementById('gmsg').value = '';
+    const inp = document.getElementById('gmsg'); if (inp) inp.value = '';
+    typing.hidden = true;
     load();
-  };
+  }
   document.getElementById('gsend').onclick = send;
   document.getElementById('gmsg').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
 }
-
 async function viewMyApps() {
   const body = document.getElementById('body');
   const { data, error } = await sb.from('clan_applications').select('id,clan_name,status,message,created_at')
@@ -1691,8 +1913,8 @@ function gearEditor(host, G, byId) {
   draw();
 }
 
-let playerId = null;
-const openPlayer = id => { playerId = id; tab = 'player'; render(); };
+let playerId = null, playerBack = null;
+const openPlayer = (id, back) => { playerId = id; playerBack = back || null; tab = 'player'; render(); };
 const plLink = (id, nick) => id ? `<a href="#" data-pl="${id}">${esc(nick)}</a>` : esc(nick);
 const wirePl = root => root.querySelectorAll('[data-pl]').forEach(el => el.onclick = e => { e.preventDefault(); openPlayer(el.dataset.pl); });
 
@@ -1747,10 +1969,10 @@ async function viewPlayer() {
     <div style="margin-top:10px">${factionChip(prof.faction)}<span class="chip ok">${GEAR[prof.gear_level] || '—'}</span><span class="chip">${prof.mic ? 'С микрофоном' : 'Без микрофона'}</span></div>
     <div class="stats">${stat(prof.kd ?? '—', 'K/D')}${stat(prof.ehp ?? '—', 'приведёнка')}${stat(prof.speed ?? '—', 'скорость')}${stat((prof.tournaments_per_week ?? 0) + ' в нед.', 'турниры')}</div>
     ${prof.gear_notes ? `<p style="margin-top:10px">${esc(prof.gear_notes)}</p>` : ''}</div>` : '';
-  body.innerHTML = `<button class="ghost" id="pback">← К рейтингу</button>
+  body.innerHTML = `<button class="ghost" id="pback">${playerBack ? '← Назад' : '← К рейтингу'}</button>
     <div class="card" style="margin-top:12px"><div class="brand" style="gap:14px">${avImg(card && card.avatar_url, 'lg') || `<div class="av ph lg">${esc(p.nick.slice(0, 2).toUpperCase())}</div>`}
-      <div><h2 style="margin:0 0 6px">${esc(p.nick)}</h2>${sqn ? `<span class="chip">Отряд: ${esc(sqn)}</span>` : ''}${p.user_id ? '<span class="chip ok">Аккаунт привязан</span>' : ''}${p.active ? '' : '<span class="chip">Не в составе</span>'}</div></div>
-      ${p.user_id && p.user_id !== user.id ? '<div class="row" style="margin-top:10px"><button class="ghost" id="pdm">Написать</button></div>' : ''}</div>
+      <div><h2 style="margin:0 0 6px">${esc(p.nick)}</h2>${sqn ? `<span class="chip">Отряд: ${esc(sqn)}</span>` : ''}${p.user_id ? '<span class="chip ok">Аккаунт привязан</span>' : '<span class="chip">Игрок ещё не зарегистрирован на сайте</span>'}${p.active ? '' : '<span class="chip">Не в составе</span>'}</div></div>
+      <div class="row" style="margin-top:10px">${p.user_id ? '<button class="ghost" id="puprofile">Профиль пользователя</button>' : ''}${p.user_id && p.user_id !== user.id ? '<button class="ghost" id="pdm">Написать</button>' : ''}</div></div>
     <div class="row">${pb(7, '7 дней')}${pb(30, '30 дней')}${pb(0, 'Всё время')}</div>
     <div class="card"><h2>Статистика за период</h2><p class="mut">Боёв клана: ${rows.length}</p>
       <div class="stats">${stat(played.length, 'боёв сыграно')}${stat(rows.length ? Math.round(played.length / rows.length * 100) + '%' : '—', 'явка')}
@@ -1759,7 +1981,12 @@ async function viewPlayer() {
     ${gear}
     ${modeCard}
     ${hist ? `<div class="card wrap"><h2>Последние бои</h2><table><tr><th>Дата</th><th>K</th><th>D</th><th>П</th><th>Счёт</th></tr>${hist}</table></div>` : '<div class="card mut">За выбранный период боёв нет.</div>'}`;
-  document.getElementById('pback').onclick = () => { tab = 'rating'; render(); };
+  document.getElementById('pback').onclick = () => {
+    const back = playerBack; playerBack = null;
+    if (back) back(); else { tab = 'rating'; render(); }
+  };
+  const pup = document.getElementById('puprofile');
+  if (pup) pup.onclick = () => viewUserCard(p.user_id, () => openPlayer(p.id, playerBack));
   const gh = document.getElementById('gear_host');
   if (gh && prof) loadCatalog().catch(() => null).then(cat => renderGear(gh, gearOf(prof), byIdOf(cat)));
   const dm = document.getElementById('pdm');
@@ -3498,9 +3725,13 @@ const fmtTime = iso => new Date(iso).toLocaleString('ru-RU', { dateStyle: 'short
 const fmtMentions = t => esc(t || '').replace(/(@[\p{L}\p{N}_.-]{2,32})/gu, m => '<span class="mention">' + m + '</span>');
 const fmtMessage = t => {
   const s = String(t || '');
+  if (s.startsWith('GIF|')) {
+    const u = safeMedia(s.slice(4));
+    return u ? `<a class="msg-gif" href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="GIF"></a>` : '<span class="mut">GIF недоступен</span>';
+  }
   if (s.startsWith('TACTIC|')) {
     const p = s.split('|'), map = TAC_MAPS[p[2]];
-    return `<div class="tac-msg-card">${TAC_PIN}<div><b>${esc(p[1] || 'Тактика')}</b><span>${esc(map ? map.name : 'Карта')}</span></div><button class="tac-tool" data-open-gallery>Открыть</button></div>`;
+    return `<div class="tac-msg-card">${TAC_PIN}<div><b>${esc(p[1] || 'Тактика')}</b><span>${esc(map ? map.name : 'Карта')}</span></div><button class="tac-tool" data-open-gallery="${esc(p[3] || '')}">Открыть</button></div>`;
   }
   return fmtMentions(t);
 };
@@ -3593,14 +3824,21 @@ async function viewChat() {
   const body = document.getElementById('body');
   const q = () => sb.from('clan_messages').select('id,body,created_at,user_id,user_cards(name,avatar_url)')
     .eq('clan_id', clan.id).order('created_at', { ascending: false }).limit(100);
-  const [r, cm] = await Promise.all([q(), sb.from('clans').select('chat_mode').eq('id', clan.id).single()]);
+  const [r, cm, mb] = await Promise.all([
+    q(), sb.from('clans').select('chat_mode').eq('id', clan.id).single(),
+    sb.from('clan_members').select('user_id,display_name').eq('clan_id', clan.id)
+  ]);
   if (r.error) return body.innerHTML = failBox(r.error);
   const canPost = canEdit() || (cm.data && cm.data.chat_mode !== 'announce');
   body.innerHTML = `<div class="card"><div class="top" style="margin-bottom:8px"><h2 style="margin:0">Чат клана</h2><span class="mut" style="font-size:12px">${plural(r.data.length, 'сообщение', 'сообщения', 'сообщений')}</span></div>
     ${canPost ? '' : '<p class="mut">В этом чате пишут только владелец и офицеры, остальные читают объявления.</p>'}
     <div class="log chat" id="log"></div>
-    ${canPost ? '<div class="chatform"><textarea id="cmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упомянуть)"></textarea><button id="csend">' + ICONS.send + ' Отправить</button></div>' : ''}</div>`;
+    <div class="typing" id="ctyping" hidden></div>
+    ${canPost ? `<div class="chatform"><div class="attach-wrap"><button class="ghost attach-btn" id="cattach" aria-label="Добавить гифку или тактику">＋</button></div>
+      <textarea id="cmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упомянуть)"></textarea><button id="csend">${ICONS.send} Отправить</button></div>` : ''}</div>`;
   const log = document.getElementById('log');
+  const typing = document.getElementById('ctyping');
+  const chatNames = [...new Set((mb.data || []).map(m => m.display_name).filter(Boolean))];
   const paint = list => {
     log.innerHTML = list.length ? list.map(m => {
       const mine = m.user_id === user.id;
@@ -3611,29 +3849,39 @@ async function viewChat() {
     }).join('')
       : `<div class="empty"><div class="eico">${ICONS.chat}</div><h3>Тишина в эфире</h3><p>Напиши первым — сообщение увидят все участники клана.</p></div>`;
     log.scrollTop = log.scrollHeight;
-    log.querySelectorAll('[data-delmsg]').forEach(b => b.onclick = async () => {
+    log.querySelectorAll('[data-delmsg]').forEach(b => b.onclick = () => animateDelete(b, async () => {
       const { error } = await sb.from('clan_messages').delete().eq('id', b.dataset.delmsg);
       if (error) return alert(error.message);
       load();
-    });
+    }));
   };
   const load = async () => { const { data } = await q(); if (data) paint(data.slice().reverse()); };
   paint(r.data.slice().reverse());
-  chan = sb.channel('clan-' + clan.id).on('postgres_changes',
-    { event: 'INSERT', schema: 'public', table: 'clan_messages', filter: 'clan_id=eq.' + clan.id }, load).subscribe();
+  stopChan();
+  let showTyping = () => {};
+  chan = sb.channel('clan-' + clan.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'clan_messages', filter: 'clan_id=eq.' + clan.id }, load)
+    .on('broadcast', { event: 'typing' }, p => {
+      const v = p.payload || {};
+      if (v.nick && v.nick !== tacNick()) showTyping(v.nick);
+    }).subscribe();
   if (!canPost) return;
-  const send = async () => {
-    const t = val('cmsg').trim(); if (!t) return;
+  showTyping = wireTyping(chan, document.getElementById('cmsg'), typing, 'clan', fn => { showTyping = fn; });
+  mentionDropdown(document.getElementById('cmsg'), chatNames);
+  attachMenu(document.querySelector('#cattach').parentElement, sendRaw, canEdit());
+  const send = async () => { sendRaw(val('cmsg').trim()); };
+  async function sendRaw(t) {
+    if (!t) return;
     const { error } = await sb.from('clan_messages').insert({ clan_id: clan.id, user_id: user.id, body: t });
     if (error) return alert(error.message);
     notifyMentions(t, 'chat');
-    document.getElementById('cmsg').value = '';
+    const inp = document.getElementById('cmsg'); if (inp) inp.value = '';
+    typing.hidden = true;
     load();
-  };
+  }
   document.getElementById('csend').onclick = send;
   document.getElementById('cmsg').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
 }
-
 async function viewDm() {
   const body = document.getElementById('body');
   if (dmPartner) return viewThread(body);
