@@ -458,6 +458,15 @@ function toast(text, kind) {
   host.append(el);
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, 3600);
 }
+const auditLog = (action, details, targetName) => {
+  if (!sb || !clan || !user) return;
+  sb.from('clan_audit_log').insert({
+    clan_id: clan.id, actor_id: user.id,
+    actor_name: tacNick(), action: String(action).slice(0, 80),
+    details: String(details || '').slice(0, 500), target_name: targetName ? String(targetName).slice(0, 80) : null,
+    created_at: new Date().toISOString()
+  }).then(() => {}).catch(() => {});
+};
 // Перехватываем нативный alert — старые вызовы теперь показывают тосты.
 window.alert = text => toast(text);
 const plural = (n, one, few, many) => { const m = n % 100, k = n % 10; return n + ' ' + (m > 10 && m < 20 ? many : k === 1 ? one : k >= 2 && k <= 4 ? few : many); };
@@ -466,6 +475,7 @@ let myRole = 'viewer';
 const canEdit = () => myRole === 'owner' || myRole === 'officer';
 const ROLE = { owner: 'владелец', officer: 'офицер', viewer: 'участник' };
 const CLAN_RANKS = { RESERVE: 'Запасной', PRIVATE: 'Рядовой', FIGHTER: 'Боец', SERGEANT: 'Сержант', OFFICER: 'Офицер', COLONEL: 'Полковник', CALLER: 'Колер', LEADER: 'Лидер' };
+const MATCH_MODES = { 'Потасовка': 'Потасовка', 'Турнир': 'Турнир', 'Захват базы': 'Захват базы', 'Хроноразлом': 'Хроноразлом', 'Открытый мир': 'Открытый мир' };
 const CLAN_RANK_ORDER = ['LEADER','CALLER','COLONEL','OFFICER','SERGEANT','FIGHTER','PRIVATE','RESERVE'];
 const clanRank = (m) => CLAN_RANKS[m && m.rank] || (m && m.role === 'owner' ? CLAN_RANKS.LEADER : '—');
 
@@ -1385,7 +1395,7 @@ function manualMeta() {
   const opps = [...document.querySelectorAll('.opp')].map(r => ({ name: r.querySelector('.oname').value.trim().slice(0, 40),
     score: toInt(r.querySelector('.oscore').value), place: toInt(r.querySelector('.oplace').value) })).filter(t => t.name);
   const teams = opps.length || place != null || score != null ? [{ name: clan.name, score, place, own: true }, ...opps] : [];
-  return { place, team_score: score, extra: { source: 'manual', teams } };
+  return { place, team_score: score, extra: { source: 'manual', teams, map: val('mmap') || null } };
 }
 
 const ICON_BASE = 'https://raw.githubusercontent.com/EXBO-Studio/stalzone-database/main/ru';
@@ -1635,6 +1645,7 @@ async function viewHistory() {
     if (jump) jump.onclick = () => { tab = 'match'; render(); };
     return;
   }
+  const mapOpts = Object.fromEntries(Object.entries(TAC_MAPS).map(([k, v]) => [k, v.name]));
   const nv = v => v == null ? '—' : v;
   const card = (m, open) => {
     const present = m.match_stats.filter(s => !idleStat(s)).sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -1644,19 +1655,37 @@ async function viewHistory() {
     const opp = teams.filter(t => !t.own && !(m.place != null && t.place === m.place && t.score === m.team_score));
     const rows = present.map(s => `<tr><td>${plLink(s.player_id, s.nick_raw)}</td><td>${nv(s.kills)}</td><td>${nv(s.deaths)}</td><td>${nv(s.assists)}</td><td>${nv(s.score)}</td></tr>`).join('')
       + absent.map(p => `<tr class="dim"><td>${plLink(p.id, p.nick)}</td><td colspan="4">не явился</td></tr>`).join('');
-    return `<div class="card"><details ${open ? 'open' : ''}><summary><b>${fmtTime(m.played_at)}</b>${m.mode ? ' · ' + esc(m.mode) : ''}${m.result ? ' · ' + esc(m.result) : ''}${m.place ? ' · ' + m.place + ' место' : ''}
+    const emap = (m.extra && m.extra.map) || '';
+    return `<div class="card"><details ${open ? 'open' : ''}><summary><b>${fmtTime(m.played_at)}</b>${m.mode ? ' · ' + esc(m.mode) : ''}${emap && TAC_MAPS[emap] ? ' · ' + esc(TAC_MAPS[emap].name) : ''}${m.result ? ' · ' + esc(m.result) : ''}${m.place ? ' · ' + m.place + ' место' : ''}
       <span class="mut">· явилось ${present.length} из ${present.length + absent.length}</span></summary>
       ${m.team_score != null ? `<p class="mut">Очки клана: ${m.team_score}</p>` : ''}
       ${opp.length ? `<p class="mut" style="margin-bottom:2px">Противники:</p><div>${opp.map(t => `<span class="chip">${esc(t.name)} · ${nv(t.score)}${t.place ? ' (' + t.place + ' место)' : ''}</span>`).join('')}</div>` : ''}
       <div class="wrap"><table><tr><th>Игрок</th><th>K</th><th>D</th><th>П</th><th>Счёт</th></tr>${rows}</table></div>
-      ${canEdit() ? `<button class="ghost" data-del="${m.id}" style="margin-top:8px">Удалить бой</button>` : ''}</details></div>`;
+      ${canEdit() ? `<div class="row" style="margin-top:8px"><select id="em_${m.id}">${selOpts(MATCH_MODES, m.mode || '', 'Режим')}</select>
+        <select id="emap_${m.id}">${selOpts(mapOpts, emap, 'Карта')}</select><select id="eres_${m.id}">${selOpts(RESULTS, m.result || '', 'Итог')}</select>
+        <input type="number" id="epl_${m.id}" min="1" max="4" value="${m.place || ''}" placeholder="место 1–4" style="width:100px">
+        <button class="ghost" data-editmeta="${m.id}">Сохранить правки</button>
+        <button class="ghost" data-del="${m.id}">Удалить бой</button></div>` : ''}</details></div>`;
   };
   body.innerHTML = mr.data.map((m, i) => card(m, i === 0)).join('');
   wirePl(body);
+  body.querySelectorAll('[data-editmeta]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.editmeta, m = mr.data.find(x => x.id === id);
+    if (!m) return;
+    const extra = { ...(m.extra || {}), map: val('emap_' + id) || null };
+    const { error } = await sb.from('matches').update({
+      mode: val('em_' + id) || null, result: val('eres_' + id) || null,
+      place: numv('epl_' + id), extra
+    }).eq('id', id);
+    if (error) return alert(error.message);
+    auditLog('бой изменён', (val('em_' + id) || '') + ' · ' + (val('eres_' + id) || '') + ' · ' + (val('emap_' + id) || ''));
+    const y = scrollY; await viewHistory(); scrollTo(0, y);
+  });
   body.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     if (!confirm('Удалить бой и всю его статистику?')) return;
     const { error: e } = await sb.from('matches').delete().eq('id', b.dataset.del);
     if (e) return alert(e.message);
+    auditLog('бой удалён', b.dataset.del);
     viewHistory();
   });
 }
@@ -1768,8 +1797,9 @@ async function viewRoster() {
     document.getElementById('r_count').textContent = 'Показано ' + list.length + ' из ' + players.length;
     rowsHost.innerHTML = list.length ? list.map(p => {
       const i = info(p);
-      return `<tr><td>${plLink(p.id, p.nick)}</td><td>${esc(i.rankLabel)}</td>
-        <td>${i.fKey ? factionChip(i.fKey) : '<span class="chip">—</span>'}</td>
+      return `<tr><td>${plLink(p.id, p.nick)}</td>
+        <td>${p.user_id && canEdit() ? `<select data-rankm="${p.id}">${selOpts(CLAN_RANKS, i.rankKey, '—')}</select>` : esc(i.rankLabel)}</td>
+        <td>${p.user_id && canEdit() ? `<select data-factm="${p.id}">${selOpts(FACTIONS, i.fKey, '—')}</select>` : (i.fKey ? factionChip(i.fKey) : '<span class="chip">—</span>')}</td>
         <td><select data-sq="${p.id}">${opts(p.squad_id)}</select></td><td>${p.active ? 'в клане' : 'убран'}</td>
         <td><button class="ghost" data-a="${p.id}" data-v="${p.active}">${p.active ? 'Убрать' : 'Вернуть'}</button></td></tr>`;
     }).join('') : '<tr><td colspan="6" class="mut">Никого не найдено.</td></tr>';
@@ -1780,6 +1810,24 @@ async function viewRoster() {
   document.getElementById('r_squad').onchange = e => { RS.squad = e.target.value; paint(); };
   document.getElementById('r_faction').onchange = e => { RS.faction = e.target.value; paint(); };
   rowsHost.addEventListener('change', async e => {
+    const rk = e.target.closest('[data-rankm]');
+    if (rk) {
+      const p = players.find(x => x.id === rk.dataset.rankm);
+      if (!p || !p.user_id) return;
+      const { error } = await sb.from('clan_members').update({ rank: rk.value }).eq('clan_id', clan.id).eq('user_id', p.user_id);
+      if (error) return alert(error.message);
+      auditLog('смена звания', CLAN_RANKS[rk.value] || '', p.nick);
+      again(); return;
+    }
+    const fc = e.target.closest('[data-factm]');
+    if (fc) {
+      const p = players.find(x => x.id === fc.dataset.factm);
+      if (!p || !p.user_id) return;
+      const { data: ok, error } = await sb.rpc('set_member_faction', { p_user: p.user_id, p_faction: fc.value });
+      if (error || !ok) return alert('Не удалось изменить фракцию');
+      auditLog('смена фракции', FACTIONS[fc.value] || '—', p.nick);
+      again(); return;
+    }
     const sel = e.target.closest('[data-sq]'); if (!sel) return;
     const { error: er } = await sb.from('players').update({ squad_id: sel.value || null }).eq('id', sel.dataset.sq);
     if (er) return alert(er.message);
@@ -1863,11 +1911,11 @@ async function viewMatch() {
     <td><input type="number" min="0" class="ast"></td><td><input type="number" min="0" class="sc"></td></tr>`).join('');
   body.innerHTML = `${importCardHtml()}<div class="card"><h2>Или внеси бой вручную</h2>
     <div class="row"><input type="datetime-local" id="dt" value="${now}">
-    <input id="mode" list="modes" placeholder="Режим (необязательно)" autocomplete="off">
-    <datalist id="modes"><option value="Турнир"></option><option value="Захват базы"></option><option value="Хроноразлом"></option><option value="Потасовка"></option><option value="Открытый мир"></option></datalist>
+    <select id="mode">${selOpts(MATCH_MODES, '', 'Режим (необязательно)')}</select>
+    <select id="mmap">${selOpts(Object.fromEntries(Object.entries(TAC_MAPS).map(([k, v]) => [k, v.name])), '', 'Карта (необязательно)')}</select>
     <select id="res"><option value="">Результат</option><option>победа</option><option>поражение</option></select>
     <select id="msq"><option value="">Отметить весь отряд…</option>${squads.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></div>
-    <div class="row"><input type="number" id="mplace" min="1" placeholder="Место клана" style="width:140px"><input type="number" id="mscore" min="0" placeholder="Очки клана" style="width:140px"></div>
+    <div class="row"><input type="number" id="mplace" min="1" max="4" placeholder="Место клана (1–4)" style="width:150px"><input type="number" id="mscore" min="0" placeholder="Очки клана" style="width:140px"></div>
     <p class="mut" style="margin:8px 0 4px">Противники (необязательно)</p><div id="opps">${oppRow()}</div>
     <button class="ghost" id="oppadd" style="margin-bottom:12px">+ Противник</button>
     <div class="row" style="align-items:center;margin:0 0 8px"><input id="msearch" placeholder="Найти игрока" aria-label="Найти игрока" style="flex:1 1 200px" autocomplete="off">
@@ -1902,9 +1950,11 @@ async function viewMatch() {
   document.getElementById('save').onclick = async () => {
     const present = [...body.querySelectorAll('tr[data-pid]')].filter(r => r.querySelector('.at').checked);
     if (!present.length) return alert('Отметь хотя бы одного игрока');
+    const modeLabel = document.getElementById('mode').value || '';
+    const place = numv('mplace'), score = numv('mscore');
     const { data: m, error } = await sb.from('matches').insert({
       clan_id: clan.id, played_at: new Date(document.getElementById('dt').value).toISOString(),
-      mode: document.getElementById('mode').value || null, result: document.getElementById('res').value || null, ...manualMeta(),
+      mode: modeLabel || null, result: document.getElementById('res').value || null, ...manualMeta(),
       created_by: user.id }).select('id').single();
     if (error) return alert(error.message);
     const { error: e2 } = await sb.from('match_stats').insert(present.map(r => ({
@@ -1912,6 +1962,7 @@ async function viewMatch() {
       kills: num(r.querySelector('.k')), deaths: num(r.querySelector('.d')), assists: num(r.querySelector('.ast')), score: num(r.querySelector('.sc')),
       confirmed: true })));
     if (e2) return alert(e2.message);
+    auditLog('бой добавлен', modeLabel + (place ? ', ' + place + ' место' : '') + (score != null ? ', очки ' + score : ''));
     tab = 'rating'; render();
   };
 }
@@ -1957,6 +2008,7 @@ async function viewTeam() {
   body.querySelectorAll('[data-rank]').forEach(sel => sel.onchange = async () => {
     const { error } = await sb.from('clan_members').update({ rank: sel.value }).eq('clan_id', clan.id).eq('user_id', sel.dataset.rank);
     if (error) return alert(error.message);
+    auditLog('смена звания', CLAN_RANKS[sel.value] || sel.value, sel.dataset.rank);
     viewTeam();
   });
   if (!owner) return;
@@ -1975,6 +2027,7 @@ async function viewTeam() {
   body.querySelectorAll('[data-role]').forEach(sel => sel.onchange = async () => {
     const { error } = await sb.from('clan_members').update({ role: sel.value }).eq('clan_id', clan.id).eq('user_id', sel.dataset.role);
     if (error) alert(error.message);
+    auditLog('смена роли', ROLE[sel.value] || sel.value, sel.dataset.role);
     viewTeam();
   });
   body.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
@@ -3407,7 +3460,8 @@ function showImport(body, parsed, roster) {
   const teams = cp.teams.length ? '<p class="mut">Команды в бою: ' + cp.teams.map(t => esc(t.name) + ' ' + (t.score ?? '—') + (t.place ? ' (' + t.place + ' место)' : '')).join(' · ') + '</p>' : '';
   body.innerHTML = `<div class="card"><h2>Проверь данные боя</h2>
     <p class="mut">Распознавание может ошибаться: сверь ники и цифры со скриншотом и поправь. Игроки со всеми нулями отключены, включи их, если они были в бою.</p>${teams}
-    <div class="grid">${fld('Дата и время', `<input type="datetime-local" id="i_dt" value="${now}">`)}${fld('Режим (необязательно)', '<input id="i_mode">')}
+    <div class="grid">${fld('Дата и время', `<input type="datetime-local" id="i_dt" value="${now}">`)}${fld('Режим', `<select id="i_mode">${selOpts(MATCH_MODES, '', 'Без режима')}</select>`)}
+    ${fld('Карта', `<select id="i_map">${selOpts(Object.fromEntries(Object.entries(TAC_MAPS).map(([k, v]) => [k, v.name])), '', 'Без карты')}</select>`)}
     ${fld('Место клана', `<input type="number" min="1" id="i_place" value="${nv(cp.place)}">`)}${fld('Очки клана', `<input type="number" min="0" id="i_score" value="${nv(cp.team_score)}">`)}
     ${fld('Итог (необязательно)', '<select id="i_res"><option value="">—</option><option>победа</option><option>поражение</option></select>')}</div>
     <div class="wrap"><table><tr><th>Был</th><th>Игрок</th><th>K</th><th>D</th><th>П</th><th>Счёт</th></tr>${tr}</table></div>
@@ -3435,8 +3489,8 @@ function showImport(body, parsed, roster) {
     if (back.length) await sb.from('players').update({ active: true }).in('id', back);
     const { data: m, error: e1 } = await sb.from('matches').insert({
       clan_id: clan.id, played_at: new Date(document.getElementById('i_dt').value).toISOString(),
-      mode: txt('i_mode'), result: txt('i_res'), place: numv('i_place'), team_score: numv('i_score'),
-      extra: { source: 'screenshot', timer: cp.timer, teams: cp.teams.map(t => ({ ...t, own: !!cp.team && normNick(t.name) === normNick(cp.team) })) }, created_by: user.id }).select('id').single();
+      mode: val('i_mode') || null, result: txt('i_res'), place: numv('i_place'), team_score: numv('i_score'),
+      extra: { source: 'screenshot', timer: cp.timer, map: val('i_map') || null, teams: cp.teams.map(t => ({ ...t, own: !!cp.team && normNick(t.name) === normNick(cp.team) })) }, created_by: user.id }).select('id').single();
     if (e1) return fail(e1.message);
     const { error: e2 } = await sb.from('match_stats').insert(pick.map(x => ({
       match_id: m.id, clan_id: clan.id, player_id: x.m ? x.m.id : ids[x.nick], nick_raw: x.nick,
