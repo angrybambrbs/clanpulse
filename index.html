@@ -3539,10 +3539,9 @@ function showImport(body, parsed, roster) {
 const EV_KIND = { tournament: 'Турнир', brawl: 'Потасовка', base: 'Захват базы', chrono: 'Хроноразломы', airdrop: 'Аирдроп', other: 'Другое' };
 const ZONE_LOCATIONS = ['Тихая Заводь (Затон)', 'Дикий Север', 'Любеч-3', 'Комбинат «Уран»', 'Могильник', 'Южная', 'Северная', 'Другое'];
 const AIRDROP_TYPES = {
-  normal: { label: 'Обычный', time: 'взлом 5 сек', loot: 'ресурсы локации, инструменты, компоненты, медикаменты', color: '#f43f5e' },
-  sugar: { label: 'Сахарный', time: 'взлом 10 сек', loot: 'светящийся сахар — нужен для катализаторов', color: '#eab308' },
-  gold: { label: 'Золотой', time: 'взлом 20 сек', loot: 'редкие компоненты и артефакты', color: '#fbbf24' },
-  newyear: { label: 'Новогодний', time: 'взлом 5 сек', loot: 'праздничные предметы (только на Новый год)', color: '#34d399' }
+  normal: { label: 'Обычный', loot: 'ресурсы локации, инструменты, компоненты, медикаменты', color: '#ffffff' },
+  sugar: { label: 'Сахарный', loot: 'светящийся сахар — нужен для катализаторов', color: '#38bdf8' },
+  gold: { label: 'Золотой', loot: 'редкие компоненты и артефакты', color: '#fbbf24' }
 };
 const RSVP = { yes: 'Буду', maybe: 'Возможно', no: 'Не смогу' };
 const RESULTS = { 'победа': 'Победа', 'поражение': 'Поражение', 'ничья': 'Ничья', 'не состоялось': 'Не состоялось' };
@@ -3587,10 +3586,11 @@ async function viewEvents() {
     <p class="mut">Хроноразломы и аирдропы — регулярные события в открытом мире. Запланируй вылазку клана и добавь её в календарь.</p>
     <div class="zone-grid">
       <div class="zone-info"><h3>Хроноразломы</h3>
-        <p>Хроноустановки дают хроносферу и артефакты. Нужно взломать установку и удержать позицию — обычно это делают отрядами.</p>
+        <p>Хроноустановки дают хроносферу и пыль. Нужно установить установку и удержать позицию — обычно это делают отрядами.</p>
         <p class="mut">Локации: Дикий Север, Тихая Заводь (Затон), Комбинат «Уран».</p></div>
       <div class="zone-info"><h3>Аирдропы</h3>
-        ${Object.entries(AIRDROP_TYPES).map(([k, a]) => `<p><span class="chip" style="margin:0 6px 4px 0;border-color:${a.color};color:${a.color}">${esc(a.label)}</span>${esc(a.time)} · ${esc(a.loot)}</p>`).join('')}
+        <p class="mut">Контейнер сбрасывается с воздуха, маркер появляется на PDA. Нужно найти его, взломать и удержать позицию — прогресс сбрасывается, если взлом начнёт другой игрок.</p>
+        ${Object.entries(AIRDROP_TYPES).map(([k, a]) => `<p><span class="chip" style="margin:0 6px 4px 0;border-color:${a.color};color:${a.color}">${esc(a.label)}</span>${esc(a.loot)}</p>`).join('')}
       </div>
     </div>
     ${canEdit() ? `<div class="zone-form"><div class="grid">
@@ -3646,7 +3646,7 @@ async function viewEvents() {
     const info = kind === 'chrono'
       ? { title: 'Хроноразломы · ' + loc, note: 'Хроноустановка: хроносфера и артефакты. Локация: ' + loc }
       : { title: AIRDROP_TYPES[atype].label + ' дроп · ' + loc,
-          note: AIRDROP_TYPES[atype].time + '. ' + AIRDROP_TYPES[atype].loot + '. Локация: ' + loc };
+          note: AIRDROP_TYPES[atype].loot + '. Локация: ' + loc };
     const extra = txt('z_note');
     const { error } = await sb.from('clan_events').insert({
       clan_id: clan.id, kind, title: info.title, starts_at: new Date(dt).toISOString(),
