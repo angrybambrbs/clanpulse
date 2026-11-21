@@ -592,7 +592,45 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-bento .bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--ac2);transition:width .9s cubic-bezier(.2,.8,.2,1)}
 @media(max-width:900px){.land-bento{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.land-bento{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.land-nav .lbtns button{font-size:13px;padding:8px 10px}}
+/* Глубокая проработка главной */
+.land-links{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.land-links a{padding:7px 11px;border-radius:9px;color:var(--mut);font-size:12px;text-decoration:none;transition:color .2s,background .2s}
+.land-links a:hover,.land-links a.on{color:var(--tx);background:rgba(var(--ac-rgb),.14)}
+.sec-kicker{display:inline-block;margin-bottom:10px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ac2);font-weight:700}
+.land-sec{position:relative}
+.land-sec:before{content:"";position:absolute;left:clamp(18px,5vw,54px);right:clamp(18px,5vw,54px);top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--ac-rgb),.45),transparent)}
+.land-decor{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.land-decor .dc{position:absolute;color:rgba(var(--ac-rgb),.16)}
+.land-decor .d1{width:320px;height:320px;top:120px;right:-90px;animation:spin 90s linear infinite}
+.land-decor .d2{width:260px;height:260px;top:900px;left:-100px;animation:spin 120s linear infinite reverse}
+.land-decor .d3{width:420px;height:130px;top:1900px;right:-60px;opacity:.5}
+.land-decor .d4{position:absolute;width:380px;height:380px;border-radius:50%;border:1px dashed rgba(var(--ac-rgb),.18);bottom:600px;left:45%}
+.land-decor .d5{position:absolute;inset:0;background-image:repeating-linear-gradient(115deg,transparent 0 58px,rgba(var(--ac-rgb),.035) 59px 60px);mask-image:linear-gradient(to bottom,transparent,#000 30%,transparent 85%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.land-card-n{position:absolute;top:12px;right:14px;font-family:'Russo One',sans-serif;font-size:30px;color:rgba(var(--ac-rgb),.16);line-height:1}
+.land-card{position:relative;overflow:hidden}
+.card-glow{position:absolute;width:120px;height:120px;border-radius:50%;background:var(--ac);filter:blur(60px);opacity:.10;right:-40px;bottom:-50px;pointer-events:none}
+.spark-wrap{display:flex;align-items:flex-end;gap:10px;margin-top:14px;color:var(--ac2)}
+.spark{width:96px;height:30px;flex:none}
+.spark-wrap .mut{font-size:10px}
+.land-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;position:relative}
+.land-flow:before{content:"";position:absolute;left:8%;right:8%;top:34px;height:2px;background:linear-gradient(90deg,var(--ac),rgba(var(--ac-rgb),.15))}
+.land-step.flow{position:relative;border-left:0;border:1px solid var(--bd2);border-radius:16px;text-align:center;padding-top:18px;z-index:1}
+.flow-n{display:grid;place-items:center;width:34px;height:34px;margin:0 auto 12px;border-radius:50%;background:var(--ac);color:#fff;font-family:'Russo One',sans-serif;font-size:13px;box-shadow:var(--glow)}
+.land-step.flow h3{margin:0 0 6px;font-size:16px;font-family:'Russo One',sans-serif}
+.land-step.flow p{margin:0;color:var(--mut);font-size:12px}
+.hook-title{max-width:920px;margin:0 auto 10px!important;font-size:clamp(24px,4vw,46px)!important;line-height:1.2}
+.hook-title em{font-style:normal;color:var(--ac2)}
+.land-steps .land-step{position:relative;padding-left:44px}
+.step-n{position:absolute;left:14px;top:20px;font-family:'Russo One',sans-serif;font-size:12px;color:var(--ac2)}
+.land-cta-sec{position:relative;overflow:hidden;text-align:center;padding:80px clamp(18px,5vw,54px);border-top:1px solid var(--bd2)}
+.cta-ring{position:absolute;left:50%;top:50%;width:560px;height:560px;margin:-280px 0 0 -280px;border:1px solid rgba(var(--ac-rgb),.22);border-radius:50%;box-shadow:0 0 0 60px rgba(var(--ac-rgb),.03),0 0 0 130px rgba(var(--ac-rgb),.02);pointer-events:none}
+.scroll-hint{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:34px;color:var(--mut);font-size:10px;letter-spacing:.16em;text-transform:uppercase;position:relative;z-index:1}
+.scroll-hint i{font-style:normal;font-size:20px;color:var(--ac2);animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+@media(max-width:900px){.land-flow{grid-template-columns:repeat(2,1fr)}.land-flow:before{display:none}.land-links{order:3;width:100%}}
+@media(max-width:600px){.land-flow{grid-template-columns:1fr}.land-nav .lbtns button{font-size:13px;padding:8px 10px}}
+@media(prefers-reduced-motion:reduce){.land-aurora i,.land-decor .dc,.scroll-hint i{animation:none}}
 @media(prefers-reduced-motion:reduce){.land-aurora i{animation:none}}
 @media(prefers-reduced-motion:reduce){.typing .dots i,.land-card,.bub{animation:none!important;transition:none!important}}
 </style>
@@ -732,9 +770,9 @@ function landBackdrop() {
   let W = 0, H = 0, parts = [];
   const resize = () => {
     W = cv.width = innerWidth; H = cv.height = innerHeight;
-    const n = Math.min(70, Math.round(W * H / 22000));
+    const n = Math.min(80, Math.round(W * H / 20000));
     parts = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - .5) * .22, vy: (Math.random() - .5) * .22, r: Math.random() * 1.6 + .6 }));
+      vx: (Math.random() - .5) * .22, vy: (Math.random() - .5) * .22, r: Math.random() * 1.7 + .6 }));
   };
   resize(); addEventListener('resize', resize);
   const rgb = () => getComputedStyle(document.documentElement).getPropertyValue('--ac-rgb').trim() || '124,58,237';
@@ -746,13 +784,13 @@ function landBackdrop() {
       if (p.x < 0 || p.x > W) p.vx *= -1;
       if (p.y < 0 || p.y > H) p.vy *= -1;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832);
-      ctx.fillStyle = 'rgba(' + c + ',.55)'; ctx.fill();
+      ctx.fillStyle = 'rgba(' + c + ',.6)'; ctx.fill();
     }
     for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
       const a = parts[i], b = parts[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-      if (d < 130) {
+      if (d < 125) {
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = 'rgba(' + c + ',' + (.12 * (1 - d / 130)).toFixed(3) + ')';
+        ctx.strokeStyle = 'rgba(' + c + ',' + (.13 * (1 - d / 125)).toFixed(3) + ')';
         ctx.lineWidth = .7; ctx.stroke();
       }
     }
@@ -760,6 +798,10 @@ function landBackdrop() {
   };
   loop();
 }
+const spark = points => {
+  const pts = points.map((v, i) => `${i * 16},${28 - v * 2.2}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 96 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+};
 function showLanding(errText, invited) {
   const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
   const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
@@ -770,7 +812,19 @@ function showLanding(errText, invited) {
     [ICONS.cal, 'Календарь и Зона', 'Турниры, хроноразломы и аирдропы. Напоминания за день и RSVP прямо в календаре.'],
     [ICONS.chat, 'Связь', 'Чат клана, глобальный чат, личные сообщения, @упоминания и уведомления.'],
     [ICONS.user, 'Профиль игрока', 'Снаряга, показатели, статистика по режимам и ссылка на профиль каждого участника клана.']
-  ].map(([ic, t, d]) => `<article class="land-card"><span class="ic">${ic}</span><h3>${t}</h3><p>${d}</p></article>`).join('');
+  ].map(([ic, t, d], i) => `<article class="land-card"><span class="land-card-n">0${i + 1}</span><span class="ic">${ic}</span><h3>${t}</h3><p>${d}</p><span class="card-glow"></span></article>`).join('');
+  const systems = [
+    ['K/D и KDA', 'Убийства, смерти и помощь отдельно по потасовкам, турнирам и захвату базы.', [3, 5, 4, 7, 6, 8, 7, 9]],
+    ['Винрейт и явка', 'Процент побед и посещаемости с учётом даты вступления игрока в клан.', [4, 6, 5, 8, 7, 9, 8, 10]],
+    ['Приведёнка и скорость', 'Общая живучесть и скорость передвижения для баланса отряда.', [6, 5, 7, 6, 8, 7, 9, 8]],
+    ['Хроно и аирдропы', 'Хроносфера и пыль, обычные, сахарные и золотые контейнеры.', [2, 4, 3, 5, 4, 6, 5, 7]]
+  ].map(([t, d, s]) => `<article class="land-card sys"><span class="ic">${ICONS.chart}</span><h3>${t}</h3><p>${d}</p><div class="spark-wrap">${spark(s)}<span class="mut">за 8 недель</span></div></article>`).join('');
+  const flow = [
+    ['01', 'Войти', 'Discord-авторизация — пароль не нужен, клан узнаёт тебя сразу.'],
+    ['02', 'Внести бой', 'Офицер заносит результат и статистику игроков за пару кликов.'],
+    ['03', 'Увидеть картину', 'Рейтинг, явка и K/D обновляются сами — без ручных таблиц.'],
+    ['04', 'Сыграть вместе', 'Отряды, тактика и календарь превращают данные в общую игру.']
+  ].map(([n, t, d]) => `<div class="land-step flow"><span class="flow-n">${n}</span><h3>${t}</h3><p>${d}</p></div>`).join('');
   const hooks = [
     ['Винрейт всегда на виду', 'Цифра обновляется после каждого боя — клан видит прогресс и хочет его сохранить.'],
     ['Пьедестал из топ-3', 'Три игрока на подиуме создают здоровое соревнование без сложных рейтингов.'],
@@ -778,11 +832,18 @@ function showLanding(errText, invited) {
     ['KPI вместо протоколов', 'Четыре карточки дают дофамин быстрее, чем длинная таблица с итогами.'],
     ['Отряд вместо списка', 'Цветная карточка с именами вызывает чувство принадлежности сильнее, чем строка в таблице.'],
     ['Точки на карте', 'Буквы A/B/C превращают абстрактную карту в конкретную задачу отряда.']
-  ].map(([t, d]) => `<div class="land-step"><b>${t}</b><span>${d}</span></div>`).join('');
+  ].map(([t, d], i) => `<div class="land-step"><span class="step-n">0${i + 1}</span><b>${t}</b><span>${d}</span></div>`).join('');
   app.innerHTML = `<div class="land">
     <canvas class="land-canvas" id="land_bg" aria-hidden="true"></canvas>
     <div class="land-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="land-decor" aria-hidden="true">
+      <svg class="dc d1" viewBox="0 0 200 200"><circle cx="100" cy="100" r="82" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="54" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="26" fill="none" stroke="currentColor"/><path d="M100 0v200M0 100h200" stroke="currentColor"/></svg>
+      <svg class="dc d2" viewBox="0 0 200 200"><path d="M100 8 184 56v88L100 192 16 144V56z" fill="none" stroke="currentColor"/><path d="M100 42 152 72v56l-52 30-52-30V72z" fill="none" stroke="currentColor"/></svg>
+      <svg class="dc d3" viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
+      <div class="dc d4"></div><div class="dc d5"></div>
+    </div>
     <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
+      <div class="land-links"><a href="#land-features">Что внутри</a><a href="#land-systems">Системы</a><a href="#land-flow">Как это работает</a><a href="#land-hooks">Хуки</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button>
         <button data-land-login>${loginLabel}</button></div></nav>
@@ -801,17 +862,19 @@ function showLanding(errText, invited) {
         ['clans', 'Кланов', ICONS.shield], ['players', 'Игроков', ICONS.users], ['matches', 'Боёв', ICONS.sword],
         ['gallery', 'Тактик', ICONS.shield], ['messages', 'Сообщений', ICONS.chat], ['events', 'Событий', ICONS.cal]
       ].map(([k, l, ic]) => `<div class="bs" data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}">—</b><span>${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
+      <div class="scroll-hint"><span>Листай вниз</span><i>↓</i></div>
     </header>
-    <section class="land-sec" id="land-features"><h2>Что внутри</h2><p class="sub">Шесть систем, которые закрывают весь цикл жизни клана.</p><div class="land-grid">${feat}</div></section>
-    <section class="land-sec"><h2>Системы и показатели</h2><p class="sub">Всё считается само — из боёв, которые вносит клан.</p>
-      <div class="land-grid">
-        <article class="land-card"><h3>K/D и KDA</h3><p>Отношение убийств к смертям и убийств с помощью к смертям. Отдельно по потасовкам, турнирам и захвату базы.</p></article>
-        <article class="land-card"><h3>Винрейт и явка</h3><p>Процент побед и посещаемости с учётом даты вступления игрока в клан.</p></article>
-        <article class="land-card"><h3>Приведёнка и скорость</h3><p>Общая живучесть и скорость передвижения — помогают собрать сбалансированный отряд.</p></article>
-        <article class="land-card"><h3>Хроно и аирдропы</h3><p>Хроноустановки дают хроносферу и пыль. Аирдропы бывают обычные, сахарные и золотые.</p></article>
-      </div></section>
-    <section class="land-sec"><h2>Хуки и психология</h2><p class="sub">Интерфейс настроен так, чтобы клан играл чаще и с удовольствием.</p><div class="land-steps">${hooks}</div></section>
-    <section class="land-sec" style="text-align:center"><h2>Готов играть вместе?</h2>
+    <section class="land-sec" id="land-features"><div class="sec-kicker">01 / ВОЗМОЖНОСТИ</div>
+      <h2>Что внутри</h2><p class="sub">Шесть систем, которые закрывают весь цикл жизни клана.</p><div class="land-grid">${feat}</div></section>
+    <section class="land-sec" id="land-systems"><div class="sec-kicker">02 / ПОКАЗАТЕЛИ</div>
+      <h2>Системы и показатели</h2><p class="sub">Всё считается само — из боёв, которые вносит клан.</p><div class="land-grid">${systems}</div></section>
+    <section class="land-sec" id="land-flow"><div class="sec-kicker">03 / СЦЕНАРИЙ</div>
+      <h2>Один вечер клана</h2><p class="sub">От входа до общей игры — четыре шага.</p><div class="land-flow">${flow}</div></section>
+    <section class="land-sec" id="land-hooks"><div class="sec-kicker">04 / ПСИХОЛОГИЯ</div>
+      <h2 class="hook-title">Интерфейс настроен так,<br>чтобы клан играл чаще <em>и с удовольствием.</em></h2>
+      <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
+    <section class="land-cta-sec"><div class="cta-ring" aria-hidden="true"></div>
+      <div class="sec-kicker">05 / НАЧНИ</div><h2>Готов играть вместе?</h2>
       <p class="sub">Войди через Discord — пароль не нужен.</p>
       <div class="land-cta"><button data-land-login>${loginLabel}</button></div>
       <p class="err" id="lerr">${esc(errText || (invited ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p></section>
@@ -820,72 +883,64 @@ function showLanding(errText, invited) {
   landBackdrop();
   app.querySelectorAll('[data-sfx-toggle]').forEach(b => b.onclick = () => {
     sfxOn = !sfxOn; localStorage.setItem(SFX_KEY, sfxOn ? '1' : '0');
-    b.innerHTML = sfxOn ? ICONS.sound : ICONS.mute;
-    sfx('toggle');
+    b.innerHTML = sfxOn ? ICONS.sound : ICONS.mute; sfx('toggle');
   });
-  const panel = app.querySelector('#theme_panel');
-  const tpBtn = app.querySelector('[data-theme-panel]');
+  const panel = app.querySelector('#theme_panel'), tpBtn = app.querySelector('[data-theme-panel]');
   if (tpBtn && panel) tpBtn.onclick = e => { e.stopPropagation(); panel.hidden = !panel.hidden; };
   document.addEventListener('click', e => { if (panel && !panel.hidden && !panel.contains(e.target) && e.target !== tpBtn) panel.hidden = true; });
   const markSw = () => panel.querySelectorAll('[data-tp-preset],[data-tp-custom]').forEach(b => {
-    const on = b.dataset.tpCustom !== undefined ? curAccent() === 'custom' : b.dataset.tpPreset === curAccent();
-    b.classList.toggle('on', on);
+    b.classList.toggle('on', b.dataset.tpCustom !== undefined ? curAccent() === 'custom' : b.dataset.tpPreset === curAccent());
   });
   const refreshFields = () => {
-    const h = hexFromCurrent();
-    const pick = app.querySelector('#tp_pick'), txt = app.querySelector('#tp_hex');
+    const h = hexFromCurrent(), pick = app.querySelector('#tp_pick'), txt = app.querySelector('#tp_hex');
     if (pick) pick.value = h; if (txt) txt.value = h;
     const tb = app.querySelector('#tp_theme');
     if (tb) tb.textContent = (document.documentElement.dataset.theme === 'light' ? '☀ Светлая' : '☾ Тёмная') + ' · сменить';
   };
-  panel.querySelectorAll('[data-tp-preset]').forEach(b => b.onclick = () => {
-    setAccent(b.dataset.tpPreset); markSw(); refreshFields(); sfx('click');
-  });
+  panel.querySelectorAll('[data-tp-preset]').forEach(b => b.onclick = () => { setAccent(b.dataset.tpPreset); markSw(); refreshFields(); sfx('click'); });
   const customSw = panel.querySelector('[data-tp-custom]');
   if (customSw) customSw.onclick = () => { const p = app.querySelector('#tp_pick'); if (p) applyCustom(p.value); markSw(); refreshFields(); sfx('click'); };
   const pickEl = app.querySelector('#tp_pick');
   if (pickEl) pickEl.oninput = () => { const txt = app.querySelector('#tp_hex'); if (txt) txt.value = pickEl.value; applyCustom(pickEl.value); markSw(); };
   const applyBtn = app.querySelector('#tp_apply');
   if (applyBtn) applyBtn.onclick = () => {
-    const txt = app.querySelector('#tp_hex'); let h = txt.value.trim();
-    if (!h.startsWith('#')) h = '#' + h;
-    if (!applyCustom(h)) return alert('Нужен HEX-цвет вида #8b5cf6');
-    markSw(); refreshFields(); sfx('toggle');
+    const txt = app.querySelector('#tp_hex'); let h = txt.value.trim(); if (!h.startsWith('#')) h = '#' + h;
+    if (!applyCustom(h)) return alert('Нужен HEX-цвет вида #8b5cf6'); markSw(); refreshFields(); sfx('toggle');
   };
   const themeBtn = app.querySelector('#tp_theme');
   if (themeBtn) themeBtn.onclick = () => {
     const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    if (curAccent() === 'custom') { const h = hexFromCurrent(); applyCustom(h); }
-    refreshFields(); sfx('click');
+    setTheme(next); if (curAccent() === 'custom') applyCustom(hexFromCurrent()); refreshFields(); sfx('click');
   };
+  app.querySelectorAll('.land-links a').forEach(a => a.onclick = e => {
+    e.preventDefault(); const t = app.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  const secs = [...app.querySelectorAll('.land-sec[id]')];
+  const onScroll = () => {
+    let cur = '';
+    for (const s of secs) if (s.getBoundingClientRect().top <= 140) cur = s.id;
+    app.querySelectorAll('.land-links a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur));
+  };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
   const exit = () => { if (LAND_RAF) cancelAnimationFrame(LAND_RAF); LAND_RAF = null; };
   app.querySelectorAll('[data-land-login]').forEach(b => b.onclick = async () => {
     if (user) { exit(); (clan ? render : renderHub)(); return; }
     b.disabled = true; b.textContent = 'Переходим в Discord…';
     const { error } = await sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: location.origin + location.pathname } });
-    if (error) {
-      b.disabled = false; b.textContent = loginLabel;
-      const el = document.getElementById('lerr'); if (el) el.textContent = 'Не удалось войти: ' + error.message;
-    }
+    if (error) { b.disabled = false; b.textContent = loginLabel; const el = document.getElementById('lerr'); if (el) el.textContent = 'Не удалось войти: ' + error.message; }
   });
   const bk = app.querySelector('[data-land-back]');
   if (bk) bk.onclick = () => { exit(); (clan ? render : renderHub)(); };
   const sc = app.querySelector('[data-land-scroll]');
   if (sc) sc.onclick = () => app.querySelector('#land-features').scrollIntoView({ behavior: 'smooth' });
-  // Живые, проверенные числа — не декоративные заглушки.
   const animate = (el, to) => {
     const t0 = performance.now(), dur = 900;
-    const step = now => {
-      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-      el.textContent = String(Math.round(to * e));
-      if (k < 1) requestAnimationFrame(step);
-    };
+    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = String(Math.round(to * e)); if (k < 1) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   };
   const fill = vals => Object.entries(vals).forEach(([k, v]) => {
-    const el = app.querySelector('[data-v="' + k + '"]');
-    if (el) animate(el, Number(v) || 0);
+    const el = app.querySelector('[data-v="' + k + '"]'); if (el) animate(el, Number(v) || 0);
     const bar = el && el.closest('.bs').querySelector('.bar i');
     if (bar) bar.style.width = Math.max(8, Math.min(100, Math.log10(Number(v) + 1) * 28)) + '%';
   });
