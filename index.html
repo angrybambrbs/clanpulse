@@ -2384,6 +2384,7 @@ const TAC_MAPS = {
   nizina: { name: 'Низина', group: 'tour', file: 'tactics/nizina.jpg', capsFile: 'tactics/nizina_caps.webp', w: 1847, h: 1172,
     caps: [[0.50, 0.585], [0.50, 0.74], [0.50, 0.85]] }
 };
+const TAC_CAPS_VER = 3; // инкрементим при изменении координат точек, чтобы браузер не показывал кэш
 const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
   ['#29d3ff', 'голубой'], ['#b47cff', 'фиолетовый'], ['#ffffff', 'белый'], ['#0b1020', 'чёрный']];
 const TAC_TOOLS = [['brush', 'Кисть'], ['line', 'Линия'], ['arrow', 'Стрелка'], ['erase', 'Ластик'], ['stamp', 'Метки'], ['pan', 'Рука']];
@@ -3032,7 +3033,7 @@ function viewTactics() {
     </div>
     <div class="tac-stage" id="tac_stage"><div class="tac-fit" id="tac_fit">
       <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? 'hidden' : ''}>
-      <img id="tac_img_caps" src="${m.capsFile}" alt="Карта «${esc(m.name)}» с точками захвата" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? '' : 'hidden'}>
+      <img id="tac_img_caps" src="${m.capsFile}?v=${TAC_CAPS_VER}" alt="Карта «${esc(m.name)}» с точками захвата" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? '' : 'hidden'}>
       <canvas id="tac_cv" role="img" aria-label="Поле для рисования плана на карте «${esc(m.name)}»"></canvas>
       <div class="tac-cursors" id="tac_cursors"></div>
     </div>
