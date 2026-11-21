@@ -286,6 +286,14 @@ a:hover{color:var(--ac)}
 .calev b{font-size:11px;font-weight:400;color:var(--ac2);font-family:'Russo One','Exo 2',sans-serif;letter-spacing:.4px}
 .calev.k-tournament{border-left-color:#f43f5e}.calev.k-brawl{border-left-color:#fbbf24}.calev.k-base{border-left-color:#34d399}.calev.k-other{border-left-color:#60a5fa}
 .calev.k-chrono{border-left-color:#a78bfa}.calev.k-airdrop{border-left-color:#facc15}
+.sq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.sq-card{padding:10px;border:1px solid var(--sq,var(--bd2));border-top:3px solid var(--sq,var(--ac));border-radius:12px;background:var(--in);min-width:0}
+.sq-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.sq-head b{font-size:13px;color:var(--tx)}
+.sq-head span{font-size:11px;color:var(--mut)}
+.sq-members{display:flex;flex-wrap:wrap;gap:5px}
+.sq-members .chip{display:inline-flex;align-items:center;gap:3px;margin:0}
+.sq-members .x{padding:0 3px;font-size:14px;line-height:1}
 .zone-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .zone-info{padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--in)}
 .zone-info h3{margin:0 0 6px;font-size:14px;color:var(--ac2)}
@@ -957,9 +965,10 @@ async function viewClanCard(cid, backFn) {
 async function viewUserCard(uid, backFn) {
   const body = document.getElementById('body');
   if (!uid || uid === user.id) { tab = 'profile'; return render(); }
-  const [pr, cm] = await Promise.all([
+  const [pr, cm, st] = await Promise.all([
     sb.from('profiles').select('*').eq('user_id', uid).maybeSingle(),
-    sb.from('clan_members').select('clan_id,role,clans(id,name,avatar_url,faction)').eq('user_id', uid).limit(1)
+    sb.from('clan_members').select('clan_id,role,clans(id,name,avatar_url,faction)').eq('user_id', uid).limit(1),
+    sb.rpc('user_clan_status', { p_user: uid }).catch(() => ({ data: null }))
   ]);
   const p = pr.data || {}, member = (cm.data || [])[0];
   const c = member && member.clans;
@@ -967,7 +976,7 @@ async function viewUserCard(uid, backFn) {
   body.innerHTML = `<button class="ghost" id="ucback">← Назад</button>
     <div class="card" style="margin-top:12px"><div class="brand" style="gap:14px">${avImg(p.avatar_url, 'lg') || `<div class="av ph lg">${esc((p.nickname || 'И').slice(0, 2).toUpperCase())}</div>`}
       <div><h2 style="margin:0 0 6px">${esc(p.nickname || 'Игрок')}</h2>${p.faction ? factionChip(p.faction) : ''}
-      ${c ? `<button class="ghost" id="ucclan">Клан: ${esc(c.name)}</button>` : '<span class="chip">Без клана</span>'}</div></div>
+      ${c ? `<button class="ghost" id="ucclan">Клан: ${esc(c.name)}</button>` : `<span class="chip">${esc(st.data || 'Без клана')}</span>`}</div></div>
       <div class="row" style="margin-top:10px"><button class="ghost" id="ucdm">${ICONS.mail} Написать</button></div>
       ${p.about ? `<p style="margin-top:10px">${esc(p.about)}</p>` : ''}
       <div class="stats" style="margin-top:10px">${stat(p.kd, 'K/D')}${stat(p.ehp, 'приведёнка')}${stat(p.speed, 'скорость')}${stat(GEAR[p.gear_level], 'снаряга')}</div>
@@ -1605,6 +1614,16 @@ async function viewPlayer() {
   const hist = rows.slice(0, 15).map(r => r.s
     ? `<tr><td>${fmtTime(r.m.played_at)}</td><td>${r.s.kills ?? '—'}</td><td>${r.s.deaths ?? '—'}</td><td>${r.s.assists ?? '—'}</td><td>${r.s.score ?? '—'}</td></tr>`
     : `<tr class="dim"><td>${fmtTime(r.m.played_at)}</td><td colspan="4">не явился</td></tr>`).join('');
+  const modeRows = ['Потасовка', 'Турнир', 'Захват базы'].map(mode => {
+    const set = played.filter(r => String(r.m.mode || '').toLowerCase().includes(mode.toLowerCase()));
+    const kk = set.reduce((a, r) => a + (r.s.kills || 0), 0);
+    const dd = set.reduce((a, r) => a + (r.s.deaths || 0), 0);
+    const aa = set.reduce((a, r) => a + (r.s.assists || 0), 0);
+    return `<tr><td>${mode}</td><td>${set.length}</td><td>${kk}</td><td>${dd}</td><td>${aa}</td><td><b>${dd ? (kk / dd).toFixed(2) : '—'}</b></td><td><b>${dd ? ((kk + aa) / dd).toFixed(2) : '—'}</b></td></tr>`;
+  }).join('');
+  const modeCard = `<div class="card wrap"><h2>Статистика по режимам</h2>
+    <p class="mut">K/D и KDA считаются автоматически из записанных кланом боёв.</p>
+    <table><tr><th>Режим</th><th>Боёв</th><th>K</th><th>D</th><th>П</th><th>K/D</th><th>KDA</th></tr>${modeRows}</table></div>`;
   const gear = prof ? `<div class="card"><h2>Снаряга и показатели</h2><div id="gear_host"></div>
     <div style="margin-top:10px">${factionChip(prof.faction)}<span class="chip ok">${GEAR[prof.gear_level] || '—'}</span><span class="chip">${prof.mic ? 'С микрофоном' : 'Без микрофона'}</span></div>
     <div class="stats">${stat(prof.kd ?? '—', 'K/D')}${stat(prof.ehp ?? '—', 'приведёнка')}${stat(prof.speed ?? '—', 'скорость')}${stat((prof.tournaments_per_week ?? 0) + ' в нед.', 'турниры')}</div>
@@ -1619,6 +1638,7 @@ async function viewPlayer() {
       ${stat(d ? (k / d).toFixed(2) : '—', 'K/D')}${stat(played.length ? Math.round(sc / played.length) : '—', 'средний счёт')}
       ${stat(best || '—', 'лучший счёт')}${stat(ast, 'помощь')}${stat(k + ' / ' + d, 'убийства / смерти')}${stat(sc, 'счёт всего')}</div>${chart}</div>
     ${gear}
+    ${modeCard}
     ${hist ? `<div class="card wrap"><h2>Последние бои</h2><table><tr><th>Дата</th><th>K</th><th>D</th><th>П</th><th>Счёт</th></tr>${hist}</table></div>` : '<div class="card mut">За выбранный период боёв нет.</div>'}`;
   document.getElementById('pback').onclick = () => { tab = 'rating'; render(); };
   const gh = document.getElementById('gear_host');
@@ -1731,6 +1751,7 @@ async function syncRoster(members, profiles, players) {
 }
 
 const RS = { q: '', rank: '', squad: '', faction: '' };
+const SQ_COLORS = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#a78bfa', '#06b6d4', '#ec4899', '#14b8a6'];
 async function viewRoster() {
   const body = document.getElementById('body');
   let players, squads, mb, pf;
@@ -1762,6 +1783,13 @@ async function viewRoster() {
   const cnt = id => players.filter(p => p.active && p.squad_id === id).length;
   const sqRows = squads.map(x => `<tr><td>${esc(x.name)}</td><td class="mut">${cnt(x.id)} игроков</td>
     <td><button class="ghost" data-dsq="${x.id}">Удалить</button></td></tr>`).join('');
+  const sqCards = squads.map((x, i) => {
+    const color = SQ_COLORS[i % SQ_COLORS.length];
+    const mem = players.filter(p => p.active && p.squad_id === x.id);
+    return `<div class="sq-card" style="--sq:${color}"><div class="sq-head"><b>${esc(x.name)}</b><span>${mem.length} чел.</span></div>
+      <div class="sq-members">${mem.length ? mem.map(p => `<span class="chip">${esc(p.nick)}${canEdit() ? `<button class="ghost x" data-unsq="${p.id}" aria-label="Убрать из отряда">×</button>` : ''}</span>`).join('') : '<span class="mut">пусто</span>'}</div>
+      ${canEdit() ? `<div class="row" style="margin-top:8px"><button class="ghost" data-dsq="${x.id}">Удалить отряд</button></div>` : ''}</div>`;
+  }).join('');
   const sqFilter = '<option value="">Все отряды</option><option value="none" ' + (RS.squad === 'none' ? 'selected' : '') + '>Без отряда</option>' +
     squads.map(x => `<option value="${x.id}" ${RS.squad === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
   const syncCard = orphan.length ? `<div class="card" style="border-color:var(--warn)">
@@ -1772,7 +1800,7 @@ async function viewRoster() {
     ${sync.error ? `<p class="err" style="margin-top:8px">${esc(sync.error)}</p>` : ''}</div>` : '';
   body.innerHTML = `${syncCard}<div class="card wrap"><h2>Отряды</h2>
     <div class="row"><input id="sqn" placeholder="Название отряда" aria-label="Название отряда"><button id="sqa">Создать отряд</button></div>
-    ${squads.length ? `<table>${sqRows}</table>` : '<p class="mut">Отрядов пока нет.</p>'}</div>
+    ${squads.length ? `<div class="sq-grid">${sqCards}</div>` : '<p class="mut">Отрядов пока нет.</p>'}</div>
     <div class="card"><h2>Добавить игроков</h2>
     <textarea id="nicks" aria-label="Ники игроков, по одному на строку" placeholder="По одному нику на строку"></textarea>
     <div class="row" style="margin-top:8px"><select id="nsq">${opts('')}</select><button id="add">Добавить</button></div></div>
@@ -1856,6 +1884,13 @@ async function viewRoster() {
     if (error) return alert(error.code === '23505' ? 'Отряд с таким названием уже есть' : error.message);
     again();
   };
+  body.querySelectorAll('[data-unsq]').forEach(b => b.onclick = async () => {
+    const p = players.find(x => x.id === b.dataset.unsq);
+    const { error } = await sb.from('players').update({ squad_id: null }).eq('id', b.dataset.unsq);
+    if (error) return alert(error.message);
+    auditLog('вывод из отряда', p ? p.nick : '', p ? p.nick : null);
+    again();
+  });
   body.querySelectorAll('[data-dsq]').forEach(b => b.onclick = async () => {
     if (!confirm('Удалить отряд? Игроки останутся в клане без отряда.')) return;
     const { error } = await sb.from('squads').delete().eq('id', b.dataset.dsq);
@@ -2047,7 +2082,7 @@ const TAC_MAPS = {
   hvoiny: { name: 'Хвойный', group: 'tour', file: 'tactics/hvoiny.jpg', capsFile: 'tactics/hvoiny_caps.webp', w: 1297, h: 991,
     caps: [[0.316, 0.560], [0.493, 0.555], [0.675, 0.560]] },
   nizina: { name: 'Низина', group: 'tour', file: 'tactics/nizina.jpg', capsFile: 'tactics/nizina_caps.webp', w: 1847, h: 1172,
-    caps: [[0.423, 0.616], [0.431, 0.818], [0.431, 0.943]] },
+    caps: [[0.53, 0.60], [0.55, 0.81], [0.55, 0.93]] },
   kvartaly: { name: 'Кварталы', group: 'brawl', file: 'tactics/kvartaly_caps.webp', capsFile: 'tactics/kvartaly_caps.webp', w: 1080, h: 980,
     caps: [[0.255, 0.505], [0.404, 0.258], [0.403, 0.746], [0.501, 0.505], [0.600, 0.258], [0.606, 0.746], [0.744, 0.505]] },
   roza: { name: 'Роза ветров', group: 'brawl', file: 'tactics/roza_caps.webp', capsFile: 'tactics/roza_caps.webp', w: 1080, h: 980,

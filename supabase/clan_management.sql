@@ -3,6 +3,14 @@ drop policy if exists "audit_insert" on public.clan_audit_log;
 create policy "audit_insert" on public.clan_audit_log
   for insert to authenticated with check (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()));
 
+create or replace function public.user_clan_status(p_user uuid)
+returns text language sql stable security definer set search_path = public as $$
+  select case
+    when exists (select 1 from public.clan_members where user_id = p_user) then 'в клане'
+    when exists (select 1 from public.clan_applications where user_id = p_user and status = 'pending') then 'ищет клан'
+    else 'без клана'
+  end;
+$$;
 create or replace function public.set_member_faction(p_user uuid, p_faction text)
 returns boolean language plpgsql security definer set search_path = public as $$
 begin
