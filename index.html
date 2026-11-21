@@ -188,6 +188,8 @@ a:hover{color:var(--ac)}
 .acc-row{display:flex;align-items:center;gap:7px;padding:6px 4px 4px}
 .acc-row .alab{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-right:2px}
 .acsw{width:24px;height:24px;min-height:0;padding:0;border-radius:50%;border:2px solid transparent;box-shadow:0 0 0 1px var(--bd2);background:var(--sw);transform:none}
+.acsw-custom{position:relative;overflow:hidden;background:conic-gradient(#f43f5e,#f59e0b,#10b981,#3b82f6,#8b5cf6,#f43f5e)}
+.acsw-custom input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);padding:0;border:0;background:transparent;opacity:0;cursor:pointer}
 .acsw:hover{transform:scale(1.12);box-shadow:0 0 0 1px var(--bd2);filter:none}
 .acsw.on{border-color:var(--card);box-shadow:0 0 0 2px var(--tx)}
 .sidebar .navi,.drawer .navi{padding:9px 10px;font-size:14px}
@@ -546,6 +548,18 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
 .land-cta button{padding:14px 26px;font-size:16px;border-radius:12px}
 .land-cta .sec{background:transparent;border-color:var(--bd2);color:var(--tx)}
+.theme-panel{position:absolute;top:64px;right:clamp(18px,5vw,54px);z-index:40;width:290px;padding:14px;border:1px solid var(--bd2);border-radius:16px;background:var(--card);box-shadow:var(--shadow);animation:rise .2s ease-out}
+.theme-panel[hidden]{display:none}
+.theme-panel h4{margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.tp-swatches{display:flex;gap:8px;margin-bottom:14px}
+.tp-sw{width:38px;height:38px;border-radius:11px;border:2px solid transparent;cursor:pointer;position:relative;transition:transform .15s,border-color .15s}
+.tp-sw:hover{transform:translateY(-2px)}.tp-sw.on{border-color:var(--tx)}
+.tp-sw.custom{background:conic-gradient(#f43f5e,#f59e0b,#10b981,#3b82f6,#8b5cf6,#f43f5e)}
+.tp-custom{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+.tp-custom input[type=color]{width:40px;height:38px;padding:2px;border:1px solid var(--bd);border-radius:9px;background:var(--in);cursor:pointer}
+.tp-custom input[type=text]{flex:1;min-width:0;font-family:monospace;font-size:13px}
+.tp-custom button{padding:8px 10px;font-size:12px}
+.tp-theme{width:100%;font-size:12px}
 .land-stats{display:flex;justify-content:center;gap:clamp(18px,5vw,60px);flex-wrap:wrap;margin-top:46px}
 .land-stats div{min-width:110px}.land-stats b{display:block;font-family:'Russo One',sans-serif;font-size:clamp(26px,4vw,40px);color:var(--ac2)}
 .land-stats span{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)}
@@ -582,7 +596,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 @media(prefers-reduced-motion:reduce){.land-aurora i{animation:none}}
 @media(prefers-reduced-motion:reduce){.typing .dots i,.land-card,.bub{animation:none!important;transition:none!important}}
 </style>
-<script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
+<script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');const c=localStorage.getItem('cp_custom');if(c&&/^#[0-9a-f]{6}$/i.test(c)){const n=c.replace('#',''),r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16),s=document.documentElement.style;s.setProperty('--ac',c);s.setProperty('--ac-rgb',r+','+g+','+b);s.setProperty('--ac2','#'+[r,g,b].map(x=>Math.round(x*.7+255*.3).toString(16).padStart(2,'0')).join(''));s.setProperty('--btn1',c);s.setProperty('--btn2','#'+[r,g,b].map(x=>Math.round(x*.8).toString(16).padStart(2,'0')).join(''));s.setProperty('--ring','rgba('+r+','+g+','+b+',.35)');s.setProperty('--glow','0 0 18px rgba('+r+','+g+','+b+',.35)');s.setProperty('--g1','rgba('+r+','+g+','+b+',.16)');document.documentElement.dataset.accent='custom';}else if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
 </head>
 <body>
 <main id="app"><p class="mut">Загрузка…</p></main>
@@ -678,6 +692,7 @@ const pendingInvite = () => { try { return sessionStorage.getItem('cp_invite'); 
 const clearInvite = () => { try { sessionStorage.removeItem('cp_invite'); } catch (e) {} };
 
 async function init() {
+  try { const c = localStorage.getItem(CUSTOM_KEY); if (c && /^#[0-9a-f]{6}$/i.test(c)) applyCustom(c); } catch (e) {}
   grabInvite();
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return showLanding(oauthError(), !!pendingInvite());
@@ -768,7 +783,15 @@ function showLanding(errText, invited) {
     <canvas class="land-canvas" id="land_bg" aria-hidden="true"></canvas>
     <div class="land-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
     <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
-      <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button data-land-login>${loginLabel}</button></div></nav>
+      <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button>
+        <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button>
+        <button data-land-login>${loginLabel}</button></div></nav>
+    <div class="theme-panel" id="theme_panel" hidden><h4>Цветовая схема</h4>
+      <div class="tp-swatches">${Object.entries(ACCENTS).map(([k, v]) => `<button class="tp-sw ${curAccent() === k ? 'on' : ''}" data-tp-preset="${k}" style="background:${v[1]}" aria-label="${esc(v[0])}"></button>`).join('')}
+        <button class="tp-sw custom ${curAccent() === 'custom' ? 'on' : ''}" data-tp-custom aria-label="Свой цвет"></button></div>
+      <div class="tp-custom"><input type="color" id="tp_pick" value="${esc(hexFromCurrent())}">
+        <input type="text" id="tp_hex" maxlength="7" value="${esc(hexFromCurrent())}" aria-label="HEX-код цвета"><button id="tp_apply">OK</button></div>
+      <button class="ghost tp-theme" id="tp_theme">${document.documentElement.dataset.theme === 'light' ? '☀ Светлая' : '☾ Тёмная'} · сменить</button></div>
     <header class="land-hero">
       <span class="kick">• Система управления кланом</span>
       <h1>Пульс твоего <em>клана</em></h1>
@@ -800,6 +823,42 @@ function showLanding(errText, invited) {
     b.innerHTML = sfxOn ? ICONS.sound : ICONS.mute;
     sfx('toggle');
   });
+  const panel = app.querySelector('#theme_panel');
+  const tpBtn = app.querySelector('[data-theme-panel]');
+  if (tpBtn && panel) tpBtn.onclick = e => { e.stopPropagation(); panel.hidden = !panel.hidden; };
+  document.addEventListener('click', e => { if (panel && !panel.hidden && !panel.contains(e.target) && e.target !== tpBtn) panel.hidden = true; });
+  const markSw = () => panel.querySelectorAll('[data-tp-preset],[data-tp-custom]').forEach(b => {
+    const on = b.dataset.tpCustom !== undefined ? curAccent() === 'custom' : b.dataset.tpPreset === curAccent();
+    b.classList.toggle('on', on);
+  });
+  const refreshFields = () => {
+    const h = hexFromCurrent();
+    const pick = app.querySelector('#tp_pick'), txt = app.querySelector('#tp_hex');
+    if (pick) pick.value = h; if (txt) txt.value = h;
+    const tb = app.querySelector('#tp_theme');
+    if (tb) tb.textContent = (document.documentElement.dataset.theme === 'light' ? '☀ Светлая' : '☾ Тёмная') + ' · сменить';
+  };
+  panel.querySelectorAll('[data-tp-preset]').forEach(b => b.onclick = () => {
+    setAccent(b.dataset.tpPreset); markSw(); refreshFields(); sfx('click');
+  });
+  const customSw = panel.querySelector('[data-tp-custom]');
+  if (customSw) customSw.onclick = () => { const p = app.querySelector('#tp_pick'); if (p) applyCustom(p.value); markSw(); refreshFields(); sfx('click'); };
+  const pickEl = app.querySelector('#tp_pick');
+  if (pickEl) pickEl.oninput = () => { const txt = app.querySelector('#tp_hex'); if (txt) txt.value = pickEl.value; applyCustom(pickEl.value); markSw(); };
+  const applyBtn = app.querySelector('#tp_apply');
+  if (applyBtn) applyBtn.onclick = () => {
+    const txt = app.querySelector('#tp_hex'); let h = txt.value.trim();
+    if (!h.startsWith('#')) h = '#' + h;
+    if (!applyCustom(h)) return alert('Нужен HEX-цвет вида #8b5cf6');
+    markSw(); refreshFields(); sfx('toggle');
+  };
+  const themeBtn = app.querySelector('#tp_theme');
+  if (themeBtn) themeBtn.onclick = () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    if (curAccent() === 'custom') { const h = hexFromCurrent(); applyCustom(h); }
+    refreshFields(); sfx('click');
+  };
   const exit = () => { if (LAND_RAF) cancelAnimationFrame(LAND_RAF); LAND_RAF = null; };
   app.querySelectorAll('[data-land-login]').forEach(b => b.onclick = async () => {
     if (user) { exit(); (clan ? render : renderHub)(); return; }
@@ -840,15 +899,50 @@ let notifCount = 0, notifChan = null, notifChanUser = null;
 const FACTIONS = { svoboda: 'Свобода', dolg: 'Долг', naemniki: 'Наёмники', zavet: 'Завет' };
 const FCLASS = { svoboda: 'svoboda', dolg: 'dolg', naemniki: 'naemniki', zavet: 'zavet' };
 const factionChip = (f, any) => `<span class="chip faction ${FCLASS[f] || ''}">${FACTIONS[f] || any || 'Без фракции'}</span>`;
-const THEME_KEY = 'cp_theme';
+const THEME_KEY = 'cp_theme', CUSTOM_KEY = 'cp_custom';
 const ACCENTS = { violet: ['Фиолетовый', '#8b5cf6'], ocean: ['Океан', '#3b82f6'], emerald: ['Изумруд', '#10b981'], amber: ['Янтарь', '#f59e0b'] };
+const CUSTOM_VARS = ['--ac', '--ac2', '--ac-rgb', '--btn1', '--btn2', '--bd', '--bd2', '--ring', '--glow', '--g1'];
+const hexRgb = h => { const s = String(h || '').replace('#', ''); return [0, 2, 4].map(i => parseInt(s.slice(i, i + 2), 16) || 0); };
+const mixHex = (h, target, t) => {
+  const a = hexRgb(h), b = hexRgb(target);
+  return '#' + a.map((v, i) => Math.round(v * (1 - t) + b[i] * t).toString(16).padStart(2, '0')).join('');
+};
+const applyCustom = hex => {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return false;
+  const root = document.documentElement, [r, g, b] = hexRgb(hex);
+  const set = (k, v) => root.style.setProperty(k, v);
+  set('--ac', hex);
+  set('--ac2', mixHex(hex, '#ffffff', .3));
+  set('--ac-rgb', `${r},${g},${b}`);
+  set('--btn1', mixHex(hex, '#000000', .06));
+  set('--btn2', mixHex(hex, '#000000', .24));
+  set('--bd', mixHex(hex, '#0f0f23', .76));
+  set('--bd2', mixHex(hex, '#0f0f23', .62));
+  set('--ring', `rgba(${r},${g},${b},.35)`);
+  set('--glow', `0 0 18px rgba(${r},${g},${b},.35)`);
+  set('--g1', `rgba(${r},${g},${b},.16)`);
+  root.dataset.accent = 'custom';
+  try { localStorage.setItem(CUSTOM_KEY, hex); } catch (e) {}
+  return true;
+};
+const clearCustom = () => {
+  CUSTOM_VARS.forEach(k => document.documentElement.style.removeProperty(k));
+  try { localStorage.removeItem(CUSTOM_KEY); } catch (e) {}
+};
+const hexFromCurrent = () => localStorage.getItem(CUSTOM_KEY) || (ACCENTS[curAccent()] || [])[1] || '#8b5cf6';
 const curAccent = () => document.documentElement.dataset.accent || 'violet';
 const setAccent = a => {
+  clearCustom();
   if (a && a !== 'violet') document.documentElement.dataset.accent = a;
   else delete document.documentElement.dataset.accent;
   try { localStorage.setItem('cp_accent', a || 'violet'); } catch (e) {}
 };
-const setTheme = t => { document.documentElement.dataset.theme = t; try { localStorage.setItem(THEME_KEY, t); } catch (e) {} const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#f4f3fa' : '#0f0f23'; };
+const setTheme = t => {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#f4f3fa' : '#0f0f23';
+  if (curAccent() === 'custom') applyCustom(hexFromCurrent());
+};
 const svg = (w, d) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-${Math.round(w * 0.15)}px">${d}</svg>`;
 const TSVG = {
   sun: svg(16, '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
@@ -880,7 +974,8 @@ const ICONS = {
   logout: svg(16, '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>'),
   home: svg(17, '<path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
   sound: svg(16, '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'),
-  mute: svg(16, '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>')
+  mute: svg(16, '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>'),
+  palette: svg(17, '<path d="M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 1.4-3.4 2 2 0 0 1 1.4-3.4H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3z"/><circle cx="7.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="8" r="1" fill="currentColor" stroke="none"/>')
 };
 const GOALS = { tournaments: 'Рейтинговые турниры', brawls: 'Потасовки', bases: 'Захват баз', chrono: 'Хроноразломы и аирдропы', open: 'Открытый мир и фарм', casual: 'Без напряга' };
 const GEAR = { 1: 'Ветеранская', 2: 'Мастерская', 3: 'Мастерская +10', 4: 'Мастерская +15' };
@@ -934,7 +1029,8 @@ function shell(title, tabs, views, again, icon, primary) {
   const ava = md.avatar_url ? '<img class="av sm" referrerpolicy="no-referrer" src="' + esc(md.avatar_url) + '" alt="">' : 'Профиль';
   const quick = primary.filter(id => label[id]).map(id => `<button class="ghost ${tab === id ? 'on' : ''}" data-t="${id}">${label[id]}</button>`).join('');
   const cur = curAccent();
-  const accRow = `<div class="acc-row" role="group" aria-label="Цветовая схема сайта"><span class="alab">Акцент</span>${Object.entries(ACCENTS).map(([k, v]) => `<button class="acsw ${cur === k ? 'on' : ''}" data-accent="${k}" style="--sw:${v[1]}" aria-label="Акцент: ${esc(v[0])}" aria-pressed="${cur === k}"></button>`).join('')}</div>`;
+  const accRow = `<div class="acc-row" role="group" aria-label="Цветовая схема сайта"><span class="alab">Акцент</span>${Object.entries(ACCENTS).map(([k, v]) => `<button class="acsw ${cur === k ? 'on' : ''}" data-accent="${k}" style="--sw:${v[1]}" aria-label="Акцент: ${esc(v[0])}" aria-pressed="${cur === k}"></button>`).join('')}
+    <label class="acsw acsw-custom" title="Свой цвет" aria-label="Свой цвет"><input type="color" data-custom-color value="${esc(hexFromCurrent())}"></label></div>`;
   const foot = `${accRow}<button class="navi" data-theme-toggle><span class="ticon">${themeIcon}</span><span class="nlabel">Сменить тему</span></button>
     <button class="navi" data-out>${ICONS.logout}<span class="nlabel">Выйти</span></button>`;
   app.innerHTML = `<div class="app">
@@ -984,6 +1080,11 @@ function shell(title, tabs, views, again, icon, primary) {
     setTheme(next);
     const ic = next === 'light' ? TSVG.sun : TSVG.moon;
     app.querySelectorAll('.ticon').forEach(el => { el.innerHTML = ic; });
+  });
+  app.querySelectorAll('[data-custom-color]').forEach(inp => inp.oninput = () => {
+    applyCustom(inp.value);
+    app.querySelectorAll('[data-accent]').forEach(x => x.classList.remove('on'));
+    toast('Свой цвет применён');
   });
   app.querySelectorAll('[data-accent]').forEach(b => b.onclick = () => {
     const a = b.dataset.accent;
