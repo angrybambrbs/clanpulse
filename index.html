@@ -215,6 +215,7 @@ a:hover{color:var(--ac)}
 .dh-kicker{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ac2);font-weight:700;margin-bottom:4px}
 .dash-hero h2{font-size:22px;margin:0}
 .dh-mark{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--ac2);background:rgba(var(--ac-rgb),.12);border:1px solid rgba(var(--ac-rgb),.32);box-shadow:var(--glow)}
+.dh-top .pg-actions button{min-width:auto}
 .hero-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative}
 .hstat{background:rgba(9,8,22,.35);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;min-width:0}
 [data-theme="light"] .hstat{background:rgba(var(--ac-rgb),.04)}
@@ -294,6 +295,24 @@ a:hover{color:var(--ac)}
 .sq-members{display:flex;flex-wrap:wrap;gap:5px}
 .sq-members .chip{display:inline-flex;align-items:center;gap:3px;margin:0}
 .sq-members .x{padding:0 3px;font-size:14px;line-height:1}
+.pg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px;margin-bottom:12px;background:linear-gradient(135deg,rgba(var(--ac-rgb),.14),transparent 60%),var(--card);border:1px solid var(--bd2);border-radius:16px}
+.pg-head h2{margin:0 0 4px;font-family:'Russo One','Exo 2',sans-serif;font-size:24px;letter-spacing:.5px;text-transform:uppercase}
+.pg-head p{margin:0;color:var(--mut);font-size:13px}
+.pg-actions,.pg-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pg-actions{justify-content:flex-end}
+.pg-actions .ghost,.pg-actions button{min-width:120px;justify-content:center}
+.pg-bar{margin-bottom:12px}
+.pg-bar .chip{margin:0;cursor:pointer}
+.pg-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.pg-kpi{padding:12px 14px;border:1px solid var(--bd2);border-radius:14px;background:var(--card)}
+.pg-kpi span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.pg-kpi b{font-family:'Russo One','Exo 2',sans-serif;font-size:26px;font-weight:400}
+.pg-main{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:12px;align-items:start}
+.pg-lobby{padding:12px;border:1px dashed var(--bd2);border-radius:14px;background:var(--in)}
+.pg-lobby h3{margin:0 0 8px;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.12em}
+.pg-lobby .lo{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px}
+.pg-lobby select{flex:1;min-width:0;font-size:11px;padding:4px 6px}
+@media(max-width:959px){.pg-kpis{grid-template-columns:1fr 1fr}.pg-main{grid-template-columns:1fr}}
 .zone-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .zone-info{padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--in)}
 .zone-info h3{margin:0 0 6px;font-size:14px;color:var(--ac2)}
@@ -466,6 +485,7 @@ function toast(text, kind) {
   host.append(el);
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, 3600);
 }
+const safeFileName = s => String(s || 'plan').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40);
 const auditLog = (action, details, targetName) => {
   if (!sb || !clan || !user) return;
   sb.from('clan_audit_log').insert({
@@ -611,6 +631,7 @@ const numv = id => { const v = val(id); return v === '' ? null : Number(v); };
 const selOpts = (obj, sel, any) => (any ? `<option value="">${any}</option>` : '') +
   Object.entries(obj).map(([k, v]) => `<option value="${k}" ${String(sel ?? '') === k ? 'selected' : ''}>${esc(v)}</option>`).join('');
 const fld = (label, inner) => `<label class="fld"><span>${label}</span>${inner}</label>`;
+const pgHead = (title, subtitle, actions = '') => `<div class="pg-head card"><div><h2>${esc(title)}</h2><p>${esc(subtitle)}</p></div><div class="pg-actions">${actions}</div></div>`;
 
 const NAV_ICON = {
   rating: ICONS.star, match: ICONS.sword, history: ICONS.clock, stats: ICONS.chart,
@@ -1302,8 +1323,9 @@ async function viewStats() {
     + rows('Лучший новичок', newcomers);
   const bp = (v, l) => `<button class="ghost ${statPeriod === v ? 'on' : ''}" data-sp="${v}">${l}</button>`;
   const bg = (v, l) => `<button class="ghost ${statGroup === v ? 'on' : ''}" data-sg="${v}">${l}</button>`;
-  body.innerHTML = `<div class="row">${bp(7, '7 дней')}${bp(30, '30 дней')}${bp(0, 'Всё время')}${bg('day', 'По дням')}${bg('week', 'По неделям')}</div>
-    <div class="card"><h2>Активность клана</h2><div class="topcard">
+  body.innerHTML = pgHead('Аналитика', 'Динамика боёв, винрейт и эффективность игроков.',
+      `${bp(7, '7 дней')}${bp(30, '30 дней')}${bp(0, 'Всё время')}${bg('day', 'По дням')}${bg('week', 'По неделям')}`)
+    + `<div class="card"><h2>Активность клана</h2><div class="topcard">
     <div class="stat"><b>${allN}</b><span>боёв</span></div><div class="stat"><b>${allW}</b><span>побед</span></div>
     <div class="stat"><b>${allN ? Math.round(allW / allN * 100) + '%' : '—'}</b><span>винрейт</span></div>
     <div class="stat"><b>${allD ? (allK / allD).toFixed(2) : '—'}</b><span>средний K/D</span></div></div>${chart}${trend}</div>
@@ -1398,7 +1420,8 @@ async function viewRating() {
       <div class="dh-top">
         <div><span class="dh-kicker">${esc(clan.name)} · штаб</span><h2>Боевая сводка</h2>
           <p class="mut">${periodNote} · боёв клана: ${total}</p></div>
-        <span class="dh-mark">${ICONS.shield}</span>
+        <div class="pg-actions">${pb(7, '7 дней')}${pb(30, '30 дней')}${pb(0, 'Всё время')}
+          <select id="fsq">${fopt('', 'Все отряды')}${sq.data.map(x => fopt(x.id, x.name)).join('')}${fopt('none', 'Без отряда')}</select></div>
       </div>
       <div class="hero-stats">
         <div class="hstat"><span>Состав</span><b>${list.length}</b><i>игроков в выборке</i></div>
@@ -1408,8 +1431,6 @@ async function viewRating() {
       </div>
     </div>
     ${podium}
-    <div class="row"><span class="mut" style="align-self:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase">Период</span>${pb(7, '7 дней')}${pb(30, '30 дней')}${pb(0, 'Всё время')}
-    <select id="fsq">${fopt('', 'Все отряды')}${sq.data.map(x => fopt(x.id, x.name)).join('')}${fopt('none', 'Без отряда')}</select></div>
     <div class="card wrap"><h2>Рейтинг активности</h2>
     <p class="mut">Явка считается с учётом даты вступления игрока. Пропуски подсвечены: жёлтый — есть пропуски, красный — пропущено 40% и больше.</p>
     <table><tr><th>#</th><th>Игрок</th><th>Отряд</th><th>Боёв</th><th>Явка</th><th>K</th><th>D</th><th>K/D</th><th>П</th><th>Счёт</th><th>Последний бой</th></tr>${rows}</table></div>`;
@@ -1689,6 +1710,9 @@ async function viewHistory() {
   }
   const mapOpts = Object.fromEntries(Object.entries(TAC_MAPS).map(([k, v]) => [k, v.name]));
   const nv = v => v == null ? '—' : v;
+  const hwins = mr.data.filter(m => (m.result || '').toLowerCase().includes('побед') || m.place === 1).length;
+  const hwr = mr.data.length ? Math.round(hwins / mr.data.length * 100) : 0;
+  const hkills = mr.data.reduce((a, m) => a + m.match_stats.reduce((x, s) => x + (s.kills || 0), 0), 0);
   const card = (m, open) => {
     const present = m.match_stats.filter(s => !idleStat(s)).sort((a, b) => (b.score || 0) - (a.score || 0));
     const shown = new Set(present.map(s => s.player_id));
@@ -1709,7 +1733,16 @@ async function viewHistory() {
         <button class="ghost" data-editmeta="${m.id}">Сохранить правки</button>
         <button class="ghost" data-del="${m.id}">Удалить бой</button></div>` : ''}</details></div>`;
   };
-  body.innerHTML = mr.data.map((m, i) => card(m, i === 0)).join('');
+  body.innerHTML = pgHead('История боёв', 'Последние 30 боёв клана: результаты, явка и статистика игроков.',
+      canEdit() ? '<button class="ghost" id="h_add">Добавить бой</button>' : '')
+    + `<div class="pg-kpis">
+        <div class="pg-kpi"><span>Боёв</span><b>${mr.data.length}</b></div>
+        <div class="pg-kpi"><span>Побед</span><b style="color:var(--ok)">${hwins}</b></div>
+        <div class="pg-kpi"><span>Винрейт</span><b style="color:#38bdf8">${hwr}%</b></div>
+        <div class="pg-kpi"><span>Убийств</span><b>${hkills}</b></div></div>`
+    + mr.data.map((m, i) => card(m, i === 0)).join('');
+  const hadd = document.getElementById('h_add');
+  if (hadd) hadd.onclick = () => { tab = 'match'; render(); };
   wirePl(body);
   body.querySelectorAll('[data-editmeta]').forEach(b => b.onclick = async () => {
     const id = b.dataset.editmeta, m = mr.data.find(x => x.id === id);
@@ -1820,19 +1853,36 @@ async function viewRoster() {
     <div class="row" style="margin-bottom:0">${orphan.map(m => `<span class="chip">${esc(m.display_name || memberNick(m, profiles) || 'без имени')}</span>`).join('')}</div>
     ${canEdit() ? '<button id="rsync" style="margin-top:10px">Добавить в состав</button>' : ''}
     ${sync.error ? `<p class="err" style="margin-top:8px">${esc(sync.error)}</p>` : ''}</div>` : '';
-  body.innerHTML = `${syncCard}<div class="card wrap"><h2>Отряды</h2>
-    <div class="row"><input id="sqn" placeholder="Название отряда" aria-label="Название отряда"><button id="sqa">Создать отряд</button></div>
-    ${squads.length ? `<div class="sq-grid">${sqCards}</div>` : '<p class="mut">Отрядов пока нет.</p>'}</div>
-    <div class="card"><h2>Добавить игроков</h2>
+  const active = players.filter(p => p.active);
+  const assigned = active.filter(p => p.squad_id).length;
+  const bench = active.length - assigned;
+  const fill = active.length ? Math.round(assigned / active.length * 100) : 0;
+  const lobby = active.filter(p => !p.squad_id);
+  body.innerHTML = `
+  <div class="pg-head card"><div><h2>Отряды</h2><p>Расстановка игроков по отрядам, статистика и быстрая выдача слотов.</p></div>
+    <div class="pg-actions">${canEdit() ? '<button class="ghost" id="sq_mode">Управление</button>' : ''}<button class="ghost" id="sq_png">Скачать PNG</button></div></div>
+  <div class="pg-bar"><button class="chip on" data-sqtab="view">Отряды</button><button class="chip" data-sqtab="edit">Управление</button></div>
+  <div class="card" id="sq_manage" hidden><div class="row"><input id="sqn" placeholder="Название отряда" aria-label="Название отряда"><button id="sqa">Создать отряд</button>
+    <button class="ghost" id="sq_copy">Копировать отряды</button><button class="ghost" id="sq_clear">Очистить отряды</button></div></div>
+  <div class="pg-kpis">
+    <div class="pg-kpi"><span>Игроков всего</span><b>${active.length}</b></div>
+    <div class="pg-kpi"><span>Назначено в отряды</span><b style="color:var(--ok)">${assigned}</b></div>
+    <div class="pg-kpi"><span>На лавке</span><b style="color:var(--bad)">${bench}</b></div>
+    <div class="pg-kpi"><span>Заполнение</span><b style="color:#38bdf8">${fill}%</b></div></div>
+  ${syncCard}
+  <div class="pg-main"><div class="pg-grid">${squads.length ? sqCards : '<p class="mut">Отрядов пока нет.</p>'}</div>
+    <aside class="pg-lobby"><h3>Свободные игроки (лавка) · ${lobby.length}</h3>
+      ${lobby.length ? lobby.map(p => `<div class="lo"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.nick)}</span><select data-lobby="${p.id}">${opts('')}</select></div>`).join('') : '<p class="mut">Все в отрядах.</p>'}</aside></div>
+  <div class="card"><h2>Добавить игроков</h2>
     <textarea id="nicks" aria-label="Ники игроков, по одному на строку" placeholder="По одному нику на строку"></textarea>
     <div class="row" style="margin-top:8px"><select id="nsq">${opts('')}</select><button id="add">Добавить</button></div></div>
-    <div class="card"><h2>Поиск по составу</h2>
+  <div class="card"><h2>Поиск по составу</h2>
     <div class="sbar"><input id="r_q" class="sq" placeholder="Ник игрока" aria-label="Поиск по нику" value="${esc(RS.q)}">
     <select id="r_rank">${selOpts(CLAN_RANKS, RS.rank, 'Любое звание')}</select>
     <select id="r_squad">${sqFilter}</select>
     <select id="r_faction">${selOpts(FACTIONS, RS.faction, 'Все фракции')}</select></div>
     <p class="mut" id="r_count"></p></div>
-    <div class="card wrap"><h2>Состав (${players.filter(p => p.active).length})</h2><table>
+    <div class="card wrap"><h2>Состав (${active.length})</h2><table>
     <tr><th>Игрок</th><th>Звание</th><th>Фракция</th><th>Отряд</th><th>Статус</th><th></th></tr><tbody id="r_rows"></tbody></table></div>`;
   const rowsHost = document.getElementById('r_rows');
   const paint = () => {
@@ -1891,6 +1941,54 @@ async function viewRoster() {
   });
   paint();
   const again = async () => { const y = scrollY; await viewRoster(); scrollTo(0, y); };
+  const setSqTab = mode => {
+    const m = document.getElementById('sq_manage');
+    if (m) m.hidden = mode !== 'edit';
+    body.querySelectorAll('[data-sqtab]').forEach(b => b.classList.toggle('on', b.dataset.sqtab === mode));
+    const btn = document.getElementById('sq_mode'); if (btn) btn.textContent = mode === 'edit' ? 'К отрядам' : 'Управление';
+  };
+  body.querySelectorAll('[data-sqtab]').forEach(b => b.onclick = () => setSqTab(b.dataset.sqtab));
+  const sm = document.getElementById('sq_mode');
+  if (sm) sm.onclick = () => setSqTab(document.getElementById('sq_manage').hidden ? 'edit' : 'view');
+  const sc = document.getElementById('sq_copy');
+  if (sc) sc.onclick = async () => {
+    const text = squads.map(x => x.name + ': ' + players.filter(p => p.active && p.squad_id === x.id).map(p => p.nick).join(', ')).join('\n');
+    try { await navigator.clipboard.writeText(text); toast('Отряды скопированы'); } catch (e) { prompt('Отряды:', text); }
+  };
+  const sx = document.getElementById('sq_clear');
+  if (sx) sx.onclick = async () => {
+    if (!confirm('Убрать всех игроков из отрядов?')) return;
+    const ids = active.filter(p => p.squad_id).map(p => p.id);
+    if (!ids.length) return;
+    const { error } = await sb.from('players').update({ squad_id: null }).in('id', ids);
+    if (error) return alert(error.message);
+    auditLog('отряды очищены', 'игроков: ' + ids.length);
+    again();
+  };
+  const sp = document.getElementById('sq_png');
+  if (sp) sp.onclick = () => {
+    const cv = document.createElement('canvas'); cv.width = 900; cv.height = Math.max(300, 60 + squads.length * 90 + lobby.length * 24);
+    const cx = cv.getContext('2d');
+    cx.fillStyle = '#0b1020'; cx.fillRect(0, 0, cv.width, cv.height);
+    cx.fillStyle = '#fff'; cx.font = '700 28px sans-serif'; cx.fillText('ClanPulse · Отряды · ' + clan.name, 24, 44);
+    let y = 90;
+    squads.forEach((s, i) => {
+      cx.fillStyle = SQ_COLORS[i % SQ_COLORS.length]; cx.fillRect(24, y - 22, 6, 22);
+      cx.fillStyle = '#fff'; cx.font = '600 20px sans-serif'; cx.fillText(s.name, 42, y);
+      cx.font = '14px sans-serif'; cx.fillStyle = '#9aa3c7';
+      cx.fillText(players.filter(p => p.active && p.squad_id === s.id).map(p => p.nick).join(', ') || '—', 42, y + 24);
+      y += 80;
+    });
+    cx.fillStyle = '#9aa3c7'; cx.font = '14px sans-serif'; cx.fillText('Лавка: ' + lobby.map(p => p.nick).join(', '), 24, y + 10);
+    const a = document.createElement('a'); a.href = cv.toDataURL('image/png');
+    a.download = 'ClanPulse_' + safeFileName(clan.name) + '_squads.png';
+    a.click();
+  };
+  body.querySelectorAll('[data-lobby]').forEach(sel => sel.onchange = async () => {
+    const { error } = await sb.from('players').update({ squad_id: sel.value || null }).eq('id', sel.dataset.lobby);
+    if (error) return alert(error.message);
+    again();
+  });
   const rs = document.getElementById('rsync');
   if (rs) rs.onclick = async () => {
     rs.disabled = true; rs.textContent = 'Добавляю…';
@@ -2053,12 +2151,17 @@ async function viewTeam() {
   const invRows = iv.data.map(i => `<tr><td style="white-space:normal"><input readonly style="width:100%" value="${esc(link(i.code))}"></td>
     <td>${ROLE[i.role]}</td><td>до ${new Date(i.expires_at).toLocaleDateString('ru-RU')}</td>
     <td><button data-copy="${esc(link(i.code))}">Копировать</button> <button class="ghost" data-delinv="${esc(i.code)}">Удалить</button></td></tr>`).join('');
-  body.innerHTML = `<div class="card wrap"><h2>Команда клана</h2>
+  body.innerHTML = pgHead('Команда клана', 'Роли, звания и приглашения участников.',
+      owner ? `<select id="irole"><option value="officer">Офицер</option><option value="viewer">Участник</option></select><button id="inew">Создать ссылку</button>` : '')
+    + `<div class="pg-kpis">
+        <div class="pg-kpi"><span>Участников</span><b>${members.length}</b></div>
+        <div class="pg-kpi"><span>Офицеров</span><b style="color:var(--ok)">${members.filter(m => m.role === 'officer').length}</b></div>
+        <div class="pg-kpi"><span>Приглашений</span><b style="color:#38bdf8">${iv.data.length}</b></div>
+        <div class="pg-kpi"><span>Твоя роль</span><b style="font-size:16px">${esc(ROLE[myRole] || myRole)}</b></div></div>
+    <div class="card wrap"><h2>Участники</h2>
     <table><tr><th>Участник</th><th>Звание</th><th>Роль</th><th></th></tr>${rows}</table>
     <p class="mut">Офицеры вносят бои и управляют составом, участники только смотрят рейтинг и историю.</p></div>
     ${owner ? `<div class="card wrap"><h2>Приглашения</h2>
-    <div class="row"><select id="irole"><option value="officer">Офицер</option><option value="viewer">Участник</option></select>
-    <button id="inew">Создать ссылку</button></div>
     ${iv.data.length ? `<table>${invRows}</table>` : '<p class="mut">Активных приглашений нет.</p>'}
     <p class="mut">Ссылка действует 7 дней и подходит для нескольких человек. Чтобы по ней могли зайти другие, сайт должен быть доступен из интернета, а не только на твоём компьютере.</p></div>` : ''}`;
   body.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => openDm(b.dataset.dm));
@@ -3615,7 +3718,7 @@ async function viewEvents() {
         ${Object.entries(AIRDROP_TYPES).map(([k, a]) => `<p><span class="chip" style="margin:0 6px 4px 0;border-color:${a.color};color:${a.color}">${esc(a.label)}</span>${esc(a.loot)}</p>`).join('')}
       </div>
     </div>
-    ${canEdit() ? `<div class="zone-form"><div class="grid">
+    ${canEdit() ? `<div class="zone-form" id="zone_form" hidden><div class="grid">
       ${fld('Тип события', '<select id="z_kind"><option value="chrono">Хроноразломы</option><option value="airdrop">Аирдроп</option></select>')}
       ${fld('Вид аирдропа', `<select id="z_atype">${selOpts(Object.fromEntries(Object.entries(AIRDROP_TYPES).map(([k, a]) => [k, a.label])), 'normal')}</select>`)}
       ${fld('Локация', `<select id="z_loc">${selOpts(Object.fromEntries(ZONE_LOCATIONS.map(x => [x, x])), ZONE_LOCATIONS[0])}</select>`)}
@@ -3623,7 +3726,7 @@ async function viewEvents() {
       </div>${fld('Заметка (необязательно)', '<input id="z_note" maxlength="300" placeholder="Например: взять 2 отряда, позвать коллегу">')}
       <button id="z_add">Добавить в календарь</button></div>` : ''}
   </div>`;
-  const form = canEdit() ? `<div class="card"><h2>Новое событие</h2><div class="grid">
+  const form = canEdit() ? `<div class="card" id="event_form" hidden><h2>Новое событие</h2><div class="grid">
     ${fld('Тип', `<select id="e_kind">${selOpts(EV_KIND, 'tournament')}</select>`)}${fld('Название (необязательно)', '<input id="e_title" maxlength="120">')}
     ${fld('Дата и время', `<input type="datetime-local" id="e_dt" value="${localDt(tomorrow)}">`)}</div>
     ${fld('Заметка (необязательно)', '<textarea id="e_note" maxlength="500"></textarea>')}<button id="e_add">Создать</button></div>` : '';
@@ -3643,12 +3746,24 @@ async function viewEvents() {
       <details><summary class="mut">Кто что ответил</summary>${Object.entries(RSVP).map(([k, l]) => `<p><b>${l}:</b> ${g[k].length ? g[k].map(n => esc(n)).join(', ') : '—'}</p>`).join('')}</details>
       ${canEdit() ? `<button class="ghost" data-delev="${e.id}" style="margin-top:8px">Удалить</button>` : ''}</div>`;
   };
-  body.innerHTML = `<div class="card"><div class="top"><h2 style="margin:0">Календарь клана</h2><span class="row">
+  body.innerHTML = pgHead('События', 'Календарь клана, хроноразломы и аирдропы — планируй вылазки заранее.',
+      canEdit() ? `<button class="ghost" id="ev_new">Новое событие</button><button class="ghost" id="ev_zone">Вылазка в Зону</button>` : '')
+    + `<div class="card"><div class="top"><h2 style="margin:0">Календарь клана</h2><span class="row">
     <button class="ghost" data-cal="-1">←</button><button class="ghost" data-cal="0">Сегодня</button><button class="ghost" data-cal="1">→</button></span></div>
     <p class="mut">${title}. Напоминание придёт за день до события.</p><div class="calgrid">${cells}</div></div>
     ${zoneCard}
     ${form}
     ${ev.data.length ? ev.data.map(card).join('') : `<div class="card empty"><div class="eico">${ICONS.cal}</div><h3>На этой неделе событий нет</h3><p>Листай календарь стрелками или создай событие — клан получит напоминание.</p></div>`}`;
+  const toggleForm = (id, btn) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.hidden = !el.hidden;
+    if (!el.hidden) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (btn) btn.classList.toggle('on', !el.hidden);
+  };
+  const evn = document.getElementById('ev_new');
+  if (evn) evn.onclick = () => toggleForm('event_form', evn);
+  const evz = document.getElementById('ev_zone');
+  if (evz) evz.onclick = () => toggleForm('zone_form', evz);
   body.querySelectorAll('[data-cal]').forEach(b => b.onclick = () => {
     const v = Number(b.dataset.cal); calOffset = v === 0 ? 0 : calOffset + v;
     const y = scrollY; viewEvents().then(() => scrollTo(0, y));
@@ -3666,7 +3781,7 @@ async function viewEvents() {
     const kind = val('z_kind'), atype = val('z_atype'), loc = val('z_loc'), dt = val('z_dt');
     if (!dt) return alert('Укажи дату и время');
     const info = kind === 'chrono'
-      ? { title: 'Хроноразломы · ' + loc, note: 'Хроноустановка: хроносфера и артефакты. Локация: ' + loc }
+      ? { title: 'Хроноразломы · ' + loc, note: 'Хроноустановка: хроносфера и пыль. Нужно установить и удержать позицию. Локация: ' + loc }
       : { title: AIRDROP_TYPES[atype].label + ' дроп · ' + loc,
           note: AIRDROP_TYPES[atype].loot + '. Локация: ' + loc };
     const extra = txt('z_note');
