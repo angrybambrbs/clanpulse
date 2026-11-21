@@ -1230,8 +1230,8 @@ async function viewStats() {
   const body = document.getElementById('body');
   const since = statPeriod ? new Date(Date.now() - statPeriod * 864e5).toISOString() : '1970-01-01T00:00:00Z';
   const [ms, st, pl] = await Promise.all([
-    sb.from('matches').select('id,played_at,result,place').eq('clan_id', clan.id).gte('played_at', since),
-    sb.from('match_stats').select('player_id,kills,deaths,assists,score,matches!inner(played_at)')
+    sb.from('matches').select('id,played_at,result,place,mode').eq('clan_id', clan.id).gte('played_at', since),
+    sb.from('match_stats').select('player_id,kills,deaths,assists,score,matches!inner(played_at,mode)')
       .eq('clan_id', clan.id).eq('confirmed', true).gte('matches.played_at', since),
     sb.from('players').select('id,nick,joined_at').eq('clan_id', clan.id).eq('active', true)
   ]);
@@ -1244,10 +1244,10 @@ async function viewStats() {
   };
   const labelOf = k => new Date(k + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   const buckets = new Map();
-  const ensure = k => { if (!buckets.has(k)) buckets.set(k, { n: 0, w: 0, k: 0, d: 0 }); return buckets.get(k); };
+  const ensure = k => { if (!buckets.has(k)) buckets.set(k, { n: 0, w: 0, k: 0, d: 0, a: 0 }); return buckets.get(k); };
   const isWin = m => (m.result || '').toLowerCase().includes('побед') || m.place === 1;
   ms.data.forEach(m => { const b = ensure(keyOf(m.played_at)); b.n++; if (isWin(m)) b.w++; });
-  st.data.forEach(s => { if (idleStat(s)) return; const b = ensure(keyOf(s.matches.played_at)); b.k += s.kills || 0; b.d += s.deaths || 0; });
+  st.data.forEach(s => { if (idleStat(s)) return; const b = ensure(keyOf(s.matches.played_at)); b.k += s.kills || 0; b.d += s.deaths || 0; b.a += s.assists || 0; });
   const keys = [...buckets.keys()].sort();
   const allN = ms.data.length, allW = ms.data.filter(isWin).length;
   const allK = st.data.reduce((a, s) => a + (s.kills || 0), 0), allD = st.data.reduce((a, s) => a + (s.deaths || 0), 0);
@@ -1261,6 +1261,27 @@ async function viewStats() {
     return `<g><title>${esc(labelOf(k))}: боёв ${b.n}, побед ${b.w}</title><rect x="${x}" y="${H - h}" width="${bw}" height="${h}" rx="3" fill="var(--ac)"/><rect x="${x + bw + 2}" y="${H - hw}" width="${bw}" height="${hw}" rx="3" fill="var(--ok)"/>${lab}</g>`;
   }).join('');
   const chart = keys.length ? `<svg class="chart" viewBox="0 0 ${W} ${H + 20}" preserveAspectRatio="none"><line x1="0" y1="${H}" x2="${W}" y2="${H}" stroke="var(--bd)"/>${bars}</svg><p class="mut">Фиолетовый — бои, зелёный — победы.</p>` : '<p class="mut">За период боёв нет.</p>';
+  // Линия динамики: винрейт и KDA по периодам.
+  const maxV = Math.max(1, ...keys.map(k => Math.max(buckets.get(k).w / Math.max(1, buckets.get(k).n) * 100,
+    (buckets.get(k).k + buckets.get(k).a) / Math.max(1, buckets.get(k).d))));
+  const pts = (field) => keys.map((k, i) => {
+    const b = buckets.get(k);
+    const v = field === 'win' ? b.w / Math.max(1, b.n) * 100 : (b.k + b.a) / Math.max(1, b.d);
+    return `${(i * step + step / 2).toFixed(1)},${(H - v / maxV * H).toFixed(1)}`;
+  }).join(' ');
+  const trend = keys.length > 1 ? `<p class="mut" style="margin:12px 0 4px">Динамика: зелёный — винрейт, голубой — KDA</p>
+    <svg class="chart" viewBox="0 0 ${W} ${H + 20}" preserveAspectRatio="none"><line x1="0" y1="${H}" x2="${W}" y2="${H}" stroke="var(--bd)"/>
+    <polyline points="${pts('win')}" fill="none" stroke="var(--ok)" stroke-width="2"/>
+    <polyline points="${pts('kda')}" fill="none" stroke="#38bdf8" stroke-width="2"/></svg>` : '';
+  const modeRows = ['Потасовка', 'Турнир', 'Захват базы', 'Другое'].map(mode => {
+    const list = ms.data.filter(m => mode === 'Другое' ? !m.mode || !['Потасовка', 'Турнир', 'Захват базы'].includes(m.mode) : m.mode === mode);
+    const ids = new Set(list.map(m => m.id));
+    const ss = st.data.filter(s => ids.has(s.matches && s.matches.id));
+    const w = list.filter(isWin).length;
+    const k = ss.reduce((a, s) => a + (s.kills || 0), 0), dd = ss.reduce((a, s) => a + (s.deaths || 0), 0), aa = ss.reduce((a, s) => a + (s.assists || 0), 0);
+    return `<tr><td>${mode}</td><td>${list.length}</td><td>${w}</td><td>${list.length ? Math.round(w / list.length * 100) + '%' : '—'}</td><td>${k}</td><td>${dd}</td><td>${dd ? (k / dd).toFixed(2) : '—'}</td><td>${dd ? ((k + aa) / dd).toFixed(2) : '—'}</td></tr>`;
+  }).join('');
+  const modeCard = `<div class="card wrap"><h2>По режимам</h2><table><tr><th>Режим</th><th>Боёв</th><th>Побед</th><th>Винрейт</th><th>K</th><th>D</th><th>K/D</th><th>KDA</th></tr>${modeRows}</table></div>`;
   const agg = {};
   pl.data.forEach(p => agg[p.id] = { id: p.id, nick: p.nick, joined: p.joined_at, n: 0, k: 0, d: 0, ast: 0, sc: 0, tot: 0 });
   st.data.forEach(s => { const a = agg[s.player_id]; if (!a || idleStat(s)) return; a.n++; a.k += s.kills || 0; a.d += s.deaths || 0; a.ast += s.assists || 0; a.sc += s.score || 0; });
@@ -1285,7 +1306,8 @@ async function viewStats() {
     <div class="card"><h2>Активность клана</h2><div class="topcard">
     <div class="stat"><b>${allN}</b><span>боёв</span></div><div class="stat"><b>${allW}</b><span>побед</span></div>
     <div class="stat"><b>${allN ? Math.round(allW / allN * 100) + '%' : '—'}</b><span>винрейт</span></div>
-    <div class="stat"><b>${allD ? (allK / allD).toFixed(2) : '—'}</b><span>средний K/D</span></div></div>${chart}</div>
+    <div class="stat"><b>${allD ? (allK / allD).toFixed(2) : '—'}</b><span>средний K/D</span></div></div>${chart}${trend}</div>
+    ${modeCard}
     <h2 style="margin:4px 0 12px">Топ клана</h2><div class="grid">${topBlock}</div>`;
   body.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { statPeriod = Number(b.dataset.sp); viewStats(); });
   body.querySelectorAll('[data-sg]').forEach(b => b.onclick = () => { statGroup = b.dataset.sg; viewStats(); });
