@@ -313,7 +313,6 @@ a:hover{color:var(--ac)}
 .pg-lobby .lo{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px}
 .pg-lobby select{flex:1;min-width:0;font-size:11px;padding:4px 6px}
 @media(max-width:959px){.pg-kpis{grid-template-columns:1fr 1fr}.pg-main{grid-template-columns:1fr}}
-/* Отряды v2 — под референс */
 .pg-bar .spacer{flex:1}
 .pg-kpis .pg-kpi.b-blue{border-color:#3b82f6;box-shadow:inset 0 0 22px rgba(59,130,246,.08)}
 .pg-kpis .pg-kpi.b-green{border-color:#10b981;box-shadow:inset 0 0 22px rgba(16,185,129,.08)}
@@ -440,13 +439,6 @@ a:hover{color:var(--ac)}
 .tac-gact .tac-tool{padding:4px 8px;min-height:30px;font-size:11px}
 .tac-markbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 10px;padding:8px;border:1px solid var(--bd);border-radius:10px;background:var(--in2)}
 .tac-markbar[hidden]{display:none}
-.tac-caps-list{display:flex;flex-wrap:wrap;gap:4px}
-.tac-cap-pill{min-width:26px;height:26px;padding:0 6px;border:1px solid var(--cs,#9aa3c7);border-radius:7px;background:transparent;color:var(--cs,#9aa3c7);font-family:'Russo One','Exo 2',sans-serif;font-size:11px;cursor:pointer}
-.tac-cap-pill.on{background:var(--cs,#9aa3c7);color:#0b1020;font-weight:700}
-.tac-cap-pill:disabled{opacity:.35;cursor:not-allowed}
-.tac-cap-side{padding:4px 7px;border:1px solid var(--cs);border-radius:7px;background:transparent;color:var(--cs);font-size:10px;cursor:pointer}
-.tac-cap-side.on{background:var(--cs);color:#0b1020;font-weight:700}
-.tac-cap-del{padding:4px 8px;border:1px solid var(--bad);border-radius:7px;background:transparent;color:var(--bad);font-size:10px;cursor:pointer}
 .tac-mlab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700}
 .tac-stamp svg{opacity:.8}
 .tac-stamp.on svg{opacity:1}
@@ -2385,27 +2377,26 @@ async function viewTeam() {
 const TAC_MAPS = {
   // Точки захвата взяты с игровых tactical-карт клановых боёв (гайд STALZONE),
   // координаты приведены к долям соответствующих изображений из tactics/.
-  berdovka: { name: 'Малая Бердовка', group: 'tour', file: 'tactics/berdovka.jpg', w: 1615, h: 1070,
+  berdovka: { name: 'Малая Бердовка', group: 'tour', file: 'tactics/berdovka.jpg', capsFile: 'tactics/berdovka_caps.webp', w: 1615, h: 1070,
     caps: [[0.364, 0.533], [0.483, 0.525], [0.437, 0.332], [0.591, 0.407], [0.587, 0.640], [0.445, 0.699]] },
-  hvoiny: { name: 'Хвойный', group: 'tour', file: 'tactics/hvoiny.jpg', w: 1297, h: 991,
+  hvoiny: { name: 'Хвойный', group: 'tour', file: 'tactics/hvoiny.jpg', capsFile: 'tactics/hvoiny_caps.webp', w: 1297, h: 991,
     caps: [[0.316, 0.560], [0.493, 0.555], [0.675, 0.560]] },
-  nizina: { name: 'Низина', group: 'tour', file: 'tactics/nizina.jpg', w: 1847, h: 1172,
+  nizina: { name: 'Низина', group: 'tour', file: 'tactics/nizina.jpg', capsFile: 'tactics/nizina_caps.webp', w: 1847, h: 1172,
     caps: [[0.53, 0.60], [0.55, 0.81], [0.55, 0.93]] },
-  kvartaly: { name: 'Кварталы', group: 'brawl', file: 'tactics/kvartaly.webp', w: 1080, h: 1080,
+  kvartaly: { name: 'Кварталы', group: 'brawl', file: 'tactics/kvartaly_caps.webp', capsFile: 'tactics/kvartaly_caps.webp', w: 1080, h: 980,
     caps: [[0.255, 0.505], [0.404, 0.258], [0.403, 0.746], [0.501, 0.505], [0.600, 0.258], [0.606, 0.746], [0.744, 0.505]] },
-  roza: { name: 'Роза ветров', group: 'brawl', file: 'tactics/roza.webp', w: 1080, h: 1080,
+  roza: { name: 'Роза ветров', group: 'brawl', file: 'tactics/roza_caps.webp', capsFile: 'tactics/roza_caps.webp', w: 1080, h: 980,
     caps: [[0.411, 0.430], [0.411, 0.635], [0.607, 0.430], [0.607, 0.635], [0.505, 0.115], [0.887, 0.520], [0.130, 0.520], [0.505, 0.932], [0.505, 0.531]] }
 };
 const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
   ['#29d3ff', 'голубой'], ['#b47cff', 'фиолетовый'], ['#ffffff', 'белый'], ['#0b1020', 'чёрный']];
-const TAC_TOOLS = [['brush', 'Кисть'], ['line', 'Линия'], ['arrow', 'Стрелка'], ['erase', 'Ластик'], ['stamp', 'Метки'], ['caps', 'Точки'], ['pan', 'Рука']];
+const TAC_TOOLS = [['brush', 'Кисть'], ['line', 'Линия'], ['arrow', 'Стрелка'], ['erase', 'Ластик'], ['stamp', 'Метки'], ['pan', 'Рука']];
 const TAC_TOOL_ICON = {
   brush: svg(16, '<path d="m14.5 5.5 4 4L11 17l-4 1 1-4z"/><path d="M13.5 6.5 17.5 10.5"/>'),
   line: svg(16, '<path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.5"/><circle cx="19" cy="5" r="1.5"/>'),
   arrow: svg(16, '<path d="M5 19 19 5"/><path d="M13 5h6v6"/>'),
   erase: svg(16, '<path d="m8 20-5-5 9-9 6 6-7 8z"/><path d="M21 20H9"/>'),
   stamp: svg(16, '<path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/>'),
-  caps: svg(16, '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>'),
   pan: svg(16, '<path d="M8 13V5a1.5 1.5 0 0 1 3 0v6m0-2a1.5 1.5 0 0 1 3 0v3m0-1a1.5 1.5 0 0 1 3 0v5a6 6 0 0 1-6 6h-2a6 6 0 0 1-5-3l-3-5a1.5 1.5 0 0 1 2.5-1.7L8 13"/>')
 };
 const TAC_ACT_ICON = {
@@ -2430,15 +2421,7 @@ const TAC_STAMPS = {
   cap: ['Захват', '<path d="M6 21V4"/><path d="M6 4h12l-2 4 2 4H6"/>']
 };
 const TAC_SIDE = { ally: ['Свой', '#2f9bff'], enemy: ['Враг', '#ff3b61'] };
-const CAP_SIDES = { neutral: ['Нейтральная', '#9aa3c7'], ally: ['Своя', '#2f9bff'], enemy: ['Вражеская', '#ff3b61'] };
-const capState = key => {
-  TAC_PLAN.caps = TAC_PLAN.caps || {};
-  if (!Array.isArray(TAC_PLAN.caps[key])) {
-    TAC_PLAN.caps[key] = (TAC_MAPS[key].caps || []).map((c, i) => ({ x: c[0], y: c[1], side: 'neutral', removed: false, id: 'c' + i }));
-  }
-  return TAC_PLAN.caps[key];
-};
-const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true, zoom: 1, px: 0, py: 0, stamp: 'tent', side: 'ally', capPlacing: false, showCaps: true, capSel: null };
+const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true, zoom: 1, px: 0, py: 0, stamp: 'tent', side: 'ally', capPlacing: false, showCaps: true };
 let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
 let TAC_CHAN = null, TAC_CURSORS = {}, TAC_LIVE = {}, TAC_REMOTE_INIT = false, TAC_LAST_CURSOR = 0, TAC_LAST_LIVE = 0;
 const TAC_GROUPS = { tour: true, brawl: true };
@@ -2446,7 +2429,7 @@ const TAC_GROUP_LABEL = { tour: 'Турниры и захваты', brawl: 'По
 let TAC_REDO = [], TAC_PAN_PREV = 'brush', TAC_ONLINE = {}, TAC_LAST_EDIT = null;
 const tacNick = () => ((user && (user.user_metadata || {}).nick) || (user && user.user_metadata && user.user_metadata.name) || (user && user.email || 'Игрок')).split('@')[0].slice(0, 24);
 const saveLocalPlan = () => {
-  try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 4, maps: TAC_PLAN.maps, ver: TAC_PLAN.ver || {}, caps: TAC_PLAN.caps || {} })); }
+  try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 3, maps: TAC_PLAN.maps, ver: TAC_PLAN.ver || {} })); }
   catch (e) {}
 };
 
@@ -2454,7 +2437,7 @@ function tacPlan() {
   if (TAC_PLAN) return TAC_PLAN;
   let o = null;
   try { o = JSON.parse(localStorage.getItem('cp_tac_' + clan.id) || 'null'); } catch (e) {}
-  TAC_PLAN = { maps: (o && o.maps) || {}, ver: (o && o.ver) || {}, caps: (o && o.caps) || {} };
+  TAC_PLAN = { maps: (o && o.maps) || {}, ver: (o && o.ver) || {} };
   Object.keys(TAC_MAPS).forEach(k => { if (!Array.isArray(TAC_PLAN.maps[k])) TAC_PLAN.maps[k] = []; });
   return TAC_PLAN;
 }
@@ -2465,7 +2448,7 @@ function tacSave(keepRedo) {
   TAC_SAVE = setTimeout(() => {
     if (!sb || !clan || !user) return;
     const map = TAC.map;
-    sb.rpc('save_tactics_plan', { p_clan: clan.id, p_map: map, p_marks: TAC_PLAN.maps[map] || [], p_caps: TAC_PLAN.caps && TAC_PLAN.caps[map] || [] })
+    sb.rpc('save_tactics_plan', { p_clan: clan.id, p_map: map, p_marks: TAC_PLAN.maps[map] || [] })
       .then(({ data, error }) => {
         if (!error) { if (typeof data === 'number') TAC_PLAN.ver[map] = data; }
         else if (!TAC_SAVE_WARNED) { TAC_SAVE_WARNED = true; toast('Не удалось сохранить план на сервере — работает локально'); }
@@ -2477,10 +2460,10 @@ let TAC_SAVE_WARNED = false;
 // Загрузить общий план клана из базы. Возвращает true, если данные изменились.
 async function tacLoadRemote() {
   if (!sb || !clan || !user) return false;
-  const { data, error } = await sb.from('tactics_plans').select('map_key,marks,caps,version,updated_at').eq('clan_id', clan.id);
+  const { data, error } = await sb.from('tactics_plans').select('map_key,marks,version,updated_at').eq('clan_id', clan.id);
   if (error || !Array.isArray(data)) return false;
   let changed = false;
-  TAC_PLAN = tacPlan(); TAC_PLAN.ver = TAC_PLAN.ver || {}; TAC_PLAN.caps = TAC_PLAN.caps || {};
+  TAC_PLAN = tacPlan(); TAC_PLAN.ver = TAC_PLAN.ver || {};
   data.forEach(row => {
     if (row.map_key === TAC.map && row.updated_at) TAC_LAST_EDIT = row.updated_at;
     const key = String(row.map_key || ''), v = Number(row.version) || 1;
@@ -2488,7 +2471,6 @@ async function tacLoadRemote() {
     const arr = TAC_PLAN.maps[key] || (TAC_PLAN.maps[key] = []);
     arr.length = 0;
     (Array.isArray(row.marks) ? row.marks : []).forEach(s => arr.push(s));
-    if (Array.isArray(row.caps) && row.caps.length) TAC_PLAN.caps[key] = row.caps;
     TAC_PLAN.ver[key] = v;
     changed = true;
   });
@@ -2592,35 +2574,6 @@ function tacStamp(ctx, W, H, s, view) {
     ctx.beginPath(); ctx.moveTo(-r * .82, r * .52); ctx.lineTo(r * .82, r * .52);
     ctx.lineWidth = Math.max(1.2, r * .12); ctx.stroke();
   }
-  ctx.restore();
-}
-
-// Точка захвата на canvas: тёмный квадрат с буквой, цвет рамки кодирует сторону.
-function tacCap(ctx, W, H, c, view, i) {
-  const col = (CAP_SIDES[c.side] || CAP_SIDES.neutral)[1];
-  const box = Math.max(16, Math.min(96, W * 0.052 / Math.sqrt(Math.max(1, view))));
-  const half = box / 2, rad = box * .14;
-  ctx.save();
-  ctx.translate(c.x * W, c.y * H);
-  ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = box * .4; ctx.shadowOffsetY = box * .08;
-  ctx.fillStyle = 'rgba(12,14,20,.9)';
-  ctx.beginPath();
-  ctx.moveTo(-half + rad, -half);
-  ctx.arcTo(half, -half, half, half, rad); ctx.arcTo(half, half, -half, half, rad);
-  ctx.arcTo(-half, half, -half, -half, rad); ctx.arcTo(-half, -half, half, -half, rad);
-  ctx.closePath(); ctx.fill();
-  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-  const len = box * .26, off = box * .06;
-  ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, box * .06); ctx.lineCap = 'square';
-  if (c.side === 'enemy') ctx.setLineDash([box * .18, box * .12]);
-  for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
-    const x = sx * (half + off), y = sy * (half + off);
-    ctx.beginPath(); ctx.moveTo(x - sx * len, y); ctx.lineTo(x, y); ctx.lineTo(x, y - sy * len); ctx.stroke();
-  }
-  ctx.setLineDash([]);
-  ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = '700 ' + Math.round(box * .6) + "px 'Russo One','Exo 2',sans-serif";
-  ctx.fillText(String.fromCharCode(65 + (i % 26)), 0, box * .03);
   ctx.restore();
 }
 
@@ -3032,8 +2985,7 @@ function viewTactics() {
         <div class="tac-sides" role="group" aria-label="Принадлежность метки">${Object.entries(TAC_SIDE).map(k => `<button type="button" class="tac-side-b ${k[0]} ${TAC.side === k[0] ? 'on' : ''}" data-side="${k[0]}" aria-pressed="${TAC.side === k[0]}" ${editable ? '' : 'disabled'}><i style="background:${k[1][1]}"></i>${k[1][0]}</button>`).join('')}</div>
         <span class="tac-sep" aria-hidden="true"></span>
         <button type="button" class="tac-tool ${TAC.capPlacing ? 'on' : ''}" data-cappl="${TAC.capPlacing ? 'true' : 'false'}" aria-pressed="${TAC.capPlacing}" ${editable ? '' : 'disabled'}>${TAC.capPlacing ? 'Захват: вручную' : 'Захват: по карте'}</button>
-      </div>
-      <div class="tac-markbar" id="tac_capbar" ${TAC.tool === 'caps' ? '' : 'hidden'}></div>`;
+      </div>`;
     const host = document.getElementById('tac_vtools');
     if (host) host.innerHTML = html;
   };
@@ -3073,7 +3025,7 @@ function viewTactics() {
       <button class="tac-tool" id="tac_redo">${TAC_ACT_ICON.redo}<span>Повторить</span></button>
       <button class="tac-tool" id="tac_clear">${TAC_ACT_ICON.clear}<span>Очистить</span></button>` : ''}
       <button class="tac-tool" id="tac_hide" aria-pressed="${!TAC.visible}">${TAC_ACT_ICON.hide}<span>${TAC.visible ? 'Скрыть разметку' : 'Показать разметку'}</span></button>
-      <button class="tac-tool" data-capview aria-pressed="${TAC.showCaps}">${TAC_ACT_ICON.caps}<span>${TAC.showCaps ? 'Точки: видны' : 'Точки: скрыты'}</span></button>
+      ${m.capsFile !== m.file ? `<button class="tac-tool" data-capview aria-pressed="${TAC.showCaps}">${TAC_ACT_ICON.caps}<span>${TAC.showCaps ? 'Точки: видны' : 'Точки: скрыты'}</span></button>` : ''}
       <span class="tac-sep" aria-hidden="true"></span>
       <button class="tac-tool" id="tac_png">${TAC_ACT_ICON.png}<span>Скачать PNG</span></button>
       <button class="tac-tool" id="tac_share">${TAC_ACT_ICON.share}<span>Поделиться с кланом</span></button>
@@ -3083,7 +3035,8 @@ function viewTactics() {
       <a class="tac-tool" href="${m.file}" target="_blank" rel="noopener">${TAC_ACT_ICON.ext}<span>Открыть карту</span></a>
     </div>
     <div class="tac-stage" id="tac_stage"><div class="tac-fit" id="tac_fit">
-      <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false">
+      <img id="tac_img" src="${m.file}" alt="Карта «${esc(m.name)}»" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? 'hidden' : ''}>
+      <img id="tac_img_caps" src="${m.capsFile}" alt="Карта «${esc(m.name)}» с точками захвата" width="${m.w}" height="${m.h}" draggable="false" ${TAC.showCaps ? '' : 'hidden'}>
       <canvas id="tac_cv" role="img" aria-label="Поле для рисования плана на карте «${esc(m.name)}»"></canvas>
       <div class="tac-cursors" id="tac_cursors"></div>
     </div>
@@ -3128,36 +3081,7 @@ function viewTactics() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     if (!TAC.visible) return;
-    if (TAC.showCaps) capState(TAC.map).forEach((c, i) => { if (!c.removed) tacCap(ctx, W, H, c, TAC.zoom, i); });
     list.forEach(s => tacPaint(ctx, W, H, s, TAC.zoom));
-    renderCapBar();
-  };
-  const renderCapBar = () => {
-    const bar = document.getElementById('tac_capbar');
-    if (!bar) return;
-    const caps = capState(TAC.map), sel = TAC.capSel;
-    bar.innerHTML = `<span class="tac-mlab">Точки захвата</span>
-      <div class="tac-caps-list">${caps.map((c, i) => `<button type="button" class="tac-cap-pill ${c.side} ${sel === i ? 'on' : ''}" data-cap-sel="${i}" ${c.removed ? 'disabled' : ''} title="${esc(CAP_SIDES[c.side][0])}">${c.removed ? '×' : String.fromCharCode(65 + i)}</button>`).join('')}</div>
-      <button type="button" class="tac-tool" data-cap-add>＋ Добавить</button>
-      ${sel != null && caps[sel] && !caps[sel].removed ? `<span class="tac-sep"></span>
-        ${Object.entries(CAP_SIDES).map(([k, v]) => `<button type="button" class="tac-cap-side ${caps[sel].side === k ? 'on' : ''}" data-cap-side="${k}" style="--cs:${v[1]}">${v[0]}</button>`).join('')}
-        <button type="button" class="tac-cap-del" data-cap-del>Удалить</button>` : ''}`;
-    bar.querySelectorAll('[data-cap-sel]').forEach(b => b.onclick = () => { TAC.capSel = Number(b.dataset.capSel); renderCapBar(); redraw(); });
-    bar.querySelectorAll('[data-cap-side]').forEach(b => b.onclick = () => {
-      const c = capState(TAC.map)[TAC.capSel]; if (!c) return;
-      c.side = b.dataset.capSide; tacSave(); redraw();
-    });
-    const del = bar.querySelector('[data-cap-del]');
-    if (del) del.onclick = () => {
-      const c = capState(TAC.map)[TAC.capSel]; if (!c) return;
-      c.removed = true; TAC.capSel = null; tacSave(); redraw(); toast('Точка удалена');
-    };
-    const add = bar.querySelector('[data-cap-add]');
-    if (add) add.onclick = () => {
-      const arr = capState(TAC.map);
-      arr.push({ x: 0.5, y: 0.5, side: 'neutral', removed: false, id: 'c' + Date.now() });
-      TAC.capSel = arr.length - 1; tacSave(); redraw();
-    };
   };
   const clampPan = () => {
     const mx = pw * (TAC.zoom - 1) / 2, my = ph * (TAC.zoom - 1) / 2;
@@ -3279,17 +3203,6 @@ function viewTactics() {
     if (!TAC.visible) return toast('Разметка скрыта — нажми «Показать разметку»');
     e.preventDefault();
     const p = ptOf(e);
-    if (TAC.tool === 'caps') {
-      const caps = capState(TAC.map);
-      const hit = caps.findIndex(c => !c.removed && Math.hypot((c.x - p[0]) * fit.clientWidth, (c.y - p[1]) * fit.clientHeight) < 30);
-      if (hit >= 0) {
-        TAC.capSel = hit; renderCapBar(); redraw();
-      } else {
-        caps.push({ x: p[0], y: p[1], side: 'neutral', removed: false, id: 'c' + Date.now() });
-        TAC.capSel = caps.length - 1; tacSave(); redraw(); toast('Точка добавлена');
-      }
-      return;
-    }
     if (TAC.tool === 'stamp') {
       const idx = hitStamp(p);
       if (idx >= 0) { list.splice(idx, 1); tacSave(); redraw(); counts(); toast('Метка убрана'); }
@@ -3362,16 +3275,14 @@ function viewTactics() {
   window.tacRefreshCanvas = () => { redraw(); counts(); renderTacOnline(); };
   const markTools = () => {
     document.querySelectorAll('[data-tool]').forEach(b => { const on = b.dataset.tool === TAC.tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
-    document.querySelectorAll('.tac-markbar').forEach(mb => { mb.hidden = mb.id === 'tac_capbar' ? TAC.tool !== 'caps' : TAC.tool !== 'stamp'; });
+    document.querySelectorAll('.tac-markbar').forEach(mb => { mb.hidden = TAC.tool !== 'stamp'; });
     document.querySelectorAll('[data-cappl]').forEach(b => { const on = b.dataset.cappl === 'true'; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     const hintBase = 'Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z, повторить — Ctrl+Shift+Z. Клавиши 1–6 — инструменты, Space — рука.';
     const hintEl = document.getElementById('tac_hint');
-    if (hintEl) hintEl.textContent = TAC.tool === 'caps'
-      ? 'Точки захвата: клик по точке — выбрать, клик по пустому месту — добавить. Цвет рамки: серый — нейтральная, синий — своя, красный — враг. ' + hintBase
-      : TAC.stamp === 'cap'
-        ? (TAC.capPlacing ? 'Захват ставится кликом по карте, буква зоны подставляется автоматически. ' + hintBase
-          : 'Точки захвата управляются инструментом «Точки» в панели слева. ' + hintBase)
-        : hintBase;
+    if (hintEl) hintEl.textContent = TAC.stamp === 'cap'
+      ? (TAC.capPlacing ? 'Захват ставится кликом по карте, буква зоны подставляется автоматически. ' + hintBase
+        : 'Точки захвата на карте заданы автоматически — включи «Захват: вручную», чтобы ставить свой захват. ' + hintBase)
+      : hintBase;
     cv.style.cursor = cursorFor();
   };
   document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { TAC.tool = b.dataset.tool; markTools(); });
@@ -3407,6 +3318,9 @@ function viewTactics() {
       x.setAttribute('aria-pressed', String(TAC.showCaps));
       x.innerHTML = TAC_ACT_ICON.caps + '<span>' + (TAC.showCaps ? 'Точки: видны' : 'Точки: скрыты') + '</span>';
     });
+    // Переключатель просто подменяет изображение: точки запечены в копию оригинала.
+    const clean = document.getElementById('tac_img'), marked = document.getElementById('tac_img_caps');
+    if (clean && marked) { clean.hidden = TAC.showCaps; marked.hidden = !TAC.showCaps; }
     redraw();
   });
   const sizeEl = document.getElementById('tac_size');
@@ -3450,13 +3364,12 @@ function viewTactics() {
     redraw();
   };
   document.getElementById('tac_png').onclick = () => {
-    const base = img;
+    const base = TAC.showCaps ? document.getElementById('tac_img_caps') : img;
     if (!base || !base.complete || !base.naturalWidth) return toast('Карта ещё загружается');
     const out = document.createElement('canvas'); out.width = m.w; out.height = m.h;
     const o = out.getContext('2d');
     try {
       o.drawImage(base, 0, 0, m.w, m.h);
-      if (TAC.showCaps) capState(TAC.map).forEach((c, i) => { if (!c.removed) tacCap(o, m.w, m.h, c, 1, i); });
       if (TAC.visible) list.forEach(s => tacPaint(o, m.w, m.h, s, 1));
       const fs = Math.max(16, Math.round(m.w * 0.017));
       const label = 'ClanPulse · ' + clan.name + ' · ' + m.name + ' · ' + new Date().toLocaleDateString('ru-RU');
