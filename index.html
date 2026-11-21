@@ -593,13 +593,15 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 @media(max-width:900px){.land-bento{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.land-bento{grid-template-columns:repeat(2,1fr)}}
 /* Глубокая проработка главной */
-.land-links{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
-.land-links a{display:inline-flex;align-items:center;gap:6px;padding:10px 15px;border:1px solid transparent;border-radius:11px;color:var(--tx);font-size:14px;font-weight:600;text-decoration:none;letter-spacing:.2px;white-space:nowrap;transition:color .2s,background .2s,border-color .2s,transform .2s}
-.land-links a:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ac2);opacity:.5;transition:opacity .2s,transform .2s}
-.land-links a:hover{color:var(--tx);border-color:var(--bd2);background:rgba(var(--ac-rgb),.10);transform:translateY(-1px)}
-.land-links a:hover:before{opacity:1;transform:scale(1.3)}
-.land-links a.on{color:var(--ac2);border-color:rgba(var(--ac-rgb),.5);background:rgba(var(--ac-rgb),.16)}
-.land-links a.on:before{opacity:1;box-shadow:0 0 10px var(--ac2)}
+.land-links{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+.hero-links{margin:28px auto 0;max-width:900px;position:relative;z-index:1}
+.land-links a{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border:1px solid var(--bd2);border-radius:12px;color:var(--tx);font-size:15px;font-weight:600;text-decoration:none;letter-spacing:.2px;white-space:nowrap;background:rgba(var(--card),.7);transition:color .2s,background .2s,border-color .2s,transform .2s,box-shadow .2s}
+.land-links a:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ac2);opacity:.8;transition:opacity .2s,transform .2s}
+.land-links a:hover{color:var(--tx);border-color:var(--ac);background:rgba(var(--ac-rgb),.12);transform:translateY(-2px);box-shadow:0 6px 18px rgba(var(--ac-rgb),.15)}
+.land-links a:hover:before{opacity:1;transform:scale(1.35)}
+.land-links a.on{color:var(--ac2);border-color:var(--ac);background:rgba(var(--ac-rgb),.18);box-shadow:inset 0 0 0 1px rgba(var(--ac-rgb),.35)}
+.land-links a.on:before{opacity:1;box-shadow:0 0 12px var(--ac2)}
+@media(max-width:700px){.land-links a{font-size:13px;padding:10px 13px}}
 .sec-kicker{display:inline-block;margin-bottom:10px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ac2);font-weight:700}
 .land-sec{position:relative}
 .land-sec:before{content:"";position:absolute;left:clamp(18px,5vw,54px);right:clamp(18px,5vw,54px);top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--ac-rgb),.45),transparent)}
@@ -847,7 +849,6 @@ function showLanding(errText, invited) {
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
     <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
-      <div class="land-links"><a href="#land-features">Что внутри</a><a href="#land-systems">Системы</a><a href="#land-flow">Как это работает</a><a href="#land-hooks">Хуки</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button>
         <button data-land-login>${loginLabel}</button></div></nav>
@@ -862,6 +863,7 @@ function showLanding(errText, invited) {
       <h1>Пульс твоего <em>клана</em></h1>
       <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
       <div class="land-cta"><button data-land-login>${loginLabel}</button><button class="sec" data-land-scroll>Узнать подробнее</button></div>
+      <div class="land-links hero-links"><a href="#land-features">Что внутри</a><a href="#land-systems">Системы и показатели</a><a href="#land-flow">Как это работает</a><a href="#land-hooks">Хуки и психология</a></div>
       <div class="land-bento" id="land_stats">${[
         ['clans', 'Кланов', ICONS.shield], ['players', 'Игроков', ICONS.users], ['matches', 'Боёв', ICONS.sword],
         ['gallery', 'Тактик', ICONS.shield], ['messages', 'Сообщений', ICONS.chat], ['events', 'Событий', ICONS.cal]
