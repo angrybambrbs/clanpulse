@@ -2380,13 +2380,9 @@ const TAC_MAPS = {
   berdovka: { name: 'Малая Бердовка', group: 'tour', file: 'tactics/berdovka.jpg', capsFile: 'tactics/berdovka_caps.webp', w: 1615, h: 1070,
     caps: [[0.364, 0.533], [0.483, 0.525], [0.437, 0.332], [0.591, 0.407], [0.587, 0.640], [0.445, 0.699]] },
   hvoiny: { name: 'Хвойный', group: 'tour', file: 'tactics/hvoiny.jpg', capsFile: 'tactics/hvoiny_caps.webp', w: 1297, h: 991,
-    caps: [[0.316, 0.560], [0.493, 0.555], [0.675, 0.560]] },
+    caps: [[0.300, 0.560], [0.493, 0.545], [0.690, 0.560]] },
   nizina: { name: 'Низина', group: 'tour', file: 'tactics/nizina.jpg', capsFile: 'tactics/nizina_caps.webp', w: 1847, h: 1172,
-    caps: [[0.53, 0.60], [0.55, 0.81], [0.55, 0.93]] },
-  kvartaly: { name: 'Кварталы', group: 'brawl', file: 'tactics/kvartaly_caps.webp', capsFile: 'tactics/kvartaly_caps.webp', w: 1080, h: 980,
-    caps: [[0.255, 0.505], [0.404, 0.258], [0.403, 0.746], [0.501, 0.505], [0.600, 0.258], [0.606, 0.746], [0.744, 0.505]] },
-  roza: { name: 'Роза ветров', group: 'brawl', file: 'tactics/roza_caps.webp', capsFile: 'tactics/roza_caps.webp', w: 1080, h: 980,
-    caps: [[0.411, 0.430], [0.411, 0.635], [0.607, 0.430], [0.607, 0.635], [0.505, 0.115], [0.887, 0.520], [0.130, 0.520], [0.505, 0.932], [0.505, 0.531]] }
+    caps: [[0.50, 0.60], [0.50, 0.81], [0.50, 0.92]] }
 };
 const TAC_COLORS = [['#ff2d55', 'красный'], ['#ff8a3d', 'оранжевый'], ['#ffd23f', 'жёлтый'], ['#2ee66b', 'зелёный'],
   ['#29d3ff', 'голубой'], ['#b47cff', 'фиолетовый'], ['#ffffff', 'белый'], ['#0b1020', 'чёрный']];
@@ -2424,8 +2420,8 @@ const TAC_SIDE = { ally: ['Свой', '#2f9bff'], enemy: ['Враг', '#ff3b61']
 const TAC = { map: 'berdovka', tool: 'brush', color: '#ff2d55', size: 4, visible: true, zoom: 1, px: 0, py: 0, stamp: 'tent', side: 'ally', capPlacing: false, showCaps: true };
 let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
 let TAC_CHAN = null, TAC_CURSORS = {}, TAC_LIVE = {}, TAC_REMOTE_INIT = false, TAC_LAST_CURSOR = 0, TAC_LAST_LIVE = 0;
-const TAC_GROUPS = { tour: true, brawl: true };
-const TAC_GROUP_LABEL = { tour: 'Турниры и захваты', brawl: 'Потасовки' };
+const TAC_GROUPS = { tour: true };
+const TAC_GROUP_LABEL = { tour: 'Турниры и захваты' };
 let TAC_REDO = [], TAC_PAN_PREV = 'brush', TAC_ONLINE = {}, TAC_LAST_EDIT = null;
 const tacNick = () => ((user && (user.user_metadata || {}).nick) || (user && user.user_metadata && user.user_metadata.name) || (user && user.email || 'Игрок')).split('@')[0].slice(0, 24);
 const saveLocalPlan = () => {
