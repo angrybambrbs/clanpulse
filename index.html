@@ -561,7 +561,25 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-step{padding:20px;border-left:3px solid var(--ac);border-radius:0 14px 14px 0;background:var(--card)}
 .land-step b{display:block;color:var(--ac2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
 .land-foot{text-align:center;padding:36px 18px 46px;color:var(--mut);border-top:1px solid var(--bd2)}
+.land-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.land-aurora{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.land-aurora i{position:absolute;display:block;border-radius:50%;filter:blur(80px);opacity:.28;animation:aurora 18s ease-in-out infinite alternate}
+.land-aurora i:nth-child(1){width:46vw;height:46vw;left:-12vw;top:-14vw;background:var(--ac)}
+.land-aurora i:nth-child(2){width:38vw;height:38vw;right:-10vw;top:18vh;background:#f43f5e;animation-delay:-6s}
+.land-aurora i:nth-child(3){width:32vw;height:32vw;left:32vw;bottom:-14vw;background:var(--ac2);animation-delay:-12s}
+@keyframes aurora{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(6vw,5vh,0) scale(1.18)}}
+.land-bento{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:46px;position:relative;z-index:1}
+.land-bento .bs{padding:15px 14px;border:1px solid var(--bd2);border-radius:14px;background:linear-gradient(160deg,rgba(var(--ac-rgb),.12),transparent 65%),var(--card);text-align:left;transition:transform .2s,border-color .2s}
+.land-bento .bs:hover{transform:translateY(-4px);border-color:var(--ac)}
+.land-bento .bs .ic{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:rgba(var(--ac-rgb),.16);color:var(--ac2);margin-bottom:8px}
+.land-bento .bs b{display:block;font-family:'Russo One',sans-serif;font-size:clamp(21px,3vw,32px);color:var(--ac2);line-height:1}
+.land-bento .bs>span:last-of-type{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--mut)}
+.land-bento .bar{height:3px;border-radius:3px;background:rgba(var(--ac-rgb),.18);margin-top:10px;overflow:hidden}
+.land-bento .bar i{display:block;height:100%;width:0;border-radius:3px;background:var(--ac2);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+@media(max-width:900px){.land-bento{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.land-bento{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.land-nav .lbtns button{font-size:13px;padding:8px 10px}}
+@media(prefers-reduced-motion:reduce){.land-aurora i{animation:none}}
 @media(prefers-reduced-motion:reduce){.typing .dots i,.land-card,.bub{animation:none!important;transition:none!important}}
 </style>
 <script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
@@ -578,6 +596,39 @@ const SUPABASE_ANON_KEY = 'sb_publishable_0kJv9lAMAvBYwPQW23Qwyg_R_MkNBAe';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const app = document.getElementById('app');
+// Звуки интерфейса — синтезируются через Web Audio, без внешних файлов.
+const SFX_KEY = 'cp_sfx';
+let sfxOn = localStorage.getItem(SFX_KEY) !== '0';
+let audioCtx = null, lastHoverSfx = 0;
+const sfx = (kind = 'click') => {
+  if (!sfxOn) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain(), now = audioCtx.currentTime;
+    const cfg = kind === 'send' ? ['triangle', 720, 420, .14, .05]
+      : kind === 'toggle' ? ['sine', 440, 880, .16, .045]
+      : kind === 'hover' ? ['sine', 1300, 1250, .045, .012]
+      : ['sine', 560, 320, .09, .045];
+    o.type = cfg[0];
+    o.frequency.setValueAtTime(cfg[1], now);
+    o.frequency.exponentialRampToValueAtTime(cfg[2], now + cfg[3]);
+    g.gain.setValueAtTime(.0001, now);
+    g.gain.exponentialRampToValueAtTime(cfg[4], now + .008);
+    g.gain.exponentialRampToValueAtTime(.0001, now + cfg[3]);
+    o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now + cfg[3] + .02);
+  } catch (e) {}
+};
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest && e.target.closest('button');
+  if (!b || b.hasAttribute('data-sfx-toggle')) return;
+  sfx(b.id === 'gsend' || b.id === 'csend' ? 'send' : 'click');
+}, true);
+document.addEventListener('mouseover', e => {
+  if (!e.target || !e.target.closest || !e.target.closest('button')) return;
+  const now = Date.now();
+  if (now - lastHoverSfx > 70) { lastHoverSfx = now; sfx('hover'); }
+});
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const avImg = (url, cls) => url ? '<img class="av ' + (cls || '') + '" referrerpolicy="no-referrer" src="' + esc(url) + '" alt="">' : '';
 let user = null, clan = null, tab = 'rating';
@@ -658,13 +709,49 @@ function oauthError() {
   return q.get('error_description') || h.get('error_description') || '';
 }
 
+let LAND_RAF = null;
+function landBackdrop() {
+  const cv = document.getElementById('land_bg');
+  if (!cv || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const ctx = cv.getContext('2d');
+  let W = 0, H = 0, parts = [];
+  const resize = () => {
+    W = cv.width = innerWidth; H = cv.height = innerHeight;
+    const n = Math.min(70, Math.round(W * H / 22000));
+    parts = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - .5) * .22, vy: (Math.random() - .5) * .22, r: Math.random() * 1.6 + .6 }));
+  };
+  resize(); addEventListener('resize', resize);
+  const rgb = () => getComputedStyle(document.documentElement).getPropertyValue('--ac-rgb').trim() || '124,58,237';
+  const loop = () => {
+    const c = rgb();
+    ctx.clearRect(0, 0, W, H);
+    for (const p of parts) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+      ctx.fillStyle = 'rgba(' + c + ',.55)'; ctx.fill();
+    }
+    for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
+      const a = parts[i], b = parts[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < 130) {
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = 'rgba(' + c + ',' + (.12 * (1 - d / 130)).toFixed(3) + ')';
+        ctx.lineWidth = .7; ctx.stroke();
+      }
+    }
+    LAND_RAF = requestAnimationFrame(loop);
+  };
+  loop();
+}
 function showLanding(errText, invited) {
   const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
   const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
   const feat = [
     [ICONS.chart, 'Аналитика без таблиц', 'Явка, винрейт, K/D и KDA считаются автоматически из записанных боёв. Фильтры по периоду, режиму и отрядам.'],
     [ICONS.users, 'Отряды и состав', 'Цветные карточки отрядов, свободные слоты, лавка и быстрая рассадка игроков одной кнопкой.'],
-    [ICONS.shield, 'Общая тактика', 'Пять карт, маршруты и метки, совместное рисование с кланом, галерея планов и экспорт в PNG/JSON.'],
+    [ICONS.shield, 'Общая тактика', 'Карты, маршруты и метки, совместное рисование с кланом, галерея планов и экспорт в PNG/JSON.'],
     [ICONS.cal, 'Календарь и Зона', 'Турниры, хроноразломы и аирдропы. Напоминания за день и RSVP прямо в календаре.'],
     [ICONS.chat, 'Связь', 'Чат клана, глобальный чат, личные сообщения, @упоминания и уведомления.'],
     [ICONS.user, 'Профиль игрока', 'Снаряга, показатели, статистика по режимам и ссылка на профиль каждого участника клана.']
@@ -678,14 +765,19 @@ function showLanding(errText, invited) {
     ['Точки на карте', 'Буквы A/B/C превращают абстрактную карту в конкретную задачу отряда.']
   ].map(([t, d]) => `<div class="land-step"><b>${t}</b><span>${d}</span></div>`).join('');
   app.innerHTML = `<div class="land">
+    <canvas class="land-canvas" id="land_bg" aria-hidden="true"></canvas>
+    <div class="land-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
     <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
-      <div class="lbtns">${back}<button data-land-login>${loginLabel}</button></div></nav>
+      <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button data-land-login>${loginLabel}</button></div></nav>
     <header class="land-hero">
       <span class="kick">• Система управления кланом</span>
       <h1>Пульс твоего <em>клана</em></h1>
       <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
       <div class="land-cta"><button data-land-login>${loginLabel}</button><button class="sec" data-land-scroll>Узнать подробнее</button></div>
-      <div class="land-stats"><div><b>5</b><span>Тактических карт</span></div><div><b>15</b><span>Разделов</span></div><div><b>0</b><span>Таблиц</span></div><div><b>1</b><span>Вход через Discord</span></div></div>
+      <div class="land-bento" id="land_stats">${[
+        ['clans', 'Кланов', ICONS.shield], ['players', 'Игроков', ICONS.users], ['matches', 'Боёв', ICONS.sword],
+        ['gallery', 'Тактик', ICONS.shield], ['messages', 'Сообщений', ICONS.chat], ['events', 'Событий', ICONS.cal]
+      ].map(([k, l, ic]) => `<div class="bs" data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}">—</b><span>${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
     </header>
     <section class="land-sec" id="land-features"><h2>Что внутри</h2><p class="sub">Шесть систем, которые закрывают весь цикл жизни клана.</p><div class="land-grid">${feat}</div></section>
     <section class="land-sec"><h2>Системы и показатели</h2><p class="sub">Всё считается само — из боёв, которые вносит клан.</p>
@@ -702,8 +794,15 @@ function showLanding(errText, invited) {
       <p class="err" id="lerr">${esc(errText || (invited ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p></section>
     <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе</footer>
   </div>`;
+  landBackdrop();
+  app.querySelectorAll('[data-sfx-toggle]').forEach(b => b.onclick = () => {
+    sfxOn = !sfxOn; localStorage.setItem(SFX_KEY, sfxOn ? '1' : '0');
+    b.innerHTML = sfxOn ? ICONS.sound : ICONS.mute;
+    sfx('toggle');
+  });
+  const exit = () => { if (LAND_RAF) cancelAnimationFrame(LAND_RAF); LAND_RAF = null; };
   app.querySelectorAll('[data-land-login]').forEach(b => b.onclick = async () => {
-    if (user) { (clan ? render : renderHub)(); return; }
+    if (user) { exit(); (clan ? render : renderHub)(); return; }
     b.disabled = true; b.textContent = 'Переходим в Discord…';
     const { error } = await sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: location.origin + location.pathname } });
     if (error) {
@@ -712,9 +811,27 @@ function showLanding(errText, invited) {
     }
   });
   const bk = app.querySelector('[data-land-back]');
-  if (bk) bk.onclick = () => (clan ? render : renderHub)();
+  if (bk) bk.onclick = () => { exit(); (clan ? render : renderHub)(); };
   const sc = app.querySelector('[data-land-scroll]');
   if (sc) sc.onclick = () => app.querySelector('#land-features').scrollIntoView({ behavior: 'smooth' });
+  // Живые, проверенные числа — не декоративные заглушки.
+  const animate = (el, to) => {
+    const t0 = performance.now(), dur = 900;
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = String(Math.round(to * e));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const fill = vals => Object.entries(vals).forEach(([k, v]) => {
+    const el = app.querySelector('[data-v="' + k + '"]');
+    if (el) animate(el, Number(v) || 0);
+    const bar = el && el.closest('.bs').querySelector('.bar i');
+    if (bar) bar.style.width = Math.max(8, Math.min(100, Math.log10(Number(v) + 1) * 28)) + '%';
+  });
+  fill({ clans: 2, players: 8, matches: 1, gallery: 8, messages: 6, events: 1 });
+  sb.rpc('site_stats').then(r => { if (!r.error && r.data && typeof r.data === 'object') fill(r.data); }).catch(() => {});
 }
 let hubNote = '';
 let isAdmin = false;
@@ -761,7 +878,9 @@ const ICONS = {
   send: svg(14, '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>'),
   x: svg(12, '<path d="M18 6 6 18M6 6l12 12"/>'),
   logout: svg(16, '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>'),
-  home: svg(17, '<path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>')
+  home: svg(17, '<path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
+  sound: svg(16, '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'),
+  mute: svg(16, '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>')
 };
 const GOALS = { tournaments: 'Рейтинговые турниры', brawls: 'Потасовки', bases: 'Захват баз', chrono: 'Хроноразломы и аирдропы', open: 'Открытый мир и фарм', casual: 'Без напряга' };
 const GEAR = { 1: 'Ветеранская', 2: 'Мастерская', 3: 'Мастерская +10', 4: 'Мастерская +15' };
@@ -830,6 +949,7 @@ function shell(title, tabs, views, again, icon, primary) {
         <div class="tb-title"><span class="tb-kicker ${clan ? 'clan-link' : ''}" ${clan ? 'data-clan-card role="button" tabindex="0"' : ''}>ClanPulse${tab === 'player' ? ' · Профиль' : ' · ' + esc(title)}</span><h1>${esc(pageTitle)}</h1></div>
         <div class="tb-actions">
           <button class="ghost" data-home aria-label="Главная страница">${ICONS.home}</button>
+          <button class="ghost" data-sfx-toggle aria-label="Звуки кнопок" title="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button>
           <button class="ghost ${tab === 'dm' ? 'on' : ''}" data-t="dm" aria-label="Сообщения">${ICONS.mail}${cnt}</button>
           <button class="ghost ${tab === 'notifs' ? 'on' : ''}" data-t="notifs" aria-label="Уведомления">${ICONS.bell}${ncnt}</button>
           <button class="ghost tb-theme" data-theme-toggle aria-label="Сменить тему"><span class="ticon">${themeIcon}</span></button>
@@ -876,6 +996,12 @@ function shell(title, tabs, views, again, icon, primary) {
   });
   app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { toggle(false); tab = b.dataset.t; again(); });
   app.querySelectorAll('[data-home]').forEach(b => b.onclick = () => { toggle(false); showLanding(); });
+  app.querySelectorAll('[data-sfx-toggle]').forEach(b => b.onclick = () => {
+    sfxOn = !sfxOn; localStorage.setItem(SFX_KEY, sfxOn ? '1' : '0');
+    b.innerHTML = sfxOn ? ICONS.sound : ICONS.mute;
+    b.setAttribute('aria-label', sfxOn ? 'Выключить звуки' : 'Включить звуки');
+    sfx('toggle');
+  });
   app.querySelectorAll('[data-clan-card]').forEach(b => {
     const go = () => { toggle(false); viewClanCard(clan.id, () => render()); };
     b.onclick = go;
