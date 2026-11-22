@@ -535,7 +535,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .msg-tactic{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--ac);border-radius:12px;background:rgba(var(--ac-rgb),.10);margin-top:4px;max-width:270px}
 .msg-tactic b{display:block;font-size:13px}.msg-tactic span{font-size:11px;color:var(--mut)}
 /* ===== Главная страница ===== */
-.land{min-height:100vh;overflow:hidden;position:relative;background:radial-gradient(900px 520px at 78% -80px,rgba(var(--ac-rgb),.26),transparent 62%),radial-gradient(700px 460px at -100px 40vh,rgba(244,63,94,.14),transparent 60%),var(--bg)}
+.land{min-height:100vh;overflow:clip;position:relative;background:radial-gradient(900px 520px at 78% -80px,rgba(var(--ac-rgb),.26),transparent 62%),radial-gradient(700px 460px at -100px 40vh,rgba(244,63,94,.14),transparent 60%),var(--bg)}
 .land:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(var(--ac-rgb),.05) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--ac-rgb),.05) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent 70%);pointer-events:none}
 .land-nav{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:14px clamp(18px,5vw,54px);border-bottom:1px solid var(--bd2);background:rgba(var(--bg),.82);backdrop-filter:blur(16px)}
 .land-nav .logo{justify-self:start}
@@ -1964,21 +1964,27 @@ async function viewStats() {
 const TREASURY_KIND = { income: ['Доход', 'var(--ok)'], expense: ['Расход', 'var(--bad)'], fine: ['Штраф', 'var(--warn)'] };
 async function viewTreasury() {
   const body = document.getElementById('body');
-  const [tr, pl] = await Promise.all([
-    sb.from('clan_treasury').select('id,player_id,kind,amount,reason,created_at').eq('clan_id', clan.id).order('created_at', { ascending: false }).limit(200),
-    loadPlayers()
+  const [tr, pl, mb] = await Promise.all([
+    sb.from('clan_treasury').select('id,player_id,player_nick,kind,amount,reason,created_at').eq('clan_id', clan.id).order('created_at', { ascending: false }).limit(200),
+    loadPlayers(), sb.from('clan_members').select('user_id,display_name').eq('clan_id', clan.id)
   ]);
-  const err = tr.error || pl.error;
+  const err = tr.error || pl.error || mb.error;
   if (err) return body.innerHTML = failBox(err);
   const rows = tr.data || [], players = pl.data || [];
   const pname = Object.fromEntries(players.map(p => [p.id, p.nick]));
+  // Любой участник клана, даже если его нет в отдельном списке состава.
+  const people = players.filter(p => p.active).map(p => ({ id: p.id, nick: p.nick, user_id: p.user_id }));
+  (mb.data || []).forEach(m => {
+    const nick = m.display_name;
+    if (nick && !people.some(p => p.user_id === m.user_id || p.nick.toLowerCase() === nick.toLowerCase())) people.push({ id: '', nick, user_id: m.user_id });
+  });
   const sum = k => rows.filter(r => r.kind === k).reduce((a, r) => a + (Number(r.amount) || 0), 0);
   const income = sum('income'), expense = sum('expense'), fine = sum('fine'), balance = income - expense - fine;
   const kpi = (label, val, color) => `<div class="pg-kpi"><span>${label}</span><b style="color:${color}">${val}</b></div>`;
   const list = rows.length ? rows.map(r => `<tr>
     <td>${fmtTime(r.created_at)}</td>
     <td><span class="chip" style="color:${TREASURY_KIND[r.kind][1]};border-color:${TREASURY_KIND[r.kind][1]}">${TREASURY_KIND[r.kind][0]}</span></td>
-    <td>${r.player_id ? esc(pname[r.player_id] || 'Игрок') : '—'}</td>
+    <td>${esc(r.player_nick || (r.player_id ? pname[r.player_id] || 'Игрок' : '') || '—')}</td>
     <td><b>${esc(r.amount)}</b></td><td>${esc(r.reason || '—')}</td>
     <td>${canEdit() ? `<button class="ghost x" data-txdel="${r.id}" aria-label="Удалить">${ICONS.x}</button>` : ''}</td></tr>`).join('')
     : '<tr><td colspan="6" class="mut">Записей пока нет.</td></tr>';
@@ -1987,7 +1993,7 @@ async function viewTreasury() {
     + `<div class="pg-kpis">${kpi('Баланс', balance, balance >= 0 ? 'var(--ok)' : 'var(--bad)')}${kpi('Доходы', income, 'var(--ok)')}${kpi('Расходы', expense, 'var(--bad)')}${kpi('Штрафы', fine, 'var(--warn)')}</div>
     ${canEdit() ? `<div class="card" id="tx_form" hidden><div class="grid">
       ${fld('Тип', '<select id="tx_kind"><option value="income">Доход</option><option value="expense">Расход</option><option value="fine">Штраф</option></select>')}
-      ${fld('Игрок', `<select id="tx_player"><option value="">— общий —</option>${players.map(p => `<option value="${p.id}">${esc(p.nick)}</option>`).join('')}</select>`)}
+      ${fld('Игрок', `<select id="tx_player"><option value="-1">— Клан (без игрока) —</option>${people.map((p, i) => `<option value="${i}">${esc(p.nick)}</option>`).join('')}</select>`)}
       ${fld('Сумма', '<input type="number" id="tx_amount" min="1" placeholder="0">')}
       ${fld('Причина', '<input id="tx_reason" maxlength="200" placeholder="За что">')}</div>
       <div class="row" style="margin-top:8px"><button id="tx_save">Сохранить</button></div></div>` : ''}
@@ -2000,9 +2006,11 @@ async function viewTreasury() {
   if (save) save.onclick = async () => {
     const amount = Number(val('tx_amount'));
     if (!amount || amount < 1) return alert('Укажи сумму');
+    const idx = Number(val('tx_player')), person = idx >= 0 ? people[idx] : null;
     const { error: e } = await sb.from('clan_treasury').insert({
       clan_id: clan.id, kind: val('tx_kind'), amount: Math.round(amount),
-      player_id: val('tx_player') || null, reason: txt('tx_reason') || '', created_by: user.id
+      player_id: person && person.id || null, player_nick: person ? person.nick : null,
+      reason: txt('tx_reason') || '', created_by: user.id
     });
     if (e) return alert(e.message);
     auditLog('казна: запись', TREASURY_KIND[val('tx_kind')][0] + ' ' + amount);

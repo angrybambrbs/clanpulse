@@ -3,6 +3,7 @@ create table if not exists public.clan_treasury (
   id uuid primary key default gen_random_uuid(),
   clan_id uuid not null references public.clans(id) on delete cascade,
   player_id uuid references public.players(id) on delete set null,
+  player_nick text,
   kind text not null check (kind in ('income','expense','fine')),
   amount integer not null check (amount > 0),
   reason text not null default '',
