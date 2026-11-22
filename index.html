@@ -2611,8 +2611,8 @@ async function viewRoster() {
     return `<div class="sq2" style="--sq:${color}"><div class="sq2-top">
       <span class="sq2-ico">${svg(16, SQ_ICONS[i % SQ_ICONS.length])}</span>
       <span class="sq2-name">${esc(x.name)}</span>
-      <span class="sq2-chip" title="K/D отряда">⏱ ${kdOf(s)}</span><span class="sq2-chip" title="Убийства отряда">⚔ ${s.k}</span></div>
-      <div class="sq2-tb"><div class="sq2-row th"><span>ИГРОК</span><span>${SQ_STAT_ICONS.k}</span><span>${SQ_STAT_ICONS.d}</span><span>${SQ_STAT_ICONS.a}</span><span>K/D</span><span>${SQ_STAT_ICONS.sc}</span></div>
+      <span class="sq2-chip" title="Соотношение убийств к смертям всего отряда">K/D ${kdOf(s)}</span><span class="sq2-chip" title="Всего убийств отряда">K ${s.k}</span></div>
+      <div class="sq2-tb"><div class="sq2-row th"><span>ИГРОК</span><span title="Убийства">K</span><span title="Смерти">D</span><span title="Помощь">П</span><span title="K/D">K/D</span><span title="Счёт">Очки</span></div>
       ${mem.length ? mem.map(p => `<div class="sq2-row">${plLink(p.id, p.nick)}${statCells(p)}</div>`).join('') : '<div class="sq2-empty">Нет игроков</div>'}</div></div>`;
   }).join('');
   const manageCards = squads.map((x, i) => {
