@@ -766,6 +766,12 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return showLanding(oauthError(), !!pendingInvite());
   user = session.user;
+  if (!/[?&]tab=/.test(location.search)) {
+    try {
+      const st = localStorage.getItem(TAB_KEY); if (st) tab = st;
+      const pid = localStorage.getItem(PLAYER_KEY); if (pid) playerId = pid;
+    } catch (e) {}
+  }
   isAdmin = (await sb.rpc('is_platform_admin')).data === true;
   sb.rpc('touch_card').then(() => {});
   await refreshUnread(); await refreshNotifCount(); startDmSub(); startNotifSub();
@@ -985,7 +991,8 @@ let notifCount = 0, notifChan = null, notifChanUser = null;
 const FACTIONS = { svoboda: 'Свобода', dolg: 'Долг', naemniki: 'Наёмники', zavet: 'Завет' };
 const FCLASS = { svoboda: 'svoboda', dolg: 'dolg', naemniki: 'naemniki', zavet: 'zavet' };
 const factionChip = (f, any) => `<span class="chip faction ${FCLASS[f] || ''}">${FACTIONS[f] || any || 'Без фракции'}</span>`;
-const THEME_KEY = 'cp_theme', CUSTOM_KEY = 'cp_custom';
+const THEME_KEY = 'cp_theme', CUSTOM_KEY = 'cp_custom', TAB_KEY = 'cp_tab', PLAYER_KEY = 'cp_player';
+const saveTab = () => { try { localStorage.setItem(TAB_KEY, tab); localStorage.setItem(PLAYER_KEY, tab === 'player' ? (playerId || '') : ''); } catch (e) {} };
 const ACCENTS = { violet: ['Фиолетовый', '#8b5cf6'], ocean: ['Океан', '#3b82f6'], emerald: ['Изумруд', '#10b981'], amber: ['Янтарь', '#f59e0b'] };
 const CUSTOM_VARS = ['--ac', '--ac2', '--ac-rgb', '--btn1', '--btn2', '--bd', '--bd2', '--ring', '--glow', '--g1'];
 const hexRgb = h => { const s = String(h || '').replace('#', ''); return [0, 2, 4].map(i => parseInt(s.slice(i, i + 2), 16) || 0); };
@@ -1103,7 +1110,7 @@ function shell(title, tabs, views, again, icon, primary) {
   const logo = icon ? '<img class="av" referrerpolicy="no-referrer" src="' + esc(icon) + '" alt="">'
     : (clan && clan.faction ? factionLogo(clan.faction) : '<div class="av ph">' + esc(String(title || 'CP').slice(0, 2).toUpperCase()) + '</div>');
   const brandCls = 'side-brand' + (clan ? ' clan-link' : '');
-  const brandAttr = clan ? ' data-clan-card role="button" tabindex="0" aria-label="Профиль клана"' : '';
+  const brandAttr = clan ? ' data-clan-card role="button" tabindex="0" title="Профиль клана" aria-label="Профиль клана"' : '';
   const themeIcon = document.documentElement.dataset.theme === 'light' ? TSVG.sun : TSVG.moon;
   let nav = '', group = '';
   for (const [id, l] of tabs) {
@@ -1206,6 +1213,7 @@ function render() {
   tabs.push(['catalog', 'Каталог снаряжения'], ['global', 'Глобальный чат'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']);
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (tab !== 'player' && !tabs.some(t => t[0] === tab)) tab = 'rating';
+  saveTab();
   shell(clan.name, tabs, { rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, tactics: viewTactics, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
     settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog, global: viewGlobalChat }, render, clan.avatar_url, ['rating', 'match', 'tactics', 'events', 'chat']);
 }
@@ -1214,6 +1222,7 @@ function renderHub() {
   const tabs = [['search', 'Поиск клана'], ['myapps', 'Мои заявки'], ['start', 'Создать клан'], ['catalog', 'Каталог снаряжения'], ['global', 'Глобальный чат'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']];
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (!tabs.some(t => t[0] === tab)) tab = 'search';
+  saveTab();
   shell('ClanPulse', tabs, { search: viewSearch, myapps: viewMyApps, start: viewStart, profile: viewProfile, admin: viewAdmin, dm: viewDm, notifs: viewNotifs, catalog: viewCatalog, global: viewGlobalChat },
     renderHub, null, ['search', 'myapps']);
 }
@@ -1454,7 +1463,12 @@ function viewClanProfile(body, c, prof, applied) {
 
 async function viewClanCard(cid, backFn) {
   const body = document.getElementById('body');
-  let { data: c, error } = await sb.from('clan_directory').select('*').eq('id', cid).maybeSingle();
+  // Свой клан уже загружен — открываем мгновенно, без запроса к directory/RLS.
+  let c = clan && clan.id === cid ? clan : null, error = null;
+  if (!c) {
+    const r = await sb.from('clan_directory').select('*').eq('id', cid).maybeSingle();
+    c = r.data || null; error = r.error;
+  }
   if (!c) {
     const r = await sb.from('clans').select('*').eq('id', cid).maybeSingle();
     if (r.data) { c = r.data; error = null; }
@@ -4225,14 +4239,18 @@ async function viewThread(body) {
   const q = () => sb.from('direct_messages').select('*')
     .or(`and(sender_id.eq.${user.id},recipient_id.eq.${pid}),and(sender_id.eq.${pid},recipient_id.eq.${user.id})`)
     .order('created_at', { ascending: false }).limit(100);
-  const [cr, mr] = await Promise.all([sb.from('user_cards').select('*').eq('user_id', pid).maybeSingle(), q()]);
+  const [cr, mr, mb] = await Promise.all([
+    sb.from('user_cards').select('*').eq('user_id', pid).maybeSingle(), q(),
+    clan ? sb.from('clan_members').select('user_id,display_name').eq('clan_id', clan.id) : Promise.resolve({ data: [] })
+  ]);
   if (mr.error) return body.innerHTML = failBox(mr.error);
   const card = cr.data;
   body.innerHTML = `<div class="card"><div class="row" style="align-items:center"><button class="ghost" id="dback">← Все диалоги</button>
     <span class="brand">${avImg(card && card.avatar_url, 'sm')}<b>${esc(card ? card.name : 'Пользователь не найден')}</b></span></div>
     <div class="log chat" id="log"></div>
-    ${card ? '<div class="chatform"><textarea id="dmsg" rows="1" placeholder="Сообщение (Enter — отправить)"></textarea><button id="dsend">' + ICONS.send + ' Отправить</button></div>' : ''}</div>`;
+    ${card ? '<div class="chatform"><textarea id="dmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упомянуть)"></textarea><button id="dsend">' + ICONS.send + ' Отправить</button></div>' : ''}</div>`;
   const log = document.getElementById('log');
+  if (card) mentionDropdown(document.getElementById('dmsg'), [...new Set([card.name, ...(mb.data || []).map(m => m.display_name)].filter(Boolean))]);
   const paint = list => {
     log.innerHTML = list.length ? list.map(m => {
       const mine = m.sender_id === user.id;
@@ -4258,6 +4276,7 @@ async function viewThread(body) {
     const t = val('dmsg').trim(); if (!t) return;
     const { error } = await sb.from('direct_messages').insert({ sender_id: user.id, recipient_id: pid, body: t });
     if (error) return alert(error.message);
+    notifyMentions(t, 'dm');
     document.getElementById('dmsg').value = '';
     load();
   };
