@@ -18,6 +18,7 @@
 [data-accent="emerald"][data-theme="light"]{--bg:#eaf7f0;--card:#ffffff;--tx:#10332a;--mut:#3f6b5d;--ac:#047857;--ac2:#065f46;--ac-rgb:4,120,87;--btn1:#047857;--btn2:#065f46;--cta:#be123c;--bd:#c8e4d8;--bd2:#a3d2bf;--bad:#dc2626;--in:#ffffff;--in2:#f2faf6;--ok:#059669;--warn:#b45309;--warn-bg:rgba(245,158,11,.14);--bad-bg:rgba(220,38,38,.10);--ring:rgba(4,120,87,.22);--glow:0 4px 14px rgba(4,120,87,.18);--shadow:0 6px 18px rgba(32,29,43,.08);--g1:rgba(4,120,87,.07);--g2:rgba(244,63,94,.05)}
 [data-accent="amber"]{--bg:#170f02;--card:#221705;--tx:#faf0de;--mut:#c8ab7e;--ac:#f59e0b;--ac2:#fbbf24;--ac-rgb:245,158,11;--btn1:#b45309;--btn2:#92400e;--cta:#e11d48;--bd:#3a2a12;--bd2:#4a3416;--bad:#f87171;--in:#181006;--in2:#120b04;--ok:#34d399;--warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);--bad-bg:rgba(248,113,113,.12);--ring:rgba(245,158,11,.35);--glow:0 0 18px rgba(245,158,11,.35);--shadow:0 8px 24px rgba(20,10,2,.55);--g1:rgba(245,158,11,.16);--g2:rgba(244,63,94,.07)}
 [data-accent="amber"][data-theme="light"]{--bg:#fdf3e3;--card:#ffffff;--tx:#3d2a10;--mut:#7a5c34;--ac:#b45309;--ac2:#92400e;--ac-rgb:180,83,9;--btn1:#b45309;--btn2:#92400e;--cta:#be123c;--bd:#f0ddb8;--bd2:#e3c48c;--bad:#dc2626;--in:#ffffff;--in2:#fdf8ee;--ok:#059669;--warn:#b45309;--warn-bg:rgba(245,158,11,.14);--bad-bg:rgba(220,38,38,.10);--ring:rgba(180,83,9,.22);--glow:0 4px 14px rgba(180,83,9,.16);--shadow:0 6px 18px rgba(32,29,43,.08);--g1:rgba(180,83,9,.07);--g2:rgba(244,63,94,.05)}
+[data-accent="custom"]:not([data-theme="light"]){--bg:#0b1020;--card:#12172c;--in:#0d1226;--in2:#080d1c;--bd:#2c2854;--bd2:#3d376e}
 *{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:8px}
@@ -371,6 +372,9 @@ a:hover{color:var(--ac)}
 .zone-info{padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--in)}
 .zone-info h3{margin:0 0 6px;font-size:14px;color:var(--ac2)}
 .zone-info p{margin:4px 0;font-size:13px}
+.air-row{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}
+.air-row .chip{display:inline-flex;align-items:center;gap:5px;flex:none;min-width:130px;justify-content:flex-start;margin:0;line-height:1.2}
+.air-row .chip svg{flex:none}
 .zone-form{margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)}
 @media(max-width:959px){.zone-grid{grid-template-columns:1fr}}
 .calempty{color:var(--bd2);font-size:12px}
@@ -744,7 +748,11 @@ let user = null, clan = null, tab = 'rating';
 function msg(text) { app.innerHTML = `<div class="card err">${esc(text)}</div>`; }
 
 // Тосты вместо нативных alert(): успех — зелёный, ошибка — красный.
+let lastToast = { text: '', at: 0 };
 function toast(text, kind) {
+  const now = Date.now();
+  if (lastToast.text === text && now - lastToast.at < 1600) return;
+  lastToast = { text, at: now };
   let host = document.getElementById('toasts');
   if (!host) { host = document.createElement('div'); host.id = 'toasts'; host.className = 'toasts'; host.setAttribute('role', 'status'); host.setAttribute('aria-live', 'polite'); document.body.append(host); }
   const ok = /сохран|отправлен|готово|добавлен|удал[её]н|обновл[её]н|скопирован|принят|создан|записан/i.test(text);
@@ -1198,10 +1206,9 @@ function shell(title, tabs, views, again, icon, primary) {
     const ic = next === 'light' ? TSVG.sun : TSVG.moon;
     app.querySelectorAll('.ticon').forEach(el => { el.innerHTML = ic; });
   });
-  app.querySelectorAll('[data-custom-color]').forEach(inp => inp.oninput = () => {
-    applyCustom(inp.value);
-    app.querySelectorAll('[data-accent]').forEach(x => x.classList.remove('on'));
-    toast('Свой цвет применён');
+  app.querySelectorAll('[data-custom-color]').forEach(inp => {
+    inp.oninput = () => { applyCustom(inp.value); app.querySelectorAll('[data-accent]').forEach(x => x.classList.remove('on')); };
+    inp.onchange = () => toast('Свой цвет применён');
   });
   app.querySelectorAll('[data-accent]').forEach(b => b.onclick = () => {
     const a = b.dataset.accent;
@@ -2363,7 +2370,7 @@ async function viewPlayer() {
   const bars = seq.map((r, i) => { const h = r.s ? Math.max(3, (r.s.score || 0) / mx * H) : 3;
     return `<rect x="${i * (bw + gap)}" y="${H - h}" width="${bw}" height="${h}" rx="2" style="fill:var(${r.s ? '--ac' : '--bd'})"/>`; }).join('');
   const chart = seq.length ? `<p class="mut" style="margin:12px 0 4px">Счёт по боям (слева старые, серые полоски — не явился)</p>
-    <svg viewBox="0 0 ${seq.length * (bw + gap) - gap} ${H}" preserveAspectRatio="none" style="width:100%;height:90px">${bars}</svg>` : '';
+    <svg viewBox="0 0 ${Math.max(320, seq.length * (bw + gap) - gap)} ${H}" preserveAspectRatio="xMinYMid meet" style="width:100%;height:90px">${bars}</svg>` : '';
   const hist = rows.slice(0, 15).map(r => r.s
     ? `<tr><td>${fmtTime(r.m.played_at)}</td><td>${r.s.kills ?? '—'}</td><td>${r.s.deaths ?? '—'}</td><td>${r.s.assists ?? '—'}</td><td>${r.s.score ?? '—'}</td></tr>`
     : `<tr class="dim"><td>${fmtTime(r.m.played_at)}</td><td colspan="4">не явился</td></tr>`).join('');
@@ -4151,9 +4158,16 @@ document.addEventListener('click', async e => {
   const b = e.target && e.target.closest && e.target.closest('[data-mention]');
   if (!b) return;
   e.preventDefault(); e.stopPropagation();
-  const nick = b.dataset.mention;
+  const nick = b.dataset.mention.replace(/^@/, '').replace(/#.*$/, '');
   try {
-    const { data: uid } = await sb.rpc('find_user_by_nick', { p_nick: nick });
+    let { data: uid } = await sb.rpc('find_user_by_nick', { p_nick: nick });
+    if (!uid && clan) {
+      const pl = await sb.from('players').select('id,user_id,nick').eq('clan_id', clan.id).ilike('nick', nick).maybeSingle();
+      if (pl.data) {
+        if (pl.data.user_id) uid = pl.data.user_id;
+        else { if (typeof stopGlobalChan === 'function') stopGlobalChan(); return openPlayer(pl.data.id, () => render()); }
+      }
+    }
     if (uid && uid !== user.id) {
       if (typeof stopGlobalChan === 'function') stopGlobalChan();
       viewUserCard(uid, () => render());
@@ -4515,10 +4529,15 @@ function showImport(body, parsed, roster) {
 
 const EV_KIND = { tournament: 'Турнир', brawl: 'Потасовка', base: 'Захват базы', chrono: 'Хроноразломы', airdrop: 'Аирдроп', other: 'Другое' };
 const ZONE_LOCATIONS = ['Тихая Заводь (Затон)', 'Дикий Север', 'Любеч-3', 'Комбинат «Уран»', 'Могильник', 'Южная', 'Северная', 'Другое'];
+const AIR_ICON = {
+  normal: svg(15, '<path d="M12 3v5M4 8a8 8 0 0 1 16 0M4 8l3 3M20 8l-3 3M6 11h12v9H6z"/><path d="M6 15h12"/>'),
+  sugar: svg(15, '<path d="m12 2 8 5v10l-8 5-8-5V7z"/><path d="m4 7 8 5 8-5M12 12v10"/><path d="M12 2v5"/>'),
+  gold: svg(15, '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 11h18M8 6V4h8v2"/><path d="M10 14h4"/>')
+};
 const AIRDROP_TYPES = {
   normal: { label: 'Обычный', loot: 'ресурсы локации, инструменты, компоненты, медикаменты', color: '#ffffff' },
-  sugar: { label: 'Сахарный', loot: 'светящийся сахар — нужен для катализаторов', color: '#38bdf8' },
-  gold: { label: 'Золотой', loot: 'редкие компоненты и артефакты', color: '#fbbf24' }
+  sugar: { label: 'Сахарный', loot: 'светящийся сахар (катализаторы, продажа)', color: '#38bdf8' },
+  gold: { label: 'Золотой', loot: 'оружейный кейс, высоко ценится на рынке', color: '#fbbf24' }
 };
 const RSVP = { yes: 'Буду', maybe: 'Возможно', no: 'Не смогу' };
 const RESULTS = { 'победа': 'Победа', 'поражение': 'Поражение', 'ничья': 'Ничья', 'не состоялось': 'Не состоялось' };
@@ -4567,7 +4586,7 @@ async function viewEvents() {
         <p class="mut">Локации: Дикий Север, Тихая Заводь (Затон), Комбинат «Уран».</p></div>
       <div class="zone-info"><h3>Аирдропы</h3>
         <p class="mut">Контейнер сбрасывается с воздуха, маркер появляется на PDA. Нужно найти его, взломать и удержать позицию — прогресс сбрасывается, если взлом начнёт другой игрок.</p>
-        ${Object.entries(AIRDROP_TYPES).map(([k, a]) => `<p><span class="chip" style="margin:0 6px 4px 0;border-color:${a.color};color:${a.color}">${esc(a.label)}</span>${esc(a.loot)}</p>`).join('')}
+        ${Object.entries(AIRDROP_TYPES).map(([k, a]) => `<div class="air-row"><span class="chip" style="border-color:${a.color};color:${a.color}">${AIR_ICON[k]}${esc(a.label)}</span><span>${esc(a.loot)}</span></div>`).join('')}
       </div>
     </div>
     ${canEdit() ? `<div class="zone-form" id="zone_form" hidden><div class="grid">
@@ -4580,7 +4599,8 @@ async function viewEvents() {
   </div>`;
   const form = canEdit() ? `<div class="card" id="event_form" hidden><h2>Новое событие</h2><div class="grid">
     ${fld('Тип', `<select id="e_kind">${selOpts(EV_KIND, 'tournament')}</select>`)}${fld('Название (необязательно)', '<input id="e_title" maxlength="120">')}
-    ${fld('Дата и время', `<input type="datetime-local" id="e_dt" value="${localDt(tomorrow)}">`)}</div>
+    ${fld('Дата и время', `<input type="datetime-local" id="e_dt" value="${localDt(tomorrow)}">`)}
+    ${fld('Повтор', `<select id="e_repeat"><option value="once">Не повторяется</option><option value="daily">Каждый день</option><option value="weekly">Каждую неделю</option><option value="weekdays">По будням (пн–пт)</option></select>`)}</div>
     ${fld('Заметка (необязательно)', '<textarea id="e_note" maxlength="500"></textarea>')}<button id="e_add">Создать</button></div>` : '';
   const card = e => {
     const g = by[e.id] || { yes: [], maybe: [], no: [] };
@@ -4590,13 +4610,14 @@ async function viewEvents() {
       ? `<p>Результат: <b>${esc(link.result || ('место ' + (link.place || '—')))}</b></p><div class="row">${resSel}<button class="ghost" data-res="${e.id}" data-mid="${link.id}">Обновить</button></div>`
       : (new Date(e.starts_at) <= new Date() && canEdit()
           ? `<div class="row">${resSel}<button class="ghost" data-res="${e.id}">Записать результат</button></div>` : '');
-    return `<div class="card"><div class="rtitle"><span class="chip ok">${EV_KIND[e.kind]}</span><b>${esc(e.title)}</b></div>
+    const rep = { daily: 'каждый день', weekly: 'каждую неделю', weekdays: 'по будням' }[e.repeat_rule];
+    return `<div class="card"><div class="rtitle"><span class="chip ok">${EV_KIND[e.kind]}</span><b>${esc(e.title)}</b>${rep ? `<span class="chip">↻ ${rep}</span>` : ''}</div>
       <p class="mut">${evDate(e.starts_at)}</p>${e.location ? `<p class="mut">Локация: ${esc(e.location)}</p>` : ''}${e.note ? `<p>${esc(e.note)}</p>` : ''}
       <p>Буду: <b>${g.yes.length}</b> · Возможно: <b>${g.maybe.length}</b> · Не смогу: <b>${g.no.length}</b></p>
       <div class="row">${Object.entries(RSVP).map(([k, l]) => `<button class="ghost ${mine[e.id] === k ? 'on' : ''}" data-rsvp="${e.id}|${k}">${l}</button>`).join('')}</div>
       ${resultBlock}
       <details><summary class="mut">Кто что ответил</summary>${Object.entries(RSVP).map(([k, l]) => `<p><b>${l}:</b> ${g[k].length ? g[k].map(n => esc(n)).join(', ') : '—'}</p>`).join('')}</details>
-      ${canEdit() ? `<button class="ghost" data-delev="${e.id}" style="margin-top:8px">Удалить</button>` : ''}</div>`;
+      ${canEdit() ? `<div class="row" style="margin-top:8px"><button class="ghost" data-delev="${e.id}">Отменить событие</button>${e.series_id ? `<button class="ghost" data-delseries="${e.series_id}">Отменить серию</button>` : ''}</div>` : ''}</div>`;
   };
   body.innerHTML = pgHead('События', 'Календарь клана, хроноразломы и аирдропы — планируй вылазки заранее.',
       canEdit() ? `<button class="ghost" id="ev_new">Новое событие</button><button class="ghost" id="ev_zone">Вылазка в Зону</button>` : '')
@@ -4646,11 +4667,23 @@ async function viewEvents() {
   };
   const add = document.getElementById('e_add');
   if (add) add.onclick = async () => {
-    const kind = val('e_kind'), dt = val('e_dt');
+    const kind = val('e_kind'), dt = val('e_dt'), rule = val('e_repeat') || 'once';
     if (!dt) return alert('Укажи дату и время');
-    const { error } = await sb.from('clan_events').insert({ clan_id: clan.id, kind, title: txt('e_title') || EV_KIND[kind],
-      starts_at: new Date(dt).toISOString(), note: txt('e_note'), created_by: user.id });
+    const base = new Date(dt), dates = [];
+    if (rule === 'once') dates.push(new Date(base));
+    else {
+      const limit = new Date(base); limit.setDate(limit.getDate() + 84);
+      for (let d = new Date(base); d <= limit; d.setDate(d.getDate() + 1)) {
+        const day = d.getDay();
+        if (rule === 'daily' || (rule === 'weekly' && day === base.getDay()) || (rule === 'weekdays' && day >= 1 && day <= 5)) dates.push(new Date(d));
+      }
+    }
+    const series = rule === 'once' ? null : (crypto && crypto.randomUUID ? crypto.randomUUID() : 's' + Date.now());
+    const rows = dates.map(d => ({ clan_id: clan.id, kind, title: txt('e_title') || EV_KIND[kind],
+      starts_at: d.toISOString(), note: txt('e_note'), created_by: user.id, repeat_rule: rule, series_id: series }));
+    const { error } = await sb.from('clan_events').insert(rows);
     if (error) return alert(error.message);
+    auditLog('событие', (EV_KIND[kind] || '') + (rule !== 'once' ? ' · повтор: ' + rule + ' (' + dates.length + ')' : ''));
     calOffset = 0; viewEvents();
   };
   body.querySelectorAll('[data-rsvp]').forEach(b => b.onclick = async () => {
@@ -4676,13 +4709,19 @@ async function viewEvents() {
     const y = scrollY; await viewEvents(); scrollTo(0, y);
   });
   body.querySelectorAll('[data-delev]').forEach(b => b.onclick = async () => {
-    if (!confirm('Удалить событие?')) return;
+    if (!confirm('Отменить это событие? Остальные в серии останутся.')) return;
     const { error } = await sb.from('clan_events').delete().eq('id', b.dataset.delev);
     if (error) return alert(error.message);
     const y = scrollY; await viewEvents(); scrollTo(0, y);
   });
+  body.querySelectorAll('[data-delseries]').forEach(b => b.onclick = async () => {
+    if (!confirm('Отменить всю серию событий навсегда?')) return;
+    const { error } = await sb.from('clan_events').delete().eq('series_id', b.dataset.delseries);
+    if (error) return alert(error.message);
+    const y = scrollY; await viewEvents(); scrollTo(0, y);
+  });
 }
-sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLogin(); });
+sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLanding(); });
 init();
 </script>
 </body>
