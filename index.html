@@ -1018,7 +1018,7 @@ const factionChip = (f, any) => `<span class="chip faction ${FCLASS[f] || ''}">$
 const THEME_KEY = 'cp_theme', CUSTOM_KEY = 'cp_custom', TAB_KEY = 'cp_tab', PLAYER_KEY = 'cp_player';
 const saveTab = () => { try { localStorage.setItem(TAB_KEY, tab); localStorage.setItem(PLAYER_KEY, tab === 'player' ? (playerId || '') : ''); } catch (e) {} };
 const ACCENTS = { violet: ['Фиолетовый', '#8b5cf6'], ocean: ['Океан', '#3b82f6'], emerald: ['Изумруд', '#10b981'], amber: ['Янтарь', '#f59e0b'] };
-const CUSTOM_VARS = ['--ac', '--ac2', '--ac-rgb', '--btn1', '--btn2', '--bd', '--bd2', '--ring', '--glow', '--g1'];
+const CUSTOM_VARS = ['--ac', '--ac2', '--ac-rgb', '--btn1', '--btn2', '--ring', '--glow', '--g1'];
 const hexRgb = h => { const s = String(h || '').replace('#', ''); return [0, 2, 4].map(i => parseInt(s.slice(i, i + 2), 16) || 0); };
 const mixHex = (h, target, t) => {
   const a = hexRgb(h), b = hexRgb(target);
@@ -1033,8 +1033,6 @@ const applyCustom = hex => {
   set('--ac-rgb', `${r},${g},${b}`);
   set('--btn1', mixHex(hex, '#000000', .06));
   set('--btn2', mixHex(hex, '#000000', .24));
-  set('--bd', mixHex(hex, '#0f0f23', .76));
-  set('--bd2', mixHex(hex, '#0f0f23', .62));
   set('--ring', `rgba(${r},${g},${b},.35)`);
   set('--glow', `0 0 18px rgba(${r},${g},${b},.35)`);
   set('--g1', `rgba(${r},${g},${b},.16)`);
