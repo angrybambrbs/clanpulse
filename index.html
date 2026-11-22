@@ -46,6 +46,7 @@ textarea{width:100%;min-height:120px}
 .wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
 th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap;transition:background-color .15s ease}
+table.t-table td:nth-child(5){white-space:normal;overflow-wrap:anywhere;max-width:260px;min-width:0}
 th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
 tr:hover td{background:rgba(var(--ac-rgb),.07)}
 td input[type=number]{width:80px}
@@ -343,7 +344,7 @@ a:hover{color:var(--ac)}
 .sq2-slot.occupied{border-color:color-mix(in srgb,var(--sq) 35%,var(--bd2));background:color-mix(in srgb,var(--sq) 6%,transparent)}
 .sq2-drag{color:var(--mut);cursor:grab;font-size:12px;letter-spacing:-2px}
 .sq2-acts{display:flex;align-items:center;gap:4px;margin-top:8px;padding-top:6px;border-top:1px dashed var(--bd)}
-.ico{border:0;background:transparent;color:var(--mut);cursor:pointer;padding:2px 5px;border-radius:6px;line-height:1;font-size:13px}
+.ico{border:0;background:transparent;color:var(--mut);cursor:pointer;padding:4px 8px;min-width:34px;min-height:28px;border-radius:6px;line-height:1;font-size:13px}
 .ico:hover{background:var(--in);color:var(--tx)}
 .ico.bad:hover{color:var(--bad)}
 .lobby2{padding:10px;border:1px dashed var(--bd2);border-radius:12px;background:var(--in)}
@@ -589,7 +590,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-card:hover{transform:translateY(-5px);border-color:var(--ac);box-shadow:var(--glow)}
 .land-card .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(var(--ac-rgb),.14);color:var(--ac2);margin-bottom:14px}
 .land-card h3{margin:0 0 8px;font-size:18px}.land-card p{margin:0;color:var(--mut);font-size:14px}
-.land-steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.land-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .land-step{padding:20px;border-left:3px solid var(--ac);border-radius:0 14px 14px 0;background:var(--card)}
 .land-step b{display:block;color:var(--ac2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
 .land-foot{text-align:center;padding:36px 18px 46px;color:var(--mut);border-top:1px solid var(--bd2)}
@@ -612,7 +613,6 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 @media(max-width:560px){.land-bento{grid-template-columns:repeat(2,1fr)}}
 /* Глубокая проработка главной */
 .land-links{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
-.hero-links{margin:28px auto 0;max-width:900px;position:relative;z-index:1}
 .nav-links{flex-wrap:nowrap;gap:5px}
 .nav-links a{font-size:12px;padding:8px 10px;border-radius:9px;gap:5px}
 .nav-links a:before{width:5px;height:5px}
@@ -645,7 +645,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .spark-wrap .mut{font-size:10px}
 .land-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;position:relative}
 .land-flow:before{content:"";position:absolute;left:8%;right:8%;top:34px;height:2px;background:linear-gradient(90deg,var(--ac),rgba(var(--ac-rgb),.15))}
-.land-step.flow{position:relative;border-left:0;border:1px solid var(--bd2);border-radius:16px;text-align:center;padding-top:18px;z-index:1}
+.land-step.flow{position:relative;border:1px solid var(--bd2);border-radius:16px;text-align:center;padding-top:18px;z-index:1}
 .flow-n{display:grid;place-items:center;width:34px;height:34px;margin:0 auto 12px;border-radius:50%;background:var(--ac);color:#fff;font-family:'Russo One',sans-serif;font-size:13px;box-shadow:var(--glow)}
 .land-step.flow h3{margin:0 0 6px;font-size:16px;font-family:'Russo One',sans-serif}
 .land-step.flow p{margin:0;color:var(--mut);font-size:12px}
@@ -878,7 +878,8 @@ function landBackdrop() {
   loop();
 }
 const spark = points => {
-  const pts = points.map((v, i) => `${i * 16},${28 - v * 2.2}`).join(' ');
+  const arr = Array.isArray(points) ? points : [];
+  const pts = arr.map((v, i) => `${Math.min(96, Math.round(i * 96 / Math.max(1, arr.length - 1)) - (arr.length > 1 ? 0 : 0) + (i === arr.length - 1 ? 0 : 0)), 28 - v * 2.2)}`).join(' ');
   return `<svg class="spark" viewBox="0 0 96 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 };
 function showLanding(errText, invited) {
@@ -947,7 +948,7 @@ function showLanding(errText, invited) {
       <div class="sec-kicker">05 / НАЧНИ</div><h2>Готов играть вместе?</h2>
       <p class="sub">Войди через Discord — пароль не нужен.</p>
       <div class="land-cta"><button data-land-login>${loginLabel}</button></div>
-      <p class="err" id="lerr">${esc(errText || (invited ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p></section>
+      ${errText || invited ? `<p class="err" id="lerr">${esc((errText || '') + (invited && !errText ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p>` : ''}</section>
     <section class="land-sec" id="land-features"><div class="sec-kicker">01 / ВОЗМОЖНОСТИ</div>
       <h2>Что внутри</h2><p class="sub">Шесть систем, которые закрывают весь цикл жизни клана.</p><div class="land-grid">${feat}</div></section>
     <section class="land-sec" id="land-systems"><div class="sec-kicker">02 / ПОКАЗАТЕЛИ</div>
@@ -1403,7 +1404,7 @@ const factionLogo = (f, cls) => `<div class="av ph ${cls || ''}" title="${esc(FA
 const clanAv = (c, cls) => avImg(c.avatar_url, cls) || (c.faction ? factionLogo(c.faction, cls) : `<div class="av ph ${cls || ''}">${esc(c.name.slice(0, 2).toUpperCase())}</div>`);
 
 const fitList = (c, p, who) => {
-  const r = [[p.gear_level >= c.min_gear_level, `Снаряга от: ${GEAR[c.min_gear_level]} (${who}: ${GEAR[p.gear_level] || '—'})`]];
+  const r = [[p.gear_level >= c.min_gear_level, `Снаряга от: ${GEAR[c.min_gear_level] || '—'} (${who}: ${GEAR[p.gear_level] || '—'})`]];
   if (c.min_kd) r.push([p.kd != null && p.kd >= c.min_kd, `K/D от ${c.min_kd} (${who}: ${p.kd ?? '—'})`]);
   if (c.min_ehp) r.push([p.ehp != null && p.ehp >= c.min_ehp, `Приведёнка от ${c.min_ehp} (${who}: ${p.ehp ?? '—'})`]);
   if (c.min_speed) r.push([p.speed != null && Number(p.speed) >= Number(c.min_speed), `Скорость от ${c.min_speed} (${who}: ${p.speed ?? '—'})`]);
@@ -1513,7 +1514,7 @@ function viewClanProfile(body, c, prof, applied) {
       <p class="mut" style="margin-top:10px">В составе ${c.roster_size}${c.open_slots ? ' · свободных мест: ' + c.open_slots : ' · свободных мест нет'}</p>
       ${c.about ? `<p>${esc(c.about)}</p>` : ''}${linksHtml(c.links)}${c.contact ? `<p class="mut">Контакт: ${esc(c.contact)}</p>` : ''}</div>
     <div class="card"><h2>Чем занимается клан</h2><div>${(c.goals || []).map(g => `<span class="chip">${esc(GOALS[g])}</span>`).join('') || '<span class="mut">Цель не указана</span>'}</div>
-      <p class="mut">Турниров в неделю: ${c.tournaments_per_week} · потасовок в неделю: ${c.brawls_per_week}</p></div>
+      <p class="mut">Турниров в неделю: ${c.tournaments_per_week ?? 0} · потасовок в неделю: ${c.brawls_per_week ?? 0}</p></div>
     <div class="card"><h2>Требования${prof ? ' и твои показатели' : ''}</h2>${reqs || plain}</div>
     <div class="card"><h2>Заявка</h2>${apply}
       ${c.owner_id && c.owner_id !== user.id ? '<div class="row" style="margin-top:10px"><button class="ghost" id="dmlead">Написать лидеру</button></div>' : ''}</div>`;
@@ -1615,7 +1616,8 @@ const mentionDropdown = (input, getNames) => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
   };
   const show = q => {
-    const list = [...new Set(typeof getNames === 'function' ? getNames() : getNames)].filter(n => n && n.toLowerCase().includes(q)).slice(0, 8);
+    const ql = q.toLowerCase();
+    const list = [...new Set(typeof getNames === 'function' ? getNames() : getNames)].filter(n => n && n.toLowerCase().includes(ql)).slice(0, 8);
     if (!list.length) return close();
     if (!box) { box = document.createElement('div'); box.className = 'mdrop'; input.parentElement.appendChild(box); }
     const paint = () => {
@@ -1806,10 +1808,10 @@ async function viewApps() {
   const appsHtml = apps.data.length ? apps.data.map(a => {
     const p = a.profiles || {};
     const lines = [
-      `${factionChip(p.faction, 'фракция не указана')} · снаряга: ${GEAR[p.gear_level]}`,
+      `${factionChip(p.faction, 'фракция не указана')} · снаряга: ${GEAR[p.gear_level] || '—'}`,
       `Броня: ${ARMOR[p.armor_type] || '—'}${p.armor_name ? ', ' + esc(p.armor_name) : ''}${p.armor_enchant != null ? ' +' + p.armor_enchant : ''}`,
       `Оружие: ${p.weapon_main ? esc(p.weapon_main) : '—'}${p.weapon_enchant != null ? ' +' + p.weapon_enchant : ''}`,
-      `K/D: ${p.kd ?? '—'} · приведёнка: ${p.ehp ?? '—'} · скорость: ${p.speed ?? '—'} · турниров в неделю: ${p.tournaments_per_week} · ${p.mic ? 'с микрофоном' : 'без микрофона'}`
+      `K/D: ${p.kd ?? '—'} · приведёнка: ${p.ehp ?? '—'} · скорость: ${p.speed ?? '—'} · турниров в неделю: ${p.tournaments_per_week ?? 0} · ${p.mic ? 'с микрофоном' : 'без микрофона'}`
     ].map(l => `<p class="mut">${l}</p>`).join('');
     return `<div class="card"><div class="brand">${avImg(p.avatar_url)}<h2 style="margin:0">${esc(p.nickname || 'Без профиля')}</h2></div>${lines}<div data-gh="${a.id}"></div>${req.data && p.nickname ? '<p class="mut" style="margin-top:8px">Соответствие требованиям клана:</p>' + fitHtml(fitList(req.data, p, 'у игрока')) : ''}
       ${p.gear_notes ? `<p>${esc(p.gear_notes)}</p>` : ''}${p.about ? `<p>${esc(p.about)}</p>` : ''}
@@ -2084,14 +2086,14 @@ async function viewTreasury() {
   const people = players.filter(p => p.active).map(p => ({ id: p.id, nick: p.nick, user_id: p.user_id }));
   (mb.data || []).forEach(m => {
     const nick = m.display_name;
-    if (nick && !people.some(p => p.user_id === m.user_id || p.nick.toLowerCase() === nick.toLowerCase())) people.push({ id: '', nick, user_id: m.user_id });
+    if (nick && !people.some(p => p.user_id === m.user_id || (p.nick || '').toLowerCase() === nick.toLowerCase())) people.push({ id: '', nick, user_id: m.user_id });
   });
   const sum = k => rows.filter(r => r.kind === k).reduce((a, r) => a + (Number(r.amount) || 0), 0);
   const income = sum('income'), expense = sum('expense'), fine = sum('fine'), balance = income - expense - fine;
   const kpi = (label, val, color) => `<div class="pg-kpi"><span>${label}</span><b style="color:${color}">${val}</b></div>`;
   const list = rows.length ? rows.map(r => `<tr>
     <td>${fmtTime(r.created_at)}</td>
-    <td><span class="chip" style="color:${TREASURY_KIND[r.kind][1]};border-color:${TREASURY_KIND[r.kind][1]}">${TREASURY_KIND[r.kind][0]}</span></td>
+    <td><span class="chip" style="color:${(TREASURY_KIND[r.kind] || ['', ''])[1]};border-color:${(TREASURY_KIND[r.kind] || ['', ''])[1]}">${(TREASURY_KIND[r.kind] || [String(r.kind), ''])[0]}</span></td>
     <td>${esc(r.player_nick || (r.player_id ? pname[r.player_id] || 'Игрок' : '') || '—')}</td>
     <td><b>${esc(r.amount)}</b></td><td>${esc(r.reason || '—')}</td>
     <td>${canEdit() ? `<button class="ghost x" data-txdel="${r.id}" aria-label="Удалить">${ICONS.x}</button>` : ''}</td></tr>`).join('')
@@ -2102,10 +2104,10 @@ async function viewTreasury() {
     ${canEdit() ? `<div class="card" id="tx_form" hidden><div class="grid">
       ${fld('Тип', '<select id="tx_kind"><option value="income">Доход</option><option value="expense">Расход</option><option value="fine">Штраф</option></select>')}
       ${fld('Игрок', `<select id="tx_player"><option value="-1">— Клан (без игрока) —</option>${people.map((p, i) => `<option value="${i}">${esc(p.nick)}</option>`).join('')}</select>`)}
-      ${fld('Сумма', '<input type="number" id="tx_amount" min="1" placeholder="0">')}
+      ${fld('Сумма', '<input type="number" id="tx_amount" min="1" placeholder="Сумма">')}
       ${fld('Причина', '<input id="tx_reason" maxlength="200" placeholder="За что">')}</div>
       <div class="row" style="margin-top:8px"><button id="tx_save">Сохранить</button></div></div>` : ''}
-    <div class="card wrap"><h2>Движение средств</h2><div class="wrap"><table>
+    <div class="card wrap"><h2>Движение средств</h2><div class="wrap"><table class="t-table">
       <tr><th>Дата</th><th>Тип</th><th>Игрок</th><th>Сумма</th><th>Причина</th><th></th></tr>${list}</table></div></div>`;
   const formBtn = document.getElementById('tx_addform'), form = document.getElementById('tx_form');
   if (formBtn && form) formBtn.onclick = () => { form.hidden = !form.hidden; if (!form.hidden) form.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
@@ -2121,7 +2123,7 @@ async function viewTreasury() {
       reason: txt('tx_reason') || '', created_by: user.id
     });
     if (e) return alert(e.message);
-    auditLog('казна: запись', TREASURY_KIND[val('tx_kind')][0] + ' ' + amount);
+    auditLog('казна: запись', (TREASURY_KIND[val('tx_kind')] || ['', ''])[0] + ' ' + amount);
     again();
   };
   body.querySelectorAll('[data-txdel]').forEach(b => b.onclick = () => animateDelete(b, async () => {
@@ -2588,7 +2590,7 @@ async function syncRoster(members, profiles, players) {
   for (const m of members) {
     const nick = memberNick(m, profiles);
     if (!nick) continue;
-    const p = byUser.get(m.user_id) || players.find(x => x.nick.toLowerCase() === nick.toLowerCase());
+    const p = byUser.get(m.user_id) || players.find(x => (x.nick || '').toLowerCase() === nick.toLowerCase());
     if (!p) add.push({ clan_id: clan.id, nick, user_id: m.user_id, active: true, joined_at: new Date().toISOString() });
     else if (!p.user_id) link.push({ id: p.id, user_id: m.user_id });
   }
@@ -2653,7 +2655,7 @@ async function viewRoster() {
   };
   const opts = sel => '<option value="">— без отряда —</option>' +
     squads.map(x => `<option value="${x.id}" ${x.id === sel ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
-  const orphan = members.filter(m => { const nick = memberNick(m, profiles); return !players.some(p => p.user_id === m.user_id || (nick && p.nick.toLowerCase() === nick.toLowerCase())); });
+  const orphan = members.filter(m => { const nick = memberNick(m, profiles); return !players.some(p => p.user_id === m.user_id || (nick && (p.nick || '').toLowerCase() === nick.toLowerCase())); });
   const active = players.filter(p => p.active);
   const assigned = active.filter(p => p.squad_id).length;
   const bench = active.length - assigned;
@@ -2680,7 +2682,7 @@ async function viewRoster() {
     ${sync.error ? `<p class="err" style="margin-top:8px">${esc(sync.error)}</p>` : ''}</div>` : '';
   const viewHead = pgHead('Отряды', 'Расстановка игроков по отрядам на каждой карте, со статистикой и баррикадами.',
       canEdit() ? '<button class="ghost" id="sq_mode">→ Управление</button>' : '');
-  const manageHead = pgHead('Управление отрядами', 'Перетаскивай игроков между отрядами и лавкой. Максимум 8 отрядов на карте.',
+  const manageHead = pgHead('Управление отрядами', 'Перетаскивай игроков между отрядами и лавкой. `Максимум ${SQ_CAP} отрядов на карте.`,
       `<button class="ghost" id="sq_new">+ Новый отряд</button><button class="ghost" id="sq_copy">Копировать отряды</button>
        <button class="ghost" id="sq_clear">Очистить отряды</button><button class="ghost" id="sq_all">Очистить все</button>
        <button class="ghost" id="sq_back">← К отрядам</button>`);
@@ -2714,7 +2716,7 @@ async function viewRoster() {
       <button class="ghost" id="sq_png">Скачать PNG</button></div>
     <div id="sq_view">
       <div class="pg-kpis">
-        <div class="pg-kpi b-blue"><span>Игроков всего</span><b style="color:#3b82f6">${active.length}</b></div>
+        <div class="pg-kpi b-blue"><span>Игроков всего</span><b style="color:var(--ac)">${active.length}</b></div>
         <div class="pg-kpi b-green"><span>Назначено в отряды</span><b style="color:var(--ok)">${assigned}</b></div>
         <div class="pg-kpi b-red"><span>На лавке</span><b style="color:var(--bad)">${bench}</b></div>
         <div class="pg-kpi b-cyan"><span>Заполнение</span><b style="color:#06b6d4">${fill}%</b></div></div>
@@ -2725,10 +2727,10 @@ async function viewRoster() {
           ${lobby.length ? lobby.map(lrow).join('') : '<p class="mut">Все в отрядах.</p>'}</aside></div>
     </div>
     <div id="sq_manage" hidden>
-      <div class="pg-bar"><span class="chip on">Отряды</span><span class="spacer"></span><span class="chip">Отрядов: ${squads.length} / 8</span></div>
+      <div class="pg-bar"><span class="chip on">Отряды</span><span class="spacer"></span><span class="chip">Отрядов: ${squads.length} / ${SQ_CAP}</span></div>
       <div class="card" id="sq_newform" hidden><div class="row"><input id="sqn" placeholder="Название отряда" aria-label="Название отряда"><button id="sqa">Создать</button></div></div>
       <div class="pg-main"><div class="sq2-grid">${squads.length ? manageCards : '<p class="mut">Отрядов пока нет.</p>'}
-        ${squads.length < 8 ? `<div class="sq-new" id="sq_newcard"><span>＋</span><span>Новый отряд</span><span class="mut">Слот ${squads.length + 1} / 8</span></div>` : ''}</div>
+        ${squads.length < SQ_CAP ? `<div class="sq-new" id="sq_newcard"><span>＋</span><span>Новый отряд</span><span class="mut">Слот ${squads.length + 1} / ${SQ_CAP}</span></div>` : ''}</div>
         <aside class="lobby2"><h3><span>Свободные игроки (лавка)</span><span>${lobby.length} игроков</span></h3>
           <input class="lsearch" id="lsearch" placeholder="Поиск игрока…" aria-label="Поиск по лавке">
           <div id="llist">${lobby.length ? lobby.map(lrow).join('') : '<p class="mut">Все в отрядах.</p>'}</div></aside></div>
@@ -2750,7 +2752,7 @@ async function viewRoster() {
     const q = RS.q.trim().toLowerCase();
     const list = players.filter(p => {
       const i = info(p);
-      return (!q || p.nick.toLowerCase().includes(q)) &&
+      return (!q || (p.nick || '').toLowerCase().includes(q)) &&
         (!RS.rank || i.rankKey === RS.rank) &&
         (!RS.squad || (RS.squad === 'none' ? !p.squad_id : p.squad_id === RS.squad)) &&
         (!RS.faction || i.fKey === RS.faction);
@@ -2823,7 +2825,7 @@ async function viewRoster() {
   if (snc) snc.onclick = () => { const f = document.getElementById('sq_newform'); f.hidden = false; document.getElementById('sqn').focus(); f.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
   const sc = document.getElementById('sq_copy');
   if (sc) sc.onclick = async () => {
-    const text = squads.map(x => x.name + ': ' + players.filter(p => p.active && p.squad_id === x.id).map(p => p.nick).join(', ')).join('\n');
+    const text = squads.map(x => (x.name || 'Без названия') + ': ' + players.filter(p => p.active && p.squad_id === x.id).map(p => p.nick || p.id).join(', ')).join('\n');
     try { await navigator.clipboard.writeText(text); toast('Отряды скопированы'); } catch (e) { prompt('Отряды:', text); }
   };
   const clearSquads = async (del) => {
@@ -2858,7 +2860,7 @@ async function viewRoster() {
       cx.font = '13px sans-serif'; cx.fillStyle = '#9aa3c7';
       cx.fillText(`K/D ${kdOf(st)} · K ${st.k} · D ${st.d} · игроков ${mem.length}`, 42, y + 24);
       cx.fillStyle = '#c7cee8'; cx.font = '14px sans-serif';
-      cx.fillText(mem.map(p => p.nick).join(', ') || 'Нет игроков', 42, y + 52);
+      cx.fillText(mem.map(p => p.nick || 'без ника').join(', ') || 'Нет игроков', 42, y + 52);
       y += 120;
     });
     cx.fillStyle = '#9aa3c7'; cx.font = '14px sans-serif'; cx.fillText('Лавка: ' + lobby.map(p => p.nick).join(', '), 24, y + 10);
@@ -3148,8 +3150,22 @@ let TAC_PLAN = null, TAC_SAVE = 0, TAC_RESIZE = null;
 let TAC_CHAN = null, TAC_CURSORS = {}, TAC_LIVE = {}, TAC_REMOTE_INIT = false, TAC_LAST_CURSOR = 0, TAC_LAST_LIVE = 0;
 const TAC_GROUPS = { tour: true };
 const TAC_GROUP_LABEL = { tour: 'Турниры и захваты' };
-let TAC_REDO = [], TAC_PAN_PREV = 'brush', TAC_ONLINE = {}, TAC_LAST_EDIT = null;
+let TAC_REDO = [], TAC_PAN_PREV = 'brush', TAC_ONLINE = {}, TAC_LAST_EDIT = null, eraseActive = false;
 const tacNick = () => ((user && (user.user_metadata || {}).nick) || (user && user.user_metadata && user.user_metadata.name) || (user && user.email || 'Игрок')).split('@')[0].slice(0, 24);
+// Ссылки клана (viewClanCard / viewClanProfile) и парсинг в viewSettings.
+const safeUrl = u => { const s = String(u || '').trim(); return /^https?:\/\/\S+$/i.test(s) ? s : ''; };
+const parseLinks = text => {
+  const out = [];
+  String(text || '').split('\n').forEach(line => {
+    const t = line.trim();
+    if (!t) return;
+    const m = t.match(/^(.*?)\s*[:—]\s*(https?:\/\/\S+)/i) || t.match(/^(https?:\/\/\S+)/i);
+    if (m) out.push({ name: (m[1] || '').trim().slice(0, 100), url: m[2] || m[1] });
+  });
+  return out;
+};
+const linksHtml = links => (Array.isArray(links) ? links : []).filter(l => l && l.url && l.url.startsWith('http')).slice(0, 6)
+  .map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="lnk">${esc(l.name || l.url)}</a>`).join('');
 const saveLocalPlan = () => {
   try { localStorage.setItem('cp_tac_' + clan.id, JSON.stringify({ v: 3, maps: TAC_PLAN.maps, ver: TAC_PLAN.ver || {} })); }
   catch (e) {}
@@ -3933,7 +3949,11 @@ function viewTactics() {
     }
     try { cv.setPointerCapture(e.pointerId); } catch (er) {}
     live = { t: TAC.tool, c: TAC.color, w: TAC.size / 1000, pts: [p] };
-    if (live.t === 'brush' || live.t === 'erase') dot(p); else preview();
+    if (live.t === 'erase') {
+      if (!list.length) { eraseActive = true; dot(p); }
+      else { eraseActive = await tacConfirm('Стереть линии?', 'Будут удалены все линии и стрелки на карте.', 'Стереть'); if (eraseActive) dot(p); }
+    } else if (live.t === 'brush') dot(p); else preview();
+    if (live.t === 'erase' && !eraseActive) return;
   });
   cv.addEventListener('pointermove', e => {
     if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -3985,7 +4005,7 @@ function viewTactics() {
     if (TAC_CHAN && typeof TAC_CHAN.send === 'function') {
       try { TAC_CHAN.send({ type: 'broadcast', event: 'live_end', payload: { user_id: user.id, map: TAC.map } }); } catch (er) {}
     }
-    live = null; redraw();
+    live = null; eraseActive = false; redraw();
   };
   cv.addEventListener('pointerup', finish);
   cv.addEventListener('pointercancel', finish);
@@ -4306,7 +4326,7 @@ async function viewNotifs() {
       <div class="brand"><b>${ICON[n.type] || ICONS.bell} ${esc(LABEL[n.type] || n.type)}</b>
         <span class="mut">${fmtTime(n.created_at)}</span></div>
       <p><b>${esc(n.title)}</b>${n.body ? '<br>' + esc(n.body) : ''}</p>
-      ${n.href ? `<button class="ghost" data-go="${esc(n.href.slice(1))}">Открыть</button>` : ''}</div>`).join('')
+      ${n.href ? `<button class="ghost" data-go="${esc(n.href)}">Открыть</button>` : ''}</div>`).join('')
       : `<div class="empty"><div class="eico">${ICONS.bell}</div><h3>Уведомлений пока нет</h3><p>Здесь появятся новые заявки в клан, сообщения, ответы на события и запросы верификации.</p></div>`}</div>`;
   body.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
     await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', b.closest('[data-n]').dataset.n);
@@ -4351,7 +4371,7 @@ async function viewChat() {
   if (r.error) return body.innerHTML = failBox(r.error);
   const canPost = canEdit() || (cm.data && cm.data.chat_mode !== 'announce');
   body.innerHTML = `<div class="card"><div class="top" style="margin-bottom:8px"><h2 style="margin:0">Чат клана</h2><span class="mut" style="font-size:12px">${plural(r.data.length, 'сообщение', 'сообщения', 'сообщений')}</span></div>
-    ${canPost ? '' : '<p class="mut">В этом чате пишут только владелец и офицеры, остальные читают объявления.</p>'}
+    ${canPost ? '' : '<p class="mut">В этом чате пишут только владелец и офицеры; остальные статусы: лидер — публикует, офицер — вносит, участник — статус «Просмотр».</p>'}
     <div class="log chat" id="log"></div>
     <div class="typing" id="ctyping" hidden></div>
     ${canPost ? `<div class="chatform"><div class="attach-wrap"><button class="ghost attach-btn" id="cattach" aria-label="Добавить гифку или тактику">＋</button></div>
