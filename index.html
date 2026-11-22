@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0f0f23">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>ClanPulse</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -643,7 +644,22 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .scroll-hint{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:34px;color:var(--mut);font-size:10px;letter-spacing:.16em;text-transform:uppercase;position:relative;z-index:1}
 .scroll-hint i{font-style:normal;font-size:20px;color:var(--ac2);animation:bob 1.8s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
-@media(max-width:900px){.land-flow{grid-template-columns:repeat(2,1fr)}.land-flow:before{display:none}.land-links{order:3;width:100%}}
+@media(max-width:900px){
+  .land-flow{grid-template-columns:repeat(2,1fr)}.land-flow:before{display:none}
+  .land-nav{grid-template-columns:minmax(0,1fr) auto;row-gap:10px}
+  .land-nav .land-links{grid-column:1/-1;grid-row:2;justify-self:center;flex-wrap:wrap}
+  .land-hero{padding-top:44px}
+}
+@media(max-width:560px){
+  .land-nav{padding:10px 14px}
+  .land-nav .logo span{font-size:16px}
+  .land-nav .lbtns button{font-size:12px;padding:7px 9px}
+  .land-links a{font-size:11px;padding:7px 9px;gap:4px}
+  .land-bento{grid-template-columns:repeat(2,1fr);gap:8px}
+  .land-cta-sec.top{padding:30px 16px}
+  .chatform{gap:6px}.attach-btn{width:42px;height:42px}
+  .tb-actions .ghost{padding:6px 7px}
+}
 @media(max-width:600px){.land-flow{grid-template-columns:1fr}.land-nav .lbtns button{font-size:13px;padding:8px 10px}}
 @media(prefers-reduced-motion:reduce){.land-aurora i,.land-decor .dc,.scroll-hint i{animation:none}}
 @media(prefers-reduced-motion:reduce){.land-aurora i{animation:none}}
@@ -1486,14 +1502,14 @@ async function viewUserCard(uid, backFn) {
 }
 
 const CHAT_GIFS = [
-  { t: 'Огонь', u: 'https://media.giphy.com/media/3o7aTskHEUdgCQAXde/giphy.gif' },
-  { t: 'Танцы', u: 'https://media.giphy.com/media/l0HlHFRbmaZtBRhXG/giphy.gif' },
-  { t: 'Окей', u: 'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif' },
-  { t: 'Опять', u: 'https://media.giphy.com/media/12yR7ZmYCI6qXe/giphy.gif' },
-  { t: 'Давай', u: 'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif' },
-  { t: 'Сила', u: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif' }
+  { t: 'Огонь', u: 'stickers/fire.svg' },
+  { t: 'Танцы', u: 'stickers/dance.svg' },
+  { t: 'Окей', u: 'stickers/ok.svg' },
+  { t: 'Хлопок', u: 'stickers/clap.svg' },
+  { t: 'Ярость', u: 'stickers/rage.svg' },
+  { t: 'Ракета', u: 'stickers/rocket.svg' }
 ];
-const safeMedia = u => { const s = String(u || '').trim(); return /^https?:\/\/\S+$/i.test(s) ? s : ''; };
+const safeMedia = u => { const s = String(u || '').trim(); return (/^https?:\/\/\S+$/i.test(s) || /^(?:\.\/|\/)?[\w-]+\/[\w./-]+\.svg$/i.test(s)) ? s : ''; };
 const mentionDropdown = (input, getNames) => {
   let box = null, active = -1;
   const close = () => { if (box) box.remove(); box = null; active = -1; };

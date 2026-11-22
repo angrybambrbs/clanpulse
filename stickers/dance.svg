@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <g fill="#38bdf8">
+    <g><circle cx="62" cy="34" r="9"/><path d="M50 92V62h24v30M62 62 46 78M62 62 80 76"/>
+      <animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur=".7s" repeatCount="indefinite"/></g>
+    <g fill="#f472b6"><circle cx="104" cy="34" r="9"/><path d="M92 92V62h24v30M104 62 88 78M104 62 122 76"/>
+      <animateTransform attributeName="transform" type="translate" values="0 -10;0 0;0 -10" dur=".7s" repeatCount="indefinite"/></g>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+  <g transform="translate(80 60)" stroke="#fbbf24" stroke-width="7" stroke-linecap="round">
+    <path d="M-34-18 10 16M-8-30 10 16M18-34 10 16M-30 30 10 16M-2 34 10 16">
+      <animateTransform attributeName="transform" type="scale" values="1;.7;1" dur=".45s" repeatCount="indefinite"/>
+    </path>
+    <path d="m34 8 22-16m-22 24 26 2m-24 14 22 14" stroke="#f59e0b">
+      <animate attributeName="opacity" values=".2;1;.2" dur=".45s" repeatCount="indefinite"/>
+    </path>
+  </g>
+</svg>
