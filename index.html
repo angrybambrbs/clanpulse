@@ -536,7 +536,10 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 /* ===== Главная страница ===== */
 .land{min-height:100vh;overflow:hidden;position:relative;background:radial-gradient(900px 520px at 78% -80px,rgba(var(--ac-rgb),.26),transparent 62%),radial-gradient(700px 460px at -100px 40vh,rgba(244,63,94,.14),transparent 60%),var(--bg)}
 .land:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(var(--ac-rgb),.05) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--ac-rgb),.05) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent 70%);pointer-events:none}
-.land-nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(18px,5vw,54px);border-bottom:1px solid var(--bd2);background:rgba(var(--bg),.82);backdrop-filter:blur(16px)}
+.land-nav{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:14px clamp(18px,5vw,54px);border-bottom:1px solid var(--bd2);background:rgba(var(--bg),.82);backdrop-filter:blur(16px)}
+.land-nav .logo{justify-self:start}
+.land-nav .land-links{justify-self:center}
+.land-nav .lbtns{justify-self:end}
 .land-nav .logo{display:flex;align-items:center;gap:10px;font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:.6px;color:var(--tx)}
 .land-nav .logo i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--btn1),var(--btn2));box-shadow:var(--glow);font-style:normal}
 .land-nav .lbtns{display:flex;gap:8px;flex-wrap:wrap}
@@ -598,7 +601,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .nav-links{flex-wrap:nowrap;gap:5px}
 .nav-links a{font-size:12px;padding:8px 10px;border-radius:9px;gap:5px}
 .nav-links a:before{width:5px;height:5px}
-.land-cta-sec.top{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:42px clamp(18px,5vw,54px);border-top:0;border-bottom:1px solid var(--bd2)}
+.land-cta-sec.top{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:42px clamp(18px,5vw,54px);border-top:1px solid var(--bd2);border-bottom:0}
 .land-cta-sec.top h2{font-size:clamp(24px,3.4vw,38px);margin:0 0 6px}
 .land-cta-sec.top .cta-ring{width:420px;height:420px;margin:-210px 0 0 -210px}
 .land-links a{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border:1px solid var(--bd2);border-radius:12px;color:var(--tx);font-size:15px;font-weight:600;text-decoration:none;letter-spacing:.2px;white-space:nowrap;background:rgba(var(--card),.7);transition:color .2s,background .2s,border-color .2s,transform .2s,box-shadow .2s}
@@ -865,11 +868,6 @@ function showLanding(errText, invited) {
       <div class="tp-custom"><input type="color" id="tp_pick" value="${esc(hexFromCurrent())}">
         <input type="text" id="tp_hex" maxlength="7" value="${esc(hexFromCurrent())}" aria-label="HEX-код цвета"><button id="tp_apply">OK</button></div>
       <button class="ghost tp-theme" id="tp_theme">${document.documentElement.dataset.theme === 'light' ? '☀ Светлая' : '☾ Тёмная'} · сменить</button></div>
-    <section class="land-cta-sec top"><div class="cta-ring" aria-hidden="true"></div>
-      <div class="sec-kicker">05 / НАЧНИ</div><h2>Готов играть вместе?</h2>
-      <p class="sub">Войди через Discord — пароль не нужен.</p>
-      <div class="land-cta"><button data-land-login>${loginLabel}</button></div>
-      <p class="err" id="lerr">${esc(errText || (invited ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p></section>
     <header class="land-hero">
       <span class="kick">• Система управления кланом</span>
       <h1>Пульс твоего <em>клана</em></h1>
@@ -881,6 +879,11 @@ function showLanding(errText, invited) {
       ].map(([k, l, ic]) => `<div class="bs" data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}">—</b><span>${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
       <div class="scroll-hint"><span>Листай вниз</span><i>↓</i></div>
     </header>
+    <section class="land-cta-sec top"><div class="cta-ring" aria-hidden="true"></div>
+      <div class="sec-kicker">05 / НАЧНИ</div><h2>Готов играть вместе?</h2>
+      <p class="sub">Войди через Discord — пароль не нужен.</p>
+      <div class="land-cta"><button data-land-login>${loginLabel}</button></div>
+      <p class="err" id="lerr">${esc(errText || (invited ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p></section>
     <section class="land-sec" id="land-features"><div class="sec-kicker">01 / ВОЗМОЖНОСТИ</div>
       <h2>Что внутри</h2><p class="sub">Шесть систем, которые закрывают весь цикл жизни клана.</p><div class="land-grid">${feat}</div></section>
     <section class="land-sec" id="land-systems"><div class="sec-kicker">02 / ПОКАЗАТЕЛИ</div>
