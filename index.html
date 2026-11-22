@@ -2700,6 +2700,7 @@ async function viewRoster() {
     <div class="card wrap"><h2>Состав (${active.length})</h2><table>
     <tr><th>Игрок</th><th>Звание</th><th>Фракция</th><th>Отряд</th><th>Статус</th><th></th></tr><tbody id="r_rows"></tbody></table></div>`;
   const rowsHost = document.getElementById('r_rows');
+  wirePl(body); // клики по никам в карточках отрядов и лавке
   const paint = () => {
     const q = RS.q.trim().toLowerCase();
     const list = players.filter(p => {
