@@ -515,7 +515,8 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .typing .dots i{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:typingBounce 1.1s infinite ease-in-out}
 .typing .dots i:nth-child(2){animation-delay:.15s}.typing .dots i:nth-child(3){animation-delay:.3s}
 @keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
-.mention{padding:1px 5px;border-radius:6px;color:var(--ac2);background:rgba(var(--ac-rgb),.16);font-weight:600}
+.mention{padding:1px 5px;border:0;border-radius:6px;color:var(--ac2);background:rgba(var(--ac-rgb),.16);font-size:inherit;font-weight:600;cursor:pointer;line-height:inherit;transition:background .15s,color .15s}
+.mention:hover{background:rgba(var(--ac-rgb),.32);color:var(--tx);text-decoration:underline}
 .mdrop{position:absolute;bottom:calc(100% + 6px);left:0;z-index:20;min-width:210px;max-height:220px;overflow:auto;padding:5px;border:1px solid var(--bd2);border-radius:12px;background:var(--card);box-shadow:var(--shadow)}
 .mdrop button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;background:transparent;border-radius:7px;font-size:13px}
 .mdrop button:hover,.mdrop button.on{background:rgba(var(--ac-rgb),.16);color:var(--tx)}
@@ -4133,7 +4134,7 @@ document.addEventListener('keydown', e => {
 const stopChan = () => { if (chan) { sb.removeChannel(chan); chan = null; } };
 const dmLabel = () => 'Сообщения' + (unread ? ' (' + unread + ')' : '');
 const fmtTime = iso => new Date(iso).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
-const fmtMentions = t => esc(t || '').replace(/(@[\p{L}\p{N}_.-]{2,32})/gu, m => '<span class="mention">' + m + '</span>');
+const fmtMentions = t => esc(t || '').replace(/(@[\p{L}\p{N}_.-]{2,32})/gu, m => `<button type="button" class="mention" data-mention="${m.slice(1)}">${m}</button>`);
 const fmtMessage = t => {
   const s = String(t || '');
   if (s.startsWith('GIF|')) {
@@ -4146,6 +4147,21 @@ const fmtMessage = t => {
   }
   return fmtMentions(t);
 };
+document.addEventListener('click', async e => {
+  const b = e.target && e.target.closest && e.target.closest('[data-mention]');
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const nick = b.dataset.mention;
+  try {
+    const { data: uid } = await sb.rpc('find_user_by_nick', { p_nick: nick });
+    if (uid && uid !== user.id) {
+      if (typeof stopGlobalChan === 'function') stopGlobalChan();
+      viewUserCard(uid, () => render());
+    } else if (uid === user.id) {
+      tab = 'profile'; render();
+    } else toast('Игрок с таким ником не найден');
+  } catch (er) { toast('Не удалось открыть профиль'); }
+});
 async function notifyMentions(text, href) {
   if (!user || !text) return;
   const names = [...new Set((String(text).match(/@([\p{L}\p{N}_.-]{2,32})/gu) || []).map(s => s.slice(1)))];
