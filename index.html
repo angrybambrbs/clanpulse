@@ -1291,12 +1291,14 @@ async function viewProfile() {
   const v = pr.data || {};
   const G = gearOf(v);
   // Автоматические показатели из записанных кланом боёв.
-  let mine = null, modeRows = [], minePlayers = [], freePlayers = [];
+  let mine = null, modeRows = [], minePlayers = [], freePlayers = [], pendingClaims = [];
   if (clan) {
-    const [mp, fp] = await Promise.all([
+    const [mp, fp, cl] = await Promise.all([
       sb.from('players').select('id,nick').eq('clan_id', clan.id).eq('user_id', user.id).order('nick'),
-      sb.from('players').select('id,nick').eq('clan_id', clan.id).is('user_id', null).eq('active', true).order('nick')
+      sb.from('players').select('id,nick').eq('clan_id', clan.id).is('user_id', null).eq('active', true).order('nick'),
+      sb.from('nick_claims').select('id,player_id,players!inner(nick)').eq('user_id', user.id).eq('status', 'pending')
     ]);
+    pendingClaims = cl.data || [];
     minePlayers = mp.data || [];
     freePlayers = (fp.data || []).filter(p => !minePlayers.some(m => m.id === p.id));
     mine = minePlayers[0] ? minePlayers[0].id : null;
@@ -1310,9 +1312,10 @@ async function viewProfile() {
     }
   }
   const nicksCard = clan ? `<div class="card"><h2>Мои игровые ники</h2>
-    <p class="mut">Один аккаунт Discord может отвечать за несколько ников в составе — статистика привязанных ников суммируется.</p>
-    <div class="row">${minePlayers.length ? minePlayers.map(p => `<span class="chip">${esc(p.nick)}<button class="ghost x" data-unclaim="${p.id}" title="Отвязать ник" aria-label="Отвязать ${esc(p.nick)}">×</button></span>`).join('') : '<span class="mut">Ники не привязаны</span>'}</div>
-    ${freePlayers.length ? `<div class="row" style="margin-top:10px"><select id="claim_nick">${freePlayers.map(p => `<option value="${p.id}">${esc(p.nick)}</option>`).join('')}</select><button id="claim_btn">Привязать ник</button></div>` : ''}</div>` : '';
+    <p class="mut">Один аккаунт Discord может отвечать за несколько ников в составе — статистика привязанных ников суммируется. Ник привязывается, если совпадает с именем Discord, иначе его подтверждает офицер.</p>
+    <div class="row">${minePlayers.length ? minePlayers.map(p => `<span class="chip ok">${esc(p.nick)}<button class="ghost x" data-unclaim="${p.id}" title="Отвязать ник" aria-label="Отвязать ${esc(p.nick)}">×</button></span>`).join('') : '<span class="mut">Ники не привязаны</span>'}</div>
+    ${pendingClaims.length ? `<p class="mut" style="margin-top:10px">Ожидают подтверждения офицером:</p><div class="row">${pendingClaims.map(c => `<span class="chip warn">${esc((c.players || {}).nick || 'ник')} · на проверке</span>`).join('')}</div>` : ''}
+    ${freePlayers.length ? `<div class="row" style="margin-top:10px"><select id="claim_nick">${freePlayers.map(p => `<option value="${p.id}">${esc(p.nick)}</option>`).join('')}</select><button id="claim_btn">Запросить привязку</button></div>` : ''}</div>` : '';
   const autoCard = `<div class="card"><div class="top"><h2 style="margin:0">Показатели по режимам</h2>
       ${mine ? `<button class="ghost" id="p_openplayer">Профиль игрока →</button>` : ''}</div>
     <p class="mut" style="margin:4px 0 12px">K/D и KDA считаются автоматически из боёв, записанных кланом. Вручную здесь ничего вбивать не нужно.</p>
@@ -1346,9 +1349,15 @@ async function viewProfile() {
   if (op) op.onclick = () => { playerId = mine; tab = 'player'; render(); };
   const claim = document.getElementById('claim_btn');
   if (claim) claim.onclick = async () => {
-    const { data, error } = await sb.rpc('claim_player_nick', { p_player: val('claim_nick') });
-    if (error || !data) return alert('Не удалось привязать ник');
-    toast('Ник привязан к аккаунту'); viewProfile();
+    const md = user.user_metadata || {};
+    const dname = md.name || md.full_name || md.username || (user.email || '').split('@')[0] || '';
+    const { data, error } = await sb.rpc('request_nick_claim', { p_player: val('claim_nick'), p_discord_name: dname });
+    if (error) return alert(error.message);
+    if (data === 'approved') toast('Ник подтверждён по имени Discord');
+    else if (data === 'pending') toast('Запрос отправлен — ждём подтверждения офицера');
+    else if (data === 'taken') toast('Этот ник уже привязан к другому аккаунту', 'err');
+    else toast('Не удалось запросить привязку', 'err');
+    viewProfile();
   };
   body.querySelectorAll('[data-unclaim]').forEach(b => b.onclick = async () => {
     const { error } = await sb.rpc('unclaim_player_nick', { p_player: b.dataset.unclaim });
@@ -1766,31 +1775,60 @@ async function viewMyApps() {
 
 async function viewApps() {
   const body = document.getElementById('body');
-  const { data: req } = await sb.from('clans').select('*').eq('id', clan.id).single();
-  const { data, error } = await sb.from('clan_applications').select('id,message,created_at,profiles(*)')
-    .eq('clan_id', clan.id).eq('status', 'pending').order('created_at');
-  if (error) return body.innerHTML = failBox(error);
-  if (!data.length) return body.innerHTML = `<div class="card empty"><div class="eico">${ICONS.inbox}</div><h3>Новых заявок нет</h3><p>Как только кто-то захочет вступить в клан, заявка появится здесь.</p></div>`;
-  const lines = p => [
-    `${factionChip(p.faction, 'фракция не указана')} · снаряга: ${GEAR[p.gear_level]}`,
-    `Броня: ${ARMOR[p.armor_type] || '—'}${p.armor_name ? ', ' + esc(p.armor_name) : ''}${p.armor_enchant != null ? ' +' + p.armor_enchant : ''}`,
-    `Оружие: ${p.weapon_main ? esc(p.weapon_main) : '—'}${p.weapon_enchant != null ? ' +' + p.weapon_enchant : ''}`,
-    `K/D: ${p.kd ?? '—'} · приведёнка: ${p.ehp ?? '—'} · скорость: ${p.speed ?? '—'} · турниров в неделю: ${p.tournaments_per_week} · ${p.mic ? 'с микрофоном' : 'без микрофона'}`
-  ].map(l => `<p class="mut">${l}</p>`).join('');
-  body.innerHTML = data.map(a => { const p = a.profiles || {}; return `<div class="card"><div class="brand">${avImg(p.avatar_url)}<h2 style="margin:0">${esc(p.nickname || 'Без профиля')}</h2></div>${lines(p)}<div data-gh="${a.id}"></div>${req && p.nickname ? '<p class="mut" style="margin-top:8px">Соответствие требованиям клана:</p>' + fitHtml(fitList(req, p, 'у игрока')) : ''}
-    ${p.gear_notes ? `<p>${esc(p.gear_notes)}</p>` : ''}${p.about ? `<p>${esc(p.about)}</p>` : ''}
-    ${p.contact ? `<p class="mut">Discord: ${esc(p.contact)}</p>` : ''}${a.message ? `<p><b>Сообщение:</b> ${esc(a.message)}</p>` : ''}
-    <div class="row"><button data-acc="${a.id}">Принять</button><button class="ghost" data-rej="${a.id}">Отклонить</button><button class="ghost" data-dm="${p.user_id}">Написать</button></div></div>`; }).join('');
-  loadCatalog().catch(() => null).then(cat => data.forEach(a => { const h = body.querySelector('[data-gh="' + a.id + '"]'); if (h && a.profiles && a.profiles.nickname) renderGear(h, gearOf(a.profiles), byIdOf(cat)); }));
+  const [req, apps, cr] = await Promise.all([
+    sb.from('clans').select('*').eq('id', clan.id).single(),
+    sb.from('clan_applications').select('id,message,created_at,profiles(*)').eq('clan_id', clan.id).eq('status', 'pending').order('created_at'),
+    sb.from('nick_claims').select('id,player_id,user_id,created_at,players!inner(nick)').eq('clan_id', clan.id).eq('status', 'pending').order('created_at', { ascending: false })
+  ]);
+  if (apps.error) return body.innerHTML = failBox(apps.error);
+  const claims = cr.data || [];
+  let claimProfiles = {};
+  if (claims.length && canEdit()) {
+    const pr = await sb.from('profiles').select('user_id,nickname,avatar_url').in('user_id', claims.map(c => c.user_id));
+    claimProfiles = Object.fromEntries((pr.data || []).map(p => [p.user_id, p]));
+  }
+  const claimsHtml = canEdit() && claims.length ? `<div class="card"><h2>Запросы на привязку ников</h2>
+    <p class="mut">Игрок просит связать игровой ник со своим аккаунтом. Подтверди, если это действительно он.</p>
+    ${claims.map(c => {
+      const p = claimProfiles[c.user_id] || {};
+      return `<div class="row" style="border-top:1px dashed var(--bd);padding:10px 0">
+        <span class="brand" style="flex:1;min-width:0">${avImg(p.avatar_url, 'sm')}<span><b>${esc((c.players || {}).nick || 'ник')}</b><br><span class="mut">${esc(p.nickname || 'без профиля')} · ${fmtTime(c.created_at)}</span></span></span>
+        <button data-ncok="${c.id}">Подтвердить</button><button class="ghost" data-ncno="${c.id}">Отклонить</button>
+        <button class="ghost" data-ncdm="${c.user_id}">Написать</button></div>`;
+    }).join('')}</div>` : '';
+  const appsHtml = apps.data.length ? apps.data.map(a => {
+    const p = a.profiles || {};
+    const lines = [
+      `${factionChip(p.faction, 'фракция не указана')} · снаряга: ${GEAR[p.gear_level]}`,
+      `Броня: ${ARMOR[p.armor_type] || '—'}${p.armor_name ? ', ' + esc(p.armor_name) : ''}${p.armor_enchant != null ? ' +' + p.armor_enchant : ''}`,
+      `Оружие: ${p.weapon_main ? esc(p.weapon_main) : '—'}${p.weapon_enchant != null ? ' +' + p.weapon_enchant : ''}`,
+      `K/D: ${p.kd ?? '—'} · приведёнка: ${p.ehp ?? '—'} · скорость: ${p.speed ?? '—'} · турниров в неделю: ${p.tournaments_per_week} · ${p.mic ? 'с микрофоном' : 'без микрофона'}`
+    ].map(l => `<p class="mut">${l}</p>`).join('');
+    return `<div class="card"><div class="brand">${avImg(p.avatar_url)}<h2 style="margin:0">${esc(p.nickname || 'Без профиля')}</h2></div>${lines}<div data-gh="${a.id}"></div>${req.data && p.nickname ? '<p class="mut" style="margin-top:8px">Соответствие требованиям клана:</p>' + fitHtml(fitList(req.data, p, 'у игрока')) : ''}
+      ${p.gear_notes ? `<p>${esc(p.gear_notes)}</p>` : ''}${p.about ? `<p>${esc(p.about)}</p>` : ''}
+      ${p.contact ? `<p class="mut">Discord: ${esc(p.contact)}</p>` : ''}${a.message ? `<p><b>Сообщение:</b> ${esc(a.message)}</p>` : ''}
+      <div class="row"><button data-acc="${a.id}">Принять</button><button class="ghost" data-rej="${a.id}">Отклонить</button><button class="ghost" data-dm="${p.user_id}">Написать</button></div></div>`;
+  }).join('') : '<div class="card empty"><div class="eico">' + ICONS.inbox + '</div><h3>Новых заявок нет</h3><p>Как только кто-то захочет вступить в клан, заявка появится здесь.</p></div>';
+  body.innerHTML = claimsHtml + appsHtml;
+  loadCatalog().catch(() => null).then(cat => apps.data.forEach(a => {
+    const h = body.querySelector('[data-gh="' + a.id + '"]');
+    if (h && a.profiles && a.profiles.nickname) renderGear(h, gearOf(a.profiles), byIdOf(cat));
+  }));
   const decide = (attr, accept) => body.querySelectorAll(`[${attr}]`).forEach(b => b.onclick = async () => {
     const { error: e } = await sb.rpc('decide_application', { aid: b.getAttribute(attr), accept });
     if (e) return alert(e.message);
     viewApps();
   });
   decide('data-acc', true); decide('data-rej', false);
+  const decideClaim = (attr, ok) => body.querySelectorAll(`[${attr}]`).forEach(b => b.onclick = async () => {
+    const { data, error } = await sb.rpc('decide_nick_claim', { p_claim: b.getAttribute(attr), p_approve: ok });
+    if (error || !data) return alert('Не удалось обработать запрос');
+    toast(ok ? 'Ник привязан' : 'Запрос отклонён'); viewApps();
+  });
+  decideClaim('data-ncok', true); decideClaim('data-ncno', false);
+  body.querySelectorAll('[data-ncdm]').forEach(b => b.onclick = () => openDm(b.dataset.ncdm));
   body.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => openDm(b.dataset.dm));
 }
-
 function setupAvatar() {
   const file = document.getElementById('s_file');
   file.onchange = async () => {
