@@ -664,11 +664,35 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 @media(prefers-reduced-motion:reduce){.land-aurora i,.land-decor .dc,.scroll-hint i{animation:none}}
 @media(prefers-reduced-motion:reduce){.land-aurora i{animation:none}}
 @media(prefers-reduced-motion:reduce){.typing .dots i,.land-card,.bub{animation:none!important;transition:none!important}}
+/* ===== Экран загрузки ===== */
+.boot{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;overflow:hidden;background:radial-gradient(700px 480px at 50% -10%,rgba(var(--ac-rgb),.22),transparent 65%),var(--bg)}
+.boot:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(var(--ac-rgb),.05) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--ac-rgb),.05) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(circle at 50% 45%,#000,transparent 70%)}
+.boot-orb{position:absolute;width:420px;height:420px;border:1px solid rgba(var(--ac-rgb),.22);border-radius:50%;animation:bootSpin 14s linear infinite}
+.boot-orb:nth-child(2){width:300px;height:300px;border-style:dashed;border-color:rgba(var(--ac-rgb),.3);animation-direction:reverse;animation-duration:9s}
+@keyframes bootSpin{to{transform:rotate(360deg)}}
+.boot-logo{position:relative;display:flex;align-items:center;gap:12px;font-family:'Russo One',sans-serif;font-size:clamp(26px,5vw,40px);letter-spacing:.6px}
+.boot-logo svg{width:46px;height:46px;padding:9px;border-radius:14px;background:linear-gradient(135deg,var(--btn1),var(--btn2));box-shadow:var(--glow);animation:bootPulse 1.6s ease-in-out infinite}
+.boot-logo em{font-style:normal;color:var(--ac2)}
+@keyframes bootPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.boot-sub{position:relative;color:var(--mut);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.boot-bar{position:relative;width:min(320px,70vw);height:4px;border-radius:4px;background:rgba(var(--ac-rgb),.16);overflow:hidden}
+.boot-bar i{display:block;height:100%;width:35%;border-radius:4px;background:linear-gradient(90deg,transparent,var(--ac2),transparent);animation:bootLoad 1.5s ease-in-out infinite}
+@keyframes bootLoad{0%{transform:translateX(-110%)}100%{transform:translateX(320%)}}
+.boot-dots{position:relative;display:flex;gap:6px;margin-top:-8px}
+.boot-dots i{width:7px;height:7px;border-radius:50%;background:var(--ac2);animation:typingBounce 1.1s infinite ease-in-out}
+.boot-dots i:nth-child(2){animation-delay:.15s}.boot-dots i:nth-child(3){animation-delay:.3s}
+@media(prefers-reduced-motion:reduce){.boot-orb,.boot-logo svg,.boot-bar i,.boot-dots i{animation:none}}
 </style>
 <script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');const c=localStorage.getItem('cp_custom');if(c&&/^#[0-9a-f]{6}$/i.test(c)){const n=c.replace('#',''),r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16),s=document.documentElement.style;s.setProperty('--ac',c);s.setProperty('--ac-rgb',r+','+g+','+b);s.setProperty('--ac2','#'+[r,g,b].map(x=>Math.round(x*.7+255*.3).toString(16).padStart(2,'0')).join(''));s.setProperty('--btn1',c);s.setProperty('--btn2','#'+[r,g,b].map(x=>Math.round(x*.8).toString(16).padStart(2,'0')).join(''));s.setProperty('--ring','rgba('+r+','+g+','+b+',.35)');s.setProperty('--glow','0 0 18px rgba('+r+','+g+','+b+',.35)');s.setProperty('--g1','rgba('+r+','+g+','+b+',.16)');document.documentElement.dataset.accent='custom';}else if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
 </head>
 <body>
-<main id="app"><p class="mut">Загрузка…</p></main>
+<main id="app"><div class="boot">
+  <div class="boot-orb"></div><div class="boot-orb"></div>
+  <div class="boot-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Clan<em>Pulse</em></span></div>
+  <div class="boot-sub">Подключаем клан</div>
+  <div class="boot-bar"><i></i></div>
+  <div class="boot-dots"><i></i><i></i><i></i></div>
+</div></main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
