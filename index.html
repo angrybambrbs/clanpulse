@@ -368,6 +368,8 @@ a:hover{color:var(--ac)}
 .metric-in label{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--mut)}
 .metric-in input{width:100%;border:0;background:transparent;padding:0;font-family:'Russo One','Exo 2',sans-serif;font-size:22px;color:var(--tx)}
 .metric-in input:focus{outline:none}
+.chip .x{padding:0 3px;font-size:14px;line-height:1;margin-left:4px}
+.chip .x:hover{color:var(--bad)}
 .zone-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .zone-info{padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--in)}
 .zone-info h3{margin:0 0 6px;font-size:14px;color:var(--ac2)}
@@ -1289,12 +1291,17 @@ async function viewProfile() {
   const v = pr.data || {};
   const G = gearOf(v);
   // Автоматические показатели из записанных кланом боёв.
-  let mine = null, modeRows = [];
+  let mine = null, modeRows = [], minePlayers = [], freePlayers = [];
   if (clan) {
-    const pl = await sb.from('players').select('id').eq('clan_id', clan.id).eq('user_id', user.id).maybeSingle();
-    if (!pl.error && pl.data) {
-      mine = pl.data.id;
-      const ms = await sb.from('match_stats').select('kills,deaths,assists,confirmed,matches!inner(mode)').eq('player_id', mine);
+    const [mp, fp] = await Promise.all([
+      sb.from('players').select('id,nick').eq('clan_id', clan.id).eq('user_id', user.id).order('nick'),
+      sb.from('players').select('id,nick').eq('clan_id', clan.id).is('user_id', null).eq('active', true).order('nick')
+    ]);
+    minePlayers = mp.data || [];
+    freePlayers = (fp.data || []).filter(p => !minePlayers.some(m => m.id === p.id));
+    mine = minePlayers[0] ? minePlayers[0].id : null;
+    if (minePlayers.length) {
+      const ms = await sb.from('match_stats').select('player_id,kills,deaths,assists,confirmed,matches!inner(mode)').in('player_id', minePlayers.map(p => p.id));
       if (!ms.error) modeRows = ['Потасовка', 'Турнир', 'Захват базы'].map(mode => {
         const set = (ms.data || []).filter(s => s.confirmed && String((s.matches || {}).mode || '').toLowerCase().includes(mode.toLowerCase()));
         const k = set.reduce((a, s) => a + (s.kills || 0), 0), d = set.reduce((a, s) => a + (s.deaths || 0), 0), a = set.reduce((a, s) => a + (s.assists || 0), 0);
@@ -1302,6 +1309,10 @@ async function viewProfile() {
       });
     }
   }
+  const nicksCard = clan ? `<div class="card"><h2>Мои игровые ники</h2>
+    <p class="mut">Один аккаунт Discord может отвечать за несколько ников в составе — статистика привязанных ников суммируется.</p>
+    <div class="row">${minePlayers.length ? minePlayers.map(p => `<span class="chip">${esc(p.nick)}<button class="ghost x" data-unclaim="${p.id}" title="Отвязать ник" aria-label="Отвязать ${esc(p.nick)}">×</button></span>`).join('') : '<span class="mut">Ники не привязаны</span>'}</div>
+    ${freePlayers.length ? `<div class="row" style="margin-top:10px"><select id="claim_nick">${freePlayers.map(p => `<option value="${p.id}">${esc(p.nick)}</option>`).join('')}</select><button id="claim_btn">Привязать ник</button></div>` : ''}</div>` : '';
   const autoCard = `<div class="card"><div class="top"><h2 style="margin:0">Показатели по режимам</h2>
       ${mine ? `<button class="ghost" id="p_openplayer">Профиль игрока →</button>` : ''}</div>
     <p class="mut" style="margin:4px 0 12px">K/D и KDA считаются автоматически из боёв, записанных кланом. Вручную здесь ничего вбивать не нужно.</p>
@@ -1322,6 +1333,7 @@ async function viewProfile() {
     ${fld('Турниров в неделю могу играть', `<select id="p_tpw">${selOpts(WEEK, v.tournaments_per_week || 0)}</select>`)}
     ${fld('Discord для связи', `<input id="p_contact" value="${esc(v.contact)}">`)}</div>
     <label class="chk"><input type="checkbox" id="p_mic" ${v.mic ? 'checked' : ''}> Есть микрофон</label></div>
+    ${nicksCard}
     ${autoCard}
     <div class="card"><h2>Снаряга</h2>
     <p class="mut">В каждой карточке можно хранить до 6 сетов и переключать их цифрами. Первый сет считается основным.</p>
@@ -1332,6 +1344,17 @@ async function viewProfile() {
   gearEditor(document.getElementById('gear_edit'), G, byIdOf(cat));
   const op = document.getElementById('p_openplayer');
   if (op) op.onclick = () => { playerId = mine; tab = 'player'; render(); };
+  const claim = document.getElementById('claim_btn');
+  if (claim) claim.onclick = async () => {
+    const { data, error } = await sb.rpc('claim_player_nick', { p_player: val('claim_nick') });
+    if (error || !data) return alert('Не удалось привязать ник');
+    toast('Ник привязан к аккаунту'); viewProfile();
+  };
+  body.querySelectorAll('[data-unclaim]').forEach(b => b.onclick = async () => {
+    const { error } = await sb.rpc('unclaim_player_nick', { p_player: b.dataset.unclaim });
+    if (error) return alert(error.message);
+    toast('Ник отвязан'); viewProfile();
+  });
   document.getElementById('p_save').onclick = async () => {
     const clean = k => G[k].filter(x => x.n).slice(0, 6).map(x => ({ n: x.n, p: x.p || null, e: x.e ?? null, t: x.t || null, id: x.id || null,
       b: k === 'container' ? (x.b || []).slice(0, 12).map(a => a && a.n ? { n: a.n, p: a.p || null } : null) : undefined }));
@@ -1520,8 +1543,18 @@ async function viewUserCard(uid, backFn) {
   const body = document.getElementById('body');
   if (!uid || uid === user.id) { tab = 'profile'; return render(); }
   if (clan) {
-    const pl = await sb.from('players').select('id').eq('clan_id', clan.id).eq('user_id', uid).maybeSingle();
-    if (pl.data) return openPlayer(pl.data.id, backFn);
+    const pls = await sb.from('players').select('id,nick').eq('clan_id', clan.id).eq('user_id', uid).order('nick');
+    const found = pls.data || [];
+    if (found.length === 1) return openPlayer(found[0].id, backFn);
+    if (found.length > 1) {
+      body.innerHTML = `<button class="ghost" id="ucback">← Назад</button>
+        <div class="card" style="margin-top:12px"><h2>Игровые ники игрока</h2>
+          <p class="mut">У этого аккаунта несколько ников в составе клана — выбери, чей профиль открыть.</p>
+          <div class="row">${found.map(p => `<button data-plid="${p.id}">${esc(p.nick)}</button>`).join('')}</div></div>`;
+      document.getElementById('ucback').onclick = backFn || (() => render());
+      body.querySelectorAll('[data-plid]').forEach(b => b.onclick = () => openPlayer(b.dataset.plid, backFn));
+      return;
+    }
   }
   const [pr, cm, st] = await Promise.all([
     sb.from('profiles').select('*').eq('user_id', uid).maybeSingle(),
