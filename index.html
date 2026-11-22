@@ -375,7 +375,8 @@ a:hover{color:var(--ac)}
 .zone-info h3{margin:0 0 6px;font-size:14px;color:var(--ac2)}
 .zone-info p{margin:4px 0;font-size:13px}
 .air-row{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}
-.air-row .chip{display:inline-flex;align-items:center;gap:5px;flex:none;min-width:130px;justify-content:flex-start;margin:0;line-height:1.2}
+.air-label{flex:none;width:126px;display:flex}
+.air-row .chip{display:inline-flex;align-items:center;gap:5px;margin:0;line-height:1.2;white-space:nowrap}
 .air-row .chip svg{flex:none}
 .zone-form{margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)}
 @media(max-width:959px){.zone-grid{grid-template-columns:1fr}}
@@ -571,6 +572,12 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .tp-custom input[type=text]{flex:1;min-width:0;font-family:monospace;font-size:13px}
 .tp-custom button{padding:8px 10px;font-size:12px}
 .tp-theme{width:100%;font-size:12px}
+.day-picks{display:flex;gap:5px;flex-wrap:wrap}
+.day-picks[hidden]{display:none}
+.day-picks button{width:34px;height:34px;padding:0;border-radius:9px;font-size:12px;background:transparent;border-color:var(--bd);color:var(--mut)}
+.day-picks button:hover{border-color:var(--ac);color:var(--tx);box-shadow:none;transform:none}
+.day-picks button.on{background:linear-gradient(135deg,var(--btn1),var(--btn2));color:#fff;border-color:transparent}
+.next-date{margin:8px 0 0!important;font-size:12px;color:var(--ac2)}
 .land-stats{display:flex;justify-content:center;gap:clamp(18px,5vw,60px);flex-wrap:wrap;margin-top:46px}
 .land-stats div{min-width:110px}.land-stats b{display:block;font-family:'Russo One',sans-serif;font-size:clamp(26px,4vw,40px);color:var(--ac2)}
 .land-stats span{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)}
@@ -4658,7 +4665,7 @@ async function viewEvents() {
         <p class="mut">Локации: Дикий Север, Тихая Заводь (Затон), Комбинат «Уран».</p></div>
       <div class="zone-info"><h3>Аирдропы</h3>
         <p class="mut">Контейнер сбрасывается с воздуха, маркер появляется на PDA. Нужно найти его, взломать и удержать позицию — прогресс сбрасывается, если взлом начнёт другой игрок.</p>
-        ${Object.entries(AIRDROP_TYPES).map(([k, a]) => `<div class="air-row"><span class="chip" style="border-color:${a.color};color:${a.color}">${AIR_ICON[k]}${esc(a.label)}</span><span>${esc(a.loot)}</span></div>`).join('')}
+        ${Object.entries(AIRDROP_TYPES).map(([k, a]) => `<div class="air-row"><span class="air-label"><span class="chip" style="border-color:${a.color};color:${a.color}">${AIR_ICON[k]}${esc(a.label)}</span></span><span>${esc(a.loot)}</span></div>`).join('')}
       </div>
     </div>
     ${canEdit() ? `<div class="zone-form" id="zone_form" hidden><div class="grid">
@@ -4672,7 +4679,9 @@ async function viewEvents() {
   const form = canEdit() ? `<div class="card" id="event_form" hidden><h2>Новое событие</h2><div class="grid">
     ${fld('Тип', `<select id="e_kind">${selOpts(EV_KIND, 'tournament')}</select>`)}${fld('Название (необязательно)', '<input id="e_title" maxlength="120">')}
     ${fld('Дата и время', `<input type="datetime-local" id="e_dt" value="${localDt(tomorrow)}">`)}
-    ${fld('Повтор', `<select id="e_repeat"><option value="once">Не повторяется</option><option value="daily">Каждый день</option><option value="weekly">Каждую неделю</option><option value="weekdays">По будням (пн–пт)</option></select>`)}</div>
+    ${fld('Повтор', `<select id="e_repeat"><option value="once">Не повторяется</option><option value="daily">Каждый день</option><option value="weekly">Каждую неделю</option><option value="weekdays">По будням (пн–пт)</option></select>`)}
+    ${fld('Дни недели', `<div class="day-picks" id="e_days" hidden>${['вс','пн','вт','ср','чт','пт','сб'].map((d, i) => `<button type="button" data-day="${i}" class="${i === new Date(tomorrow).getDay() ? 'on' : ''}">${d}</button>`).join('')}</div>`)}</div>
+    <p class="mut next-date" id="e_next"></p>
     ${fld('Заметка (необязательно)', '<textarea id="e_note" maxlength="500"></textarea>')}<button id="e_add">Создать</button></div>` : '';
   const card = e => {
     const g = by[e.id] || { yes: [], maybe: [], no: [] };
@@ -4682,7 +4691,8 @@ async function viewEvents() {
       ? `<p>Результат: <b>${esc(link.result || ('место ' + (link.place || '—')))}</b></p><div class="row">${resSel}<button class="ghost" data-res="${e.id}" data-mid="${link.id}">Обновить</button></div>`
       : (new Date(e.starts_at) <= new Date() && canEdit()
           ? `<div class="row">${resSel}<button class="ghost" data-res="${e.id}">Записать результат</button></div>` : '');
-    const rep = { daily: 'каждый день', weekly: 'каждую неделю', weekdays: 'по будням' }[e.repeat_rule];
+    const dayNames = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    const rep = { daily: 'каждый день', weekly: 'каждую неделю' + ((e.repeat_days || []).length ? ' (' + e.repeat_days.map(d => dayNames[Number(d)]).join(', ') + ')' : ''), weekdays: 'по будням' }[e.repeat_rule];
     return `<div class="card"><div class="rtitle"><span class="chip ok">${EV_KIND[e.kind]}</span><b>${esc(e.title)}</b>${rep ? `<span class="chip">↻ ${rep}</span>` : ''}</div>
       <p class="mut">${evDate(e.starts_at)}</p>${e.location ? `<p class="mut">Локация: ${esc(e.location)}</p>` : ''}${e.note ? `<p>${esc(e.note)}</p>` : ''}
       <p>Буду: <b>${g.yes.length}</b> · Возможно: <b>${g.maybe.length}</b> · Не смогу: <b>${g.no.length}</b></p>
@@ -4709,6 +4719,31 @@ async function viewEvents() {
   if (evn) evn.onclick = () => toggleForm('event_form', evn);
   const evz = document.getElementById('ev_zone');
   if (evz) evz.onclick = () => toggleForm('zone_form', evz);
+  const repSel = document.getElementById('e_repeat'), dayBox = document.getElementById('e_days'), nextEl = document.getElementById('e_next'), dtEl = document.getElementById('e_dt');
+  const pickedDays = () => [...(dayBox ? dayBox.querySelectorAll('button.on') : [])].map(b => Number(b.dataset.day));
+  const nextDate = (base, rule, days) => {
+    const d = new Date(base);
+    if (rule === 'once' || !rule) return d;
+    if (rule === 'daily') { d.setDate(d.getDate() + 1); return d; }
+    for (let i = 0; i < 7; i++) {
+      d.setDate(d.getDate() + 1);
+      const w = d.getDay();
+      if (rule === 'weekdays' ? (w >= 1 && w <= 5) : (days.length ? days.includes(w) : w === base.getDay())) return d;
+    }
+    return d;
+  };
+  const updNext = () => {
+    if (!repSel || !nextEl || !dtEl) return;
+    const rule = repSel.value, days = pickedDays();
+    if (dayBox) dayBox.hidden = rule !== 'weekly';
+    if (!dtEl.value) { nextEl.textContent = ''; return; }
+    const d = nextDate(new Date(dtEl.value), rule, days);
+    nextEl.textContent = rule === 'once' ? 'Событие состоится один раз.' : 'Следующее событие: ' + evDate(d.toISOString());
+  };
+  if (repSel) repSel.onchange = updNext;
+  if (dtEl) dtEl.onchange = updNext;
+  if (dayBox) dayBox.querySelectorAll('button').forEach(b => b.onclick = () => { b.classList.toggle('on'); updNext(); });
+  updNext();
   body.querySelectorAll('[data-cal]').forEach(b => b.onclick = () => {
     const v = Number(b.dataset.cal); calOffset = v === 0 ? 0 : calOffset + v;
     const y = scrollY; viewEvents().then(() => scrollTo(0, y));
@@ -4741,18 +4776,18 @@ async function viewEvents() {
   if (add) add.onclick = async () => {
     const kind = val('e_kind'), dt = val('e_dt'), rule = val('e_repeat') || 'once';
     if (!dt) return alert('Укажи дату и время');
-    const base = new Date(dt), dates = [];
+    const base = new Date(dt), dates = [], days = pickedDays();
     if (rule === 'once') dates.push(new Date(base));
     else {
       const limit = new Date(base); limit.setDate(limit.getDate() + 84);
       for (let d = new Date(base); d <= limit; d.setDate(d.getDate() + 1)) {
         const day = d.getDay();
-        if (rule === 'daily' || (rule === 'weekly' && day === base.getDay()) || (rule === 'weekdays' && day >= 1 && day <= 5)) dates.push(new Date(d));
+        if (rule === 'daily' || (rule === 'weekly' && (days.length ? days.includes(day) : day === base.getDay())) || (rule === 'weekdays' && day >= 1 && day <= 5)) dates.push(new Date(d));
       }
     }
     const series = rule === 'once' ? null : (crypto && crypto.randomUUID ? crypto.randomUUID() : 's' + Date.now());
     const rows = dates.map(d => ({ clan_id: clan.id, kind, title: txt('e_title') || EV_KIND[kind],
-      starts_at: d.toISOString(), note: txt('e_note'), created_by: user.id, repeat_rule: rule, series_id: series }));
+      starts_at: d.toISOString(), note: txt('e_note'), created_by: user.id, repeat_rule: rule, repeat_days: rule === 'weekly' ? days.map(String) : [], series_id: series }));
     const { error } = await sb.from('clan_events').insert(rows);
     if (error) return alert(error.message);
     auditLog('событие', (EV_KIND[kind] || '') + (rule !== 'once' ? ' · повтор: ' + rule + ' (' + dates.length + ')' : ''));
