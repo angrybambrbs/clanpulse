@@ -1088,6 +1088,7 @@ const NAV_ICON = {
   rating: ICONS.star, match: ICONS.sword, history: ICONS.clock, stats: ICONS.chart,
   tactics: svg(16, '<path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3z"/><path d="M9 3v15M15 6v15"/>'),
   roster: ICONS.users, team: ICONS.users, apps: ICONS.inbox, audit: ICONS.book,
+  treasury: svg(16, '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4.5a1.5 1.5 0 0 1 0 3H10a1.5 1.5 0 0 0 0 3h5"/>'),
   settings: ICONS.gear, chat: ICONS.chat, catalog: ICONS.box, dm: ICONS.mail,
   notifs: ICONS.bell, profile: ICONS.user, admin: ICONS.shield, search: ICONS.search,
   myapps: ICONS.file, start: ICONS.plus, player: ICONS.user,
@@ -1095,7 +1096,7 @@ const NAV_ICON = {
 };
 const NAV_GROUP = {
   rating: 'Разделы', match: 'Разделы', history: 'Разделы', stats: 'Разделы', events: 'Разделы', tactics: 'Разделы', chat: 'Разделы', team: 'Разделы',
-  roster: 'Управление', apps: 'Управление', audit: 'Управление', settings: 'Управление',
+  roster: 'Управление', apps: 'Управление', audit: 'Управление', treasury: 'Управление', settings: 'Управление',
   search: 'Клан', myapps: 'Клан', start: 'Клан',
   catalog: 'Аккаунт', dm: 'Аккаунт', notifs: 'Аккаунт', profile: 'Аккаунт', admin: 'Аккаунт', global: 'Аккаунт'
 };
@@ -1208,14 +1209,14 @@ function render() {
   const tabs = [['rating', 'Рейтинг']];
   if (canEdit()) tabs.push(['match', 'Новый бой']);
   tabs.push(['history', 'История'], ['stats', 'Аналитика'], ['tactics', 'Тактика'], ['events', 'События'], ['chat', 'Чат клана'], ['team', 'Команда']);
-  if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки'], ['audit', 'Журнал']);
+  if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки'], ['audit', 'Журнал'], ['treasury', 'Казна']);
   if (myRole === 'owner') tabs.push(['settings', 'Клан в поиске']);
   tabs.push(['catalog', 'Каталог снаряжения'], ['global', 'Глобальный чат'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']);
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (tab !== 'player' && !tabs.some(t => t[0] === tab)) tab = 'rating';
   saveTab();
   shell(clan.name, tabs, { rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, tactics: viewTactics, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
-    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog, global: viewGlobalChat }, render, clan.avatar_url, ['rating', 'match', 'tactics', 'events', 'chat']);
+    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog, global: viewGlobalChat, treasury: viewTreasury }, render, clan.avatar_url, ['rating', 'match', 'tactics', 'events', 'chat']);
 }
 
 function renderHub() {
@@ -1960,6 +1961,59 @@ async function viewStats() {
   body.querySelectorAll('[data-sg]').forEach(b => b.onclick = () => { statGroup = b.dataset.sg; viewStats(); });
 }
 
+const TREASURY_KIND = { income: ['Доход', 'var(--ok)'], expense: ['Расход', 'var(--bad)'], fine: ['Штраф', 'var(--warn)'] };
+async function viewTreasury() {
+  const body = document.getElementById('body');
+  const [tr, pl] = await Promise.all([
+    sb.from('clan_treasury').select('id,player_id,kind,amount,reason,created_at').eq('clan_id', clan.id).order('created_at', { ascending: false }).limit(200),
+    loadPlayers()
+  ]);
+  const err = tr.error || pl.error;
+  if (err) return body.innerHTML = failBox(err);
+  const rows = tr.data || [], players = pl.data || [];
+  const pname = Object.fromEntries(players.map(p => [p.id, p.nick]));
+  const sum = k => rows.filter(r => r.kind === k).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  const income = sum('income'), expense = sum('expense'), fine = sum('fine'), balance = income - expense - fine;
+  const kpi = (label, val, color) => `<div class="pg-kpi"><span>${label}</span><b style="color:${color}">${val}</b></div>`;
+  const list = rows.length ? rows.map(r => `<tr>
+    <td>${fmtTime(r.created_at)}</td>
+    <td><span class="chip" style="color:${TREASURY_KIND[r.kind][1]};border-color:${TREASURY_KIND[r.kind][1]}">${TREASURY_KIND[r.kind][0]}</span></td>
+    <td>${r.player_id ? esc(pname[r.player_id] || 'Игрок') : '—'}</td>
+    <td><b>${esc(r.amount)}</b></td><td>${esc(r.reason || '—')}</td>
+    <td>${canEdit() ? `<button class="ghost x" data-txdel="${r.id}" aria-label="Удалить">${ICONS.x}</button>` : ''}</td></tr>`).join('')
+    : '<tr><td colspan="6" class="mut">Записей пока нет.</td></tr>';
+  body.innerHTML = pgHead('Казна клана', 'Доходы, расходы и штрафы. Суммы видно всем, менять записи могут лидер и офицеры.',
+      canEdit() ? '<button class="ghost" id="tx_addform">＋ Добавить запись</button>' : '')
+    + `<div class="pg-kpis">${kpi('Баланс', balance, balance >= 0 ? 'var(--ok)' : 'var(--bad)')}${kpi('Доходы', income, 'var(--ok)')}${kpi('Расходы', expense, 'var(--bad)')}${kpi('Штрафы', fine, 'var(--warn)')}</div>
+    ${canEdit() ? `<div class="card" id="tx_form" hidden><div class="grid">
+      ${fld('Тип', '<select id="tx_kind"><option value="income">Доход</option><option value="expense">Расход</option><option value="fine">Штраф</option></select>')}
+      ${fld('Игрок', `<select id="tx_player"><option value="">— общий —</option>${players.map(p => `<option value="${p.id}">${esc(p.nick)}</option>`).join('')}</select>`)}
+      ${fld('Сумма', '<input type="number" id="tx_amount" min="1" placeholder="0">')}
+      ${fld('Причина', '<input id="tx_reason" maxlength="200" placeholder="За что">')}</div>
+      <div class="row" style="margin-top:8px"><button id="tx_save">Сохранить</button></div></div>` : ''}
+    <div class="card wrap"><h2>Движение средств</h2><div class="wrap"><table>
+      <tr><th>Дата</th><th>Тип</th><th>Игрок</th><th>Сумма</th><th>Причина</th><th></th></tr>${list}</table></div></div>`;
+  const formBtn = document.getElementById('tx_addform'), form = document.getElementById('tx_form');
+  if (formBtn && form) formBtn.onclick = () => { form.hidden = !form.hidden; if (!form.hidden) form.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+  const again = async () => { const y = scrollY; await viewTreasury(); scrollTo(0, y); };
+  const save = document.getElementById('tx_save');
+  if (save) save.onclick = async () => {
+    const amount = Number(val('tx_amount'));
+    if (!amount || amount < 1) return alert('Укажи сумму');
+    const { error: e } = await sb.from('clan_treasury').insert({
+      clan_id: clan.id, kind: val('tx_kind'), amount: Math.round(amount),
+      player_id: val('tx_player') || null, reason: txt('tx_reason') || '', created_by: user.id
+    });
+    if (e) return alert(e.message);
+    auditLog('казна: запись', TREASURY_KIND[val('tx_kind')][0] + ' ' + amount);
+    again();
+  };
+  body.querySelectorAll('[data-txdel]').forEach(b => b.onclick = () => animateDelete(b, async () => {
+    const { error } = await sb.from('clan_treasury').delete().eq('id', b.dataset.txdel);
+    if (error) return alert(error.message);
+    again();
+  }));
+}
 async function viewAudit() {
   const body = document.getElementById('body');
   const { data, error } = await sb.from('clan_audit_log').select('*').eq('clan_id', clan.id)
