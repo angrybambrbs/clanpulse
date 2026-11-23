@@ -46,7 +46,7 @@ textarea{width:100%;min-height:120px}
 .wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
 th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap;transition:background-color .15s ease}
-table.t-table td:nth-child(5){white-space:normal;overflow-wrap:anywhere;max-width:260px;min-width:0}
+table.t-table td:nth-child(5){white-space:normal;overflow-wrap:anywhere;max-width:280px;min-width:0}
 th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
 tr:hover td{background:rgba(var(--ac-rgb),.07)}
 td input[type=number]{width:80px}
@@ -77,7 +77,8 @@ button:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none;filter
 .msg{padding:8px 0;border-bottom:1px solid var(--bd)}
 .msg p{margin:4px 0 0;white-space:pre-wrap;word-break:break-word}
 .msg .x{margin-left:auto;padding:2px 8px}
-.conv{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer;border-radius:8px;transition:background-color .15s ease}
+.conv{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer;border-radius:8px;transition:background-color .15s ease;min-height:34px;padding:10px 0 10px}
+.conv:focus-visible,.crow:focus-visible,.bestyles:focus-visible{outline:2px solid var(--ac2);outline-offset:2px}
 .conv:hover{background:rgba(var(--ac-rgb),.08)}
 .badge{background:linear-gradient(135deg,var(--cta),var(--btn1));color:#fff;border-radius:10px;padding:0 7px;font-size:12px;font-weight:700}
 .badge:empty{display:none}
@@ -99,7 +100,7 @@ button:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none;filter
 .sbasic{flex-basis:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .sbasic select{width:100%;min-width:0;padding:8px 6px;font-size:13px}
 .clist{display:grid;gap:10px}
-.crow{display:flex;gap:12px;align-items:center;cursor:pointer;margin:0;transition:background-color .15s ease}
+.crow{display:flex;gap:12px;align-items:center;cursor:pointer;margin:0;transition:background-color .15s ease;min-height:34px}
 .crow:hover{filter:brightness(1.08)}
 .crow .meta{flex:1;min-width:0}
 .rtitle{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:2px}
@@ -402,7 +403,7 @@ a:hover{color:var(--ac)}
 .tac-map .nm b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tac-map .nm span{flex:none;font-size:11px;color:var(--mut);font-weight:400}
 .tac-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
-.tac-tool{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;min-height:36px;border-radius:9px;background:var(--in);border:1px solid var(--bd);color:var(--mut);font-weight:600;font-size:13px;box-shadow:none;transform:none;text-decoration:none}
+.tac-tool{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 13px;min-height:40px;border-radius:9px;background:var(--in);border:1px solid var(--bd);color:var(--mut);font-weight:600;font-size:13px;box-shadow:none;transform:none;text-decoration:none}
 .tac-tool:hover{color:var(--tx);border-color:var(--ac);box-shadow:none;transform:none;filter:none}
 .tac-tool.on{color:var(--tx);border-color:var(--ac);background:linear-gradient(180deg,rgba(var(--ac-rgb),.26),rgba(var(--ac-rgb),.1));box-shadow:inset 0 0 0 1px rgba(var(--ac-rgb),.42),0 0 14px rgba(var(--ac-rgb),.16)}
 .tac-vtools .tac-tools{display:flex;flex-direction:column;gap:6px}
@@ -1666,19 +1667,22 @@ const wireTyping = (channel, input, indicator, key, onEvent) => {
   onEvent(show);
   return () => { indicator.hidden = true; clearTimeout(timer); };
 };
+const attachMenuCache = { initialized: false, text: '' };
 const attachMenu = (host, onSend, allowTactic) => {
   if (!host) return;
   const btn = host.querySelector('.attach-btn');
   const menu = document.createElement('div'); menu.className = 'attach-menu'; menu.hidden = true; host.appendChild(menu);
-  const close = () => { menu.hidden = true; };
-  const render = () => {
+  let textBox;
+  const close = () => { if (textBox) attachMenuCache.text = textBox.value; menu.hidden = true; };
+  const init = () => {
     menu.innerHTML = `<h4>Гифки</h4><div class="gif-grid">${CHAT_GIFS.map(g => `<img src="${g.u}" alt="${esc(g.t)}" data-gif="${esc(g.u)}">`).join('')}</div>
-      <div class="row"><input id="gifurl" placeholder="Ссылка на GIF"><button class="ghost" id="gifadd">Добавить GIF</button></div>
-      ${allowTactic ? '<h4 style="margin-top:12px">Тактики клана</h4><div class="tac-list">Загрузка…</div>' : '<p class="mut" style="font-size:11px;margin:10px 0 0">Тактики клана доступны для загрузки офицерам и лидеру.</p>'}`;
+      <div class="row"><input id="gifurl" placeholder="Ссылка на GIF" aria-label="Ссылка на GIF"><button class="ghost" id="gifadd">Добавить GIF</button></div>` +
+      (allowTactic ? '<h4 style="margin-top:12px">Тактики клана</h4><div class="tac-list">Загрузка…</div>' : '<p class="mut" style="font-size:11px;margin:10px 0 0">Тактики клана доступны для загрузки офицерам и лидеру.</p>');
+    textBox = menu.querySelector('#gifurl'); textBox.value = attachMenuCache.text;
     menu.querySelectorAll('[data-gif]').forEach(im => im.onclick = () => { onSend('GIF|' + im.dataset.gif); close(); });
     const add = menu.querySelector('#gifadd');
     if (add) add.onclick = () => {
-      const u = safeMedia(menu.querySelector('#gifurl').value);
+      const u = safeMedia(textBox.value);
       if (!u) return alert('Нужна ссылка вида https://…');
       onSend('GIF|' + u); close();
     };
@@ -1695,8 +1699,10 @@ const attachMenu = (host, onSend, allowTactic) => {
         });
       });
     }
+    attachMenuCache.initialized = true;
   };
-  btn.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) render(); };
+  const open = () => { if (!menu.children.length) init(); else attachMenuCache.text = textBox ? textBox.value : attachMenuCache.text; menu.hidden = false; };
+  btn.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) open(); };
   document.addEventListener('click', e => { if (!menu.hidden && !host.contains(e.target)) close(); });
 };
 const animateDelete = (btn, doDelete) => {
