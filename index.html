@@ -3095,22 +3095,69 @@ async function viewRoster() {
   if (sa) sa.onclick = () => clearSquads(true);
   const sp = document.getElementById('sq_png');
   if (sp) sp.onclick = () => {
-    const cv = document.createElement('canvas'); cv.width = 1200; cv.height = Math.max(400, 80 + squads.length * 130);
-    const cx = cv.getContext('2d');
-    cx.fillStyle = '#0b1020'; cx.fillRect(0, 0, cv.width, cv.height);
-    cx.fillStyle = '#fff'; cx.font = '700 28px sans-serif'; cx.fillText('ClanPulse · Отряды · ' + clan.name, 24, 42);
-    let y = 90;
-    squads.forEach((s, i) => {
-      const col = SQ_COLORS[i % SQ_COLORS.length], mem = active.filter(p => p.squad_id === s.id), st = sqStats(s.id);
-      cx.fillStyle = col; cx.fillRect(24, y - 22, 6, 24);
-      cx.font = '600 20px sans-serif'; cx.fillText(s.name.toUpperCase(), 42, y);
-      cx.font = '13px sans-serif'; cx.fillStyle = '#9aa3c7';
-      cx.fillText(`K/D ${kdOf(st)} · K ${st.k} · D ${st.d} · игроков ${mem.length}`, 42, y + 24);
-      cx.fillStyle = '#c7cee8'; cx.font = '14px sans-serif';
-      cx.fillText(mem.map(p => p.nick || 'без ника').join(', ') || 'Нет игроков', 42, y + 52);
-      y += 120;
+    const W = 1400, PAD = 48, GAP = 22, CW = (W - PAD * 2 - GAP) / 2;
+    const bg = '#0f0f23', card = '#181634', bd = '#2c2854', tx = '#e8eaf6', mut = '#9aa3c7';
+    const cx = document.createElement('canvas').getContext('2d');
+    const cv = cx.canvas;
+    const rr = (x, y, w, h, r) => { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); };
+    const txt = (s, x, y, font, color, align) => { cx.font = font; cx.fillStyle = color; cx.textAlign = align || 'left'; cx.fillText(s, x, y); cx.textAlign = 'left'; };
+    const chip = (s, x, y, color) => { cx.font = "600 12px 'Exo 2',sans-serif"; const w = Math.ceil(cx.measureText(s).width) + 20; rr(x, y - 17, w, 26, 13); cx.fillStyle = 'rgba(255,255,255,.05)'; cx.fill(); cx.strokeStyle = color || bd; cx.lineWidth = 1; cx.stroke(); txt(s, x + 10, y + 1, "600 12px 'Exo 2',sans-serif", color || mut); return w; };
+    const cards = squads.map((s, i) => {
+      const mem = active.filter(p => p.squad_id === s.id), st = sqStats(s.id);
+      return { s, i, mem, st, col: SQ_COLORS[i % SQ_COLORS.length], h: 116 + Math.max(1, mem.length) * 32 };
     });
-    cx.fillStyle = '#9aa3c7'; cx.font = '14px sans-serif'; cx.fillText('Лавка: ' + lobby.map(p => p.nick).join(', '), 24, y + 10);
+    const rows = []; for (let i = 0; i < cards.length; i += 2) rows.push(cards.slice(i, i + 2).map(c => Math.max(c.h, (cards[i + 1] || c).h)));
+    const gridH = rows.reduce((n, r) => n + r[0] + GAP, 0);
+    cv.width = W; cv.height = Math.max(620, 236 + gridH + 130);
+    // фон
+    cx.fillStyle = bg; cx.fillRect(0, 0, W, cv.height);
+    const gl = cx.createRadialGradient(W - 120, -80, 10, W - 120, -80, 800);
+    gl.addColorStop(0, 'rgba(139,92,246,.20)'); gl.addColorStop(1, 'rgba(139,92,246,0)');
+    cx.fillStyle = gl; cx.fillRect(0, 0, W, cv.height);
+    // шапка
+    rr(PAD, 40, 52, 52, 14); cx.fillStyle = '#7c3aed'; cx.fill();
+    cx.beginPath(); cx.moveTo(PAD + 29, 49); cx.lineTo(PAD + 18, 66); cx.lineTo(PAD + 27, 66); cx.lineTo(PAD + 23, 83); cx.lineTo(PAD + 37, 62); cx.lineTo(PAD + 28, 62); cx.closePath(); cx.fillStyle = '#fff'; cx.fill();
+    txt('CLANPULSE · ОТРЯДЫ', PAD + 70, 58, "600 13px 'Exo 2',sans-serif", '#a78bfa');
+    txt(clan.name, PAD + 70, 90, "400 30px 'Russo One','Exo 2',sans-serif", tx);
+    const dstr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    txt(dstr, W - PAD, 74, "500 15px 'Exo 2',sans-serif", mut, 'right');
+    // KPI
+    const kpis = [['ИГРОКОВ', active.length], ['НАЗНАЧЕНО', assigned], ['НА ЛАВКЕ', bench], ['ЗАПОЛНЕНИЕ', fill + '%']];
+    kpis.forEach(([l, v], i) => {
+      const x = PAD + i * ((W - PAD * 2) / 4);
+      rr(x, 122, (W - PAD * 2) / 4 - 14, 74, 12); cx.fillStyle = card; cx.fill(); cx.strokeStyle = bd; cx.lineWidth = 1; cx.stroke();
+      txt(l, x + 16, 148, "600 11px 'Exo 2',sans-serif", mut);
+      txt(String(v), x + 16, 181, "400 24px 'Russo One','Exo 2',sans-serif", tx);
+    });
+    // карточки отрядов
+    let y = 236;
+    cards.forEach((c, i) => {
+      const col = i % 2, x = PAD + col * (CW + GAP);
+      if (col === 0 && i > 0) y += rows[Math.floor(i / 2) - 1][0] + GAP;
+      const h = rows[Math.floor(i / 2)][col];
+      rr(x, y, CW, h, 16); cx.fillStyle = card; cx.fill(); cx.strokeStyle = bd; cx.lineWidth = 1; cx.stroke();
+      cx.save(); rr(x, y, CW, h, 16); cx.clip(); cx.fillStyle = c.col; cx.fillRect(x, y, 6, h); cx.restore();
+      txt(c.s.name.toUpperCase(), x + 26, y + 36, "400 19px 'Russo One','Exo 2',sans-serif", c.col);
+      let chipX = x + 26;
+      ['K/D ' + kdOf(c.st), 'K ' + c.st.k, 'D ' + c.st.d, 'игроков ' + c.mem.length].forEach(t => { chipX += chip(t, chipX, y + 63, c.col) + 8; });
+      cx.strokeStyle = bd; cx.beginPath(); cx.moveTo(x + 26, y + 82); cx.lineTo(x + CW - 24, y + 82); cx.stroke();
+      txt('ИГРОК', x + 26, y + 104, "600 10px 'Exo 2',sans-serif", mut);
+      ['K', 'D', 'П', 'K/D', 'ОЧКИ'].forEach((t, k) => txt(t, x + CW - 250 + k * 48, y + 104, "600 10px 'Exo 2',sans-serif", mut, 'center'));
+      if (!c.mem.length) txt('Нет игроков', x + 26, y + 136, "400 14px 'Exo 2',sans-serif", mut);
+      c.mem.forEach((p, k) => {
+        const ry = y + 132 + k * 32, s = statOf(p);
+        txt(p.nick || 'без ника', x + 26, ry, "500 14px 'Exo 2',sans-serif", tx);
+        [s.k, s.d, s.a, kdOf(s), s.sc].forEach((v, z) => txt(String(v), x + CW - 250 + z * 48, ry, "500 14px 'Exo 2',sans-serif", z === 0 ? '#34d399' : z === 1 ? '#f87171' : tx, 'center'));
+      });
+    });
+    y += rows.length ? rows[rows.length - 1][0] + GAP : 0;
+    // лавка
+    const lh = 100 + Math.ceil(lobby.length / 8) * 30;
+    rr(PAD, y, W - PAD * 2, lh, 16); cx.fillStyle = card; cx.fill(); cx.strokeStyle = bd; cx.stroke();
+    txt('ЛАВКА · ' + lobby.length + ' ИГРОКОВ', PAD + 26, y + 34, "400 17px 'Russo One','Exo 2',sans-serif", '#06b6d4');
+    let lx = PAD + 26, ly = y + 68;
+    lobby.forEach(p => { const w = Math.ceil(cx.measureText(p.nick).width) + 120; if (lx + w > W - PAD - 24) { lx = PAD + 26; ly += 30; } chip(p.nick, lx, ly, bd); lx += w; });
+    txt('ClanPulse · отряды клана «' + clan.name + '»', PAD, cv.height - 20, "500 12px 'Exo 2',sans-serif", mut);
     const a = document.createElement('a'); a.href = cv.toDataURL('image/png');
     a.download = 'ClanPulse_' + safeFileName(clan.name) + '_squads.png';
     a.click();
