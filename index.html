@@ -3282,7 +3282,7 @@ function tacSave(keepRedo) {
   TAC_SAVE = setTimeout(() => {
     if (!sb || !clan || !user) return;
     const map = TAC.map;
-    sb.rpc('save_tactics_plan', { p_clan: clan.id, p_map: map, p_marks: TAC_PLAN.maps[map] || [] })
+    sb.rpc('save_tactics_plan', { p_clan: clan.id, p_map: map, p_marks: TAC_PLAN.maps[map] || [], p_caps: (TAC_PLAN.caps && TAC_PLAN.caps[map]) || [] })
       .then(({ data, error }) => {
         if (!error) { if (typeof data === 'number') TAC_PLAN.ver[map] = data; }
         else if (!TAC_SAVE_WARNED) { TAC_SAVE_WARNED = true; toast('Не удалось сохранить план на сервере — работает локально'); }

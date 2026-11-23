@@ -103,7 +103,7 @@ create index if not exists tactics_gallery_clan_idx
 
 -- Серверная saves-функция: версия растёт на сервере, поэтому два участника
 -- не перетирают правки друг друга.
-create or replace function public.save_tactics_plan(p_clan uuid, p_map text, p_marks jsonb)
+create or replace function public.save_tactics_plan(p_clan uuid, p_map text, p_marks jsonb, p_caps jsonb default '[]'::jsonb)
 returns integer language plpgsql security definer set search_path = public as $$
 declare v integer;
 begin
