@@ -707,6 +707,10 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .strip-tile{display:flex;align-items:center;gap:4px;color:var(--ac2);font-size:11px}
 /* Максимальный текст — это просто увеличенный шрифт в заголовках и таблицах */
 :root[data-max="1"] main,:root[data-max="1"] .card,:root[data-max="1"] table th,:root[data-max="1"] table td,:root[data-max="1"] .hstat b,:root[data-max="1"] .tb-title h1,:root[data-max="1"] .dh-top h1{font-size:1.45em!important}
+.role-badge{display:inline-flex;align-items:center;gap:4px;margin:0 0 3px 8px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;vertical-align:middle;border:1px solid var(--bd2);color:var(--mut);background:var(--in)}
+.role-badge.owner{color:var(--warn);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.12)}
+.role-badge.officer{color:var(--ac2);border-color:rgba(var(--ac-rgb),.45);background:var(--g1)}
+.role-badge svg{width:11px;height:11px;flex:none}
 /* ===== Дашборд клана (плитки) ===== */
 .db-head{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
 .db-brand{display:flex;gap:12px;align-items:center}
@@ -1245,6 +1249,7 @@ function shell(title, tabs, views, again, icon, primary) {
   const pageTitle = tab === 'player' ? 'Профиль игрока' : (label[tab] || title);
   const ava = md.avatar_url ? '<img class="av sm" referrerpolicy="no-referrer" src="' + esc(md.avatar_url) + '" alt="">' : 'Профиль';
   const quick = primary.filter(id => label[id]).map(id => `<button class="ghost ${tab === id ? 'on' : ''}" data-t="${id}">${label[id]}</button>`).join('');
+  const roleBadge = clan && myRole !== 'viewer' ? `<span class="role-badge ${myRole}">${myRole === 'owner' ? svg(11, '<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>') + 'Лидер клана' : svg(11, '<path d="M12 2 4 6v6c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6z"/>') + 'Офицер'}</span>` : '';
   const cur = curAccent();
   const accRow = `<div class="acc-row" role="group" aria-label="Цветовая схема сайта"><span class="alab">Акцент</span>${Object.entries(ACCENTS).map(([k, v]) => `<button class="acsw ${cur === k ? 'on' : ''}" data-accent="${k}" style="--sw:${v[1]}" aria-label="Акцент: ${esc(v[0])}" aria-pressed="${cur === k}"></button>`).join('')}
     <label class="acsw acsw-custom" title="Свой цвет" aria-label="Свой цвет"><input type="color" data-custom-color value="${esc(hexFromCurrent())}"></label></div>`;
@@ -1259,7 +1264,7 @@ function shell(title, tabs, views, again, icon, primary) {
     <div class="main">
       <header class="topbar">
         <button class="ghost mob" id="menu" aria-label="Меню">${ICONS.menu}</button>
-        <div class="tb-title"><span class="tb-kicker ${clan ? 'clan-link' : ''}" ${clan ? 'data-clan-card role="button" tabindex="0"' : ''}>ClanPulse${tab === 'player' ? ' · Профиль' : ' · ' + esc(title)}</span><h1>${esc(pageTitle)}</h1></div>
+        <div class="tb-title"><span class="tb-kicker ${clan ? 'clan-link' : ''}" ${clan ? 'data-clan-card role="button" tabindex="0"' : ''}>ClanPulse${tab === 'player' ? ' · Профиль' : ' · ' + esc(title)}</span>${roleBadge}<h1>${esc(pageTitle)}</h1></div>
         <div class="tb-actions">
           <button class="ghost" data-home aria-label="Главная страница">${ICONS.home}</button>
           <button class="ghost" data-sfx-toggle aria-label="Звуки кнопок" title="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button>
@@ -1643,11 +1648,13 @@ async function viewClanCard(cid, backFn) {
       <div><h2 style="margin:0 0 8px">${esc(c.name)}</h2>${tierBadge(c)}${factionChip(c.faction, 'Фракция не указана')}</div></div>
       <p class="mut" style="margin-top:10px">В составе ${esc(String(c.roster_size ?? 0))}${slots ? ' · свободных мест: ' + esc(String(slots)) : ' · свободных мест нет'}</p>
       ${c.about ? `<p>${esc(c.about)}</p>` : ''}${linksHtml(c.links)}${c.contact ? `<p class="mut">Контакт: ${esc(c.contact)}</p>` : ''}
-      ${myRole === 'owner' && clan && cid === clan.id ? `<div class="row" style="margin-top:10px"><button id="ccedit">Редактировать клан</button></div>` : ''}
+      ${canEdit() && clan && cid === clan.id ? `<div class="row" style="margin-top:10px"><button id="ccranks">Звания игроков →</button>${myRole === 'owner' ? '<button id="ccedit">Редактировать клан</button>' : ''}</div><p class="mut" style="font-size:12px">Звания и фракции меняются в разделе «Состав» — у игроков с привязкой к Discord.</p>` : ''}
       ${c.owner_id && c.owner_id !== user.id ? `<div class="row" style="margin-top:10px"><button class="ghost" id="ccdm">Написать лидеру</button></div>` : ''}</div>`;
   document.getElementById('ccback').onclick = backFn || (() => render());
   const editBtn = document.getElementById('ccedit');
   if (editBtn) editBtn.onclick = () => { tab = 'settings'; render(); };
+  const rankBtn = document.getElementById('ccranks');
+  if (rankBtn) rankBtn.onclick = () => { tab = 'roster'; render(); };
   const dm = document.getElementById('ccdm');
   if (dm) dm.onclick = () => openDm(c.owner_id);
 }
@@ -2967,7 +2974,7 @@ async function viewRoster() {
       <select id="r_squad">${sqFilter}</select>
       <select id="r_faction">${selOpts(FACTIONS, RS.faction, 'Все фракции')}</select></div>
       <p class="mut" id="r_count"></p></div>
-    <div class="card wrap"><h2>Состав (${active.length})</h2><table>
+    <div class="card wrap"><h2>Состав (${active.length})</h2>${canEdit() ? '<p class="mut" style="font-size:12px">Звание и фракцию можно поменять в одноимённых столбцах таблицы — у игроков, привязавших Discord.</p>' : ''}<table>
     <tr><th>Игрок</th><th>Звание</th><th>Фракция</th><th>Отряд</th><th>Статус</th><th></th></tr><tbody id="r_rows"></tbody></table></div>`;
   const rowsHost = document.getElementById('r_rows');
   wirePl(body); // клики по никам в карточках отрядов и лавке
