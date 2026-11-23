@@ -976,7 +976,7 @@ const MAXIMIZE = {
   on() { try { MAXIMIZE.set(localStorage.getItem('cp_max') === '1'); } catch (e) { MAXIMIZE.set(false); } }
 };
 function showLanding(errText, invited) {
-  const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
+  const back = '';
   const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
   const md = user ? (user.user_metadata || {}) : {};
   const nick = md.name || md.nickname || md.full_name || (user ? String(user.email || 'Игрок').split('@')[0] : 'Игрок');
@@ -1035,7 +1035,7 @@ function showLanding(errText, invited) {
       ${sessionBar}
       <h1>Пульс твоего <em>клана</em></h1>
       <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
-      <div class="land-cta"><button data-land-login>${loginLabel}</button><button class="sec" data-land-scroll>Узнать подробнее</button></div>
+      <div class="land-cta">${user ? '' : `<button data-land-login>${loginLabel}</button>`}<button class="sec" data-land-scroll>Узнать подробнее</button></div>
       <div class="land-bento" id="land_stats">${[
         ['clans', 'Кланов', ICONS.shield], ['players', 'Игроков', ICONS.users], ['matches', 'Боёв', ICONS.sword],
         ['gallery', 'Тактик', ICONS.shield], ['messages', 'Сообщений', ICONS.chat], ['events', 'Событий', ICONS.cal]
@@ -1123,13 +1123,14 @@ function showLanding(errText, invited) {
   if (bk) bk.onclick = () => { exit(); openCabinet(); };
   const sc = app.querySelector('[data-land-scroll]');
   if (sc) sc.onclick = () => app.querySelector('#land-features').scrollIntoView({ behavior: 'smooth' });
-  const LB = { clones: ['Клан', 'Клана', 'Кланов'], players: ['Игрок', 'Игрока', 'Игроков'], matches: ['Бой', 'Боя', 'Боёв'], gallery: ['Тактик', 'Тактика', 'Тактик'], messages: ['Сообщение', 'Сообщения', 'Сообщений'], events: ['Событие', 'События', 'Событий'] };
+  const LB = { clans: ['Клан', 'Клана', 'Кланов'], players: ['Игрок', 'Игрока', 'Игроков'], matches: ['Бой', 'Боя', 'Боёв'], gallery: ['Тактик', 'Тактика', 'Тактик'], messages: ['Сообщение', 'Сообщения', 'Сообщений'], events: ['Событие', 'События', 'Событий'] };
   const inflect = (n, w) => (n % 10 === 1 && n % 100 !== 11 ? w[0] : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 > 20) ? w[1] : w[2]));
   const animate = (el, to) => {
     const w = LB[el.dataset.lbl] || ['', '', ''];
     const lbl = el.closest('.bs').querySelector('.bsl');
+    const token = (el._anim || 0) + 1; el._anim = token;
     const t0 = performance.now(), dur = 900;
-    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3), n = Math.round(to * e); el.textContent = String(n); if (lbl) lbl.textContent = inflect(n, w); if (k < 1) requestAnimationFrame(step); };
+    const step = now => { if (el._anim !== token) return; const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3), n = Math.round(to * e); el.textContent = String(n); if (lbl) lbl.textContent = inflect(n, w); if (k < 1) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   };
   const fill = vals => Object.entries(vals).forEach(([k, v]) => {
