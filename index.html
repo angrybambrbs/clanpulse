@@ -599,7 +599,6 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-step{padding:20px;border-left:3px solid var(--ac);border-radius:0 14px 14px 0;background:var(--card)}
 .land-step b{display:block;color:var(--ac2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
 .land-foot{text-align:center;padding:36px 18px 46px;color:var(--mut);border-top:1px solid var(--bd2)}
-.land-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .land-aurora{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
 .land-aurora i{position:absolute;display:block;border-radius:50%;filter:blur(80px);opacity:.28;animation:aurora 18s ease-in-out infinite alternate}
 .land-aurora i:nth-child(1){width:46vw;height:46vw;left:-12vw;top:-14vw;background:var(--ac)}
@@ -702,10 +701,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .boot-dots i:nth-child(2){animation-delay:.15s}.boot-dots i:nth-child(3){animation-delay:.3s}
 @media(prefers-reduced-motion:reduce){.boot-orb,.boot-logo svg,.boot-bar i,.boot-dots i{animation:none}}
 /* ============ Марио-стиль: фон-частицы на стартовой ============ */
-#mario{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden}.land-canvas{display:none}
 #tacTip{position:absolute;display:none;pointer-events:none;z-index:20;background:var(--card);border:1px solid var(--bd2);border-radius:9px;padding:4px 9px;font-size:11px;font-weight:600;color:var(--tx);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.5);letter-spacing:.5px}
-#mario #mario-c{pointer-events:none;width:100%}
-#tooltip{position:absolute;display:none;pointer-events:none;background:var(--card);border:1px solid var(--bd2);border-radius:10px;padding:4px 9px;font-size:11px;font-weight:600;color:var(--tx);white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:4}
 #posStrip{position:fixed;left:14px;bottom:14px;z-index:2;padding:6px 10px;border-radius:9px;background:var(--card);font-size:11px;color:var(--mut);max-width:90%;opacity:.95;pointer-events:none}
 .strip-icon{width:16px;height:16px}
 .strip-tile{display:flex;align-items:center;gap:4px;color:var(--ac2);font-size:11px}
@@ -715,7 +711,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 <script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');const c=localStorage.getItem('cp_custom');if(c&&/^#[0-9a-f]{6}$/i.test(c)){const n=c.replace('#',''),r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16),s=document.documentElement.style;s.setProperty('--ac',c);s.setProperty('--ac-rgb',r+','+g+','+b);s.setProperty('--ac2','#'+[r,g,b].map(x=>Math.round(x*.7+255*.3).toString(16).padStart(2,'0')).join(''));s.setProperty('--btn1',c);s.setProperty('--btn2','#'+[r,g,b].map(x=>Math.round(x*.8).toString(16).padStart(2,'0')).join(''));s.setProperty('--ring','rgba('+r+','+g+','+b+',.35)');s.setProperty('--glow','0 0 18px rgba('+r+','+g+','+b+',.35)');s.setProperty('--g1','rgba('+r+','+g+','+b+',.16)');document.documentElement.dataset.accent='custom';}else if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
 </head>
 <body>
-<div id="mario"><canvas id="mario-c" width="1400" height="300"></canvas><div id="tooltip" hidden>Новая частица</div></div>
+<div id="tacTip" hidden></div>
 <main id="app"><div class="boot">
   <div class="boot-orb"></div><div class="boot-orb"></div>
   <div class="boot-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Clan<em>Pulse</em></span></div>
@@ -724,14 +720,35 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
   <div class="boot-dots"><i></i><i></i><i></i></div>
 </div></main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>/* CP_BOOT_LOADER */
+(function () {
+  var CDNS = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js',
+    'https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
+  var i = 0, fired = false;
+  function ready() { if (fired) return; fired = true; window.dispatchEvent(new Event('cp-lib-ready')); }
+  function next() {
+    if (window.supabase) return ready();
+    if (i >= CDNS.length) return ready();
+    var s = document.createElement('script');
+    s.src = CDNS[i++]; s.async = true; s.onload = ready; s.onerror = next;
+    document.head.appendChild(s);
+  }
+  next();
+  setTimeout(ready, 6000);
+})();
+</script>
 <script>
 // ===== НАСТРОЙКИ: вставь свой anon / publishable key =====
 const SUPABASE_URL = 'https://jzfaggufycangmgwuuks.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_0kJv9lAMAvBYwPQW23Qwyg_R_MkNBAe';
 // =========================================================
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sb = null;
+const sbInit = () => { try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return !!sb; } catch (e) { return false; } };
+sbInit();
 const app = document.getElementById('app');
 // Звуки интерфейса — синтезируются через Web Audio, без внешних файлов.
 const SFX_KEY = 'cp_sfx';
@@ -857,42 +874,6 @@ function oauthError() {
   return q.get('error_description') || h.get('error_description') || '';
 }
 
-let LAND_RAF = null;
-function landBackdrop() {
-  const cv = document.getElementById('land_bg');
-  if (!cv || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const ctx = cv.getContext('2d');
-  let W = 0, H = 0, parts = [];
-  const resize = () => {
-    W = cv.width = innerWidth; H = cv.height = innerHeight;
-    const n = Math.min(80, Math.round(W * H / 20000));
-    parts = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - .5) * .22, vy: (Math.random() - .5) * .22, r: Math.random() * 1.7 + .6 }));
-  };
-  resize(); addEventListener('resize', resize);
-  const rgb = () => getComputedStyle(document.documentElement).getPropertyValue('--ac-rgb').trim() || '124,58,237';
-  const loop = () => {
-    const c = rgb();
-    ctx.clearRect(0, 0, W, H);
-    for (const p of parts) {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > W) p.vx *= -1;
-      if (p.y < 0 || p.y > H) p.vy *= -1;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832);
-      ctx.fillStyle = 'rgba(' + c + ',.6)'; ctx.fill();
-    }
-    for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
-      const a = parts[i], b = parts[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-      if (d < 125) {
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = 'rgba(' + c + ',' + (.13 * (1 - d / 125)).toFixed(3) + ')';
-        ctx.lineWidth = .7; ctx.stroke();
-      }
-    }
-    LAND_RAF = requestAnimationFrame(loop);
-  };
-  loop();
-}
 const spark = points => {
   const arr = Array.isArray(points) ? points : [];
   if (!arr.length) arr.push(5, 5, 8, 8, 5, 5);
@@ -900,53 +881,12 @@ const spark = points => {
   const pts = arr.map((v, i) => String(arr.length === 1 ? W / 2 : Math.round(i * (W - 6) / (arr.length - 1)) + 2) + ',' + Math.max(2, 28 - Math.min(22, v * 2.2))).join(' ');
   return '<svg class="spark" viewBox="0 0 96 30" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 };
-// ============ Марио-стиль: фон-частицы на стартовой ============
+// ============ Режим крупного текста ============
 const MAXIMIZE = {
   flag() { MAXIMIZE.set(document.documentElement.dataset.max !== '1'); },
   set(v) { const root = document.documentElement; const t = v ? '1' : '0'; if (root.dataset.max !== t) { root.dataset.max = t; try { localStorage.setItem('cp_max', t); } catch (e) {} } },
   on() { try { MAXIMIZE.set(localStorage.getItem('cp_max') === '1'); } catch (e) { MAXIMIZE.set(false); } }
 };
-let marioParts = null;
-const MARIO_COLORS = ['#7fb4ff', '#4fe8b8', '#f7b468', '#b485ff'];
-function bootParticles() {
-  const cv = document.getElementById('mario-c'); if (!cv) return;
-  const W = cv.width, H = cv.height, ctx = cv.getContext('2d'); if (!ctx) return;
-  if (!marioParts) {
-    marioParts = [];
-    for (let i = 0; i < 34; i++) marioParts.push({
-      x: Math.random() * W, y: Math.random() * 0.30 * H, vy: Math.random() * 2 + 0.5, vx: 0,
-      tag: String(i).padStart(3, '0'), color: MARIO_COLORS[i % 4], drag: false, dead: false, id: i
-    });
-  }
-  const parts = marioParts;
-  const rect = cv.getBoundingClientRect(), w = rect.width / W, h = rect.height / H;
-  const t = () => document.getElementById('tooltip');
-  const showPos = p => { const e = t(); if (e) { e.hidden = false; e.textContent = p.tag + ' (' + p.x.toFixed(2) + ', ' + p.y.toFixed(2) + ')'; e.style.left = Math.min(rect.width - 150, p.x * w + 20) + 'px'; e.style.top = Math.max(0, p.y * h - 40) + 'px'; } };
-  const draw = p => {
-    ctx.save(); ctx.translate(p.x, p.y);
-    ctx.strokeStyle = '#576479'; ctx.lineCap = 'round'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 24); ctx.stroke();
-    ctx.restore();
-    ctx.save(); ctx.translate(p.x, p.y);
-    const r = 6;
-    ctx.beginPath(); ctx.arc(0, 0, r + 4, Math.PI, 0); ctx.lineTo(r + 4, r + 2); ctx.arc(r + 4, 3, r + 1, -Math.PI / 2, Math.PI); ctx.arc(0, r + 5, r + 1, 0, Math.PI); ctx.closePath();
-    ctx.fillStyle = '#d8433d'; ctx.strokeStyle = '#e65c4a'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, r + 8, 1.8, 0, 6.2832); ctx.fillStyle = '#9c2f26'; ctx.fill();
-    ctx.restore();
-  };
-  const tick = () => { ctx.clearRect(0, 0, W, H); parts.forEach(p => { if (!p.dead) { p.x += p.vx; p.y += p.vy; if (p.y > H) { p.dead = true; p.vy = Math.random() * 2 + 0.5; p.vx = 0; p.x = Math.random() * W; p.y = Math.random() * 0.30 * H; } draw(p); } }); requestAnimationFrame(tick); };
-  cv.addEventListener('pointerdown', e => {
-    const idx = parts.findIndex(p => Math.hypot((p.x - (e.clientX - rect.left) / w) * w, (p.y - (e.clientY - rect.top) / h) * h) < 14);
-    if (idx >= 0) { p.drag = true; cv.setPointerCapture(e.pointerId); showPos(p); }
-  });
-  cv.addEventListener('pointermove', e => { const p = parts.find(p => p.drag); if (p) { p.x = (e.clientX - rect.left) / w; p.y = Math.max(2, (e.clientY - rect.top) / h); showPos(p); } });
-  cv.addEventListener('pointerup', () => { parts.forEach(p => p.drag = false); const el = t(); if (el) el.hidden = true; });
-  cv.addEventListener('pointercancel', () => { parts.forEach(p => p.drag = false); });
-  cv.addEventListener('dblclick', e => {
-    const p = { x: (e.clientX - rect.left) / w, y: Math.max(2, (e.clientY - rect.top) / h), vy: Math.random() * 2 + 0.5, vx: 0, tag: String(parts.length) + '', color: MARIO_COLORS[Math.floor(Math.random() * MARIO_COLORS.length)], drag: false, dead: false };
-    parts.push(p); showPos(p);
-  });
-  tick();
-}
 function showLanding(errText, invited) {
   const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
   const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
@@ -979,7 +919,6 @@ function showLanding(errText, invited) {
     ['Точки на карте', 'Буквы A/B/C превращают абстрактную карту в конкретную задачу отряда.']
   ].map(([t, d], i) => `<div class="land-step"><span class="step-n">0${i + 1}</span><b>${t}</b><span>${d}</span></div>`).join('');
   app.innerHTML = `<div class="land">
-    <canvas class="land-canvas" id="land_bg" aria-hidden="true"></canvas>
     <div class="land-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="land-decor" aria-hidden="true">
       <svg class="dc d1" viewBox="0 0 200 200"><circle cx="100" cy="100" r="82" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="54" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="26" fill="none" stroke="currentColor"/><path d="M100 0v200M0 100h200" stroke="currentColor"/></svg>
@@ -1023,7 +962,6 @@ function showLanding(errText, invited) {
       <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
     <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе</footer>
   </div>`;
-  landBackdrop();
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
   const posUpdate = () => {
@@ -1078,7 +1016,7 @@ function showLanding(errText, invited) {
     app.querySelectorAll('.land-links a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur));
   };
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
-  const exit = () => { if (LAND_RAF) cancelAnimationFrame(LAND_RAF); LAND_RAF = null; if (posTimer) clearInterval(posTimer); };
+  const exit = () => { if (posTimer) clearInterval(posTimer); };
   app.querySelectorAll('[data-land-login]').forEach(b => b.onclick = async () => {
     if (user) { exit(); (clan ? render : renderHub)(); return; }
     b.disabled = true; b.textContent = 'Переходим в Discord…';
@@ -5025,9 +4963,28 @@ async function viewEvents() {
     const y = scrollY; await viewEvents(); scrollTo(0, y);
   });
 }
-MAXIMIZE.on(); bootParticles();
-sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLanding(); });
-init();
+MAXIMIZE.on();
+const registerAuth = () => {
+  if (sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function') {
+    sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLanding(); });
+  }
+};
+const bootApp = () => {
+  if (!sb && !sbInit()) return false;
+  registerAuth();
+  try {
+    Promise.race([
+      init(),
+      new Promise(r => setTimeout(() => {
+        if (!document.querySelector('.land, .app')) showLanding('Не удалось быстро подключиться. Проверь интернет и обнови страницу.');
+      }, 6000))
+    ]).catch(e => { console.error(e); showLanding('Ошибка запуска: ' + (e && e.message ? e.message : 'неизвестная')); });
+  } catch (e) { showLanding('Ошибка запуска: ' + (e && e.message ? e.message : 'неизвестная')); }
+  return true;
+};
+if (window.supabase) bootApp();
+else window.addEventListener('cp-lib-ready', () => { if (!bootApp()) showLanding('Библиотека входа не загрузилась. Проверь соединение.'); }, { once: true });
+setTimeout(() => { if (!document.querySelector('.land, .app')) showLanding('Сайт отвечает медленно — попробуй обновить страницу.'); }, 10000);
 </script>
 </body>
 </html>
