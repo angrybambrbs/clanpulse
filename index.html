@@ -885,9 +885,8 @@ const spark = points => {
   const arr = Array.isArray(points) ? points : [];
   if (!arr.length) arr.push(5, 5, 8, 8, 5, 5);
   const W = 96;
-  const x = (v, i) => (arr.length === 1 ? W / 2 : Math.round(i * (W - 6) / (arr.length - 1)) + 2);
-  const pts = arr.map((v, i) => `${x(v, i)},${Math.max(2, 28 - Math.min(22, v * 2.2))}`).join(' ');
-  return `<svg class="spark" viewBox="0 0 96 30" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const pts = arr.map((v, i) => String(arr.length === 1 ? W / 2 : Math.round(i * (W - 6) / (arr.length - 1)) + 2) + ',' + Math.max(2, 28 - Math.min(22, v * 2.2))).join(' ');
+  return '<svg class="spark" viewBox="0 0 96 30" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 };
 function showLanding(errText, invited) {
   const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
