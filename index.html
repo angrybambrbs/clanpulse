@@ -701,10 +701,20 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .boot-dots i{width:7px;height:7px;border-radius:50%;background:var(--ac2);animation:typingBounce 1.1s infinite ease-in-out}
 .boot-dots i:nth-child(2){animation-delay:.15s}.boot-dots i:nth-child(3){animation-delay:.3s}
 @media(prefers-reduced-motion:reduce){.boot-orb,.boot-logo svg,.boot-bar i,.boot-dots i{animation:none}}
+/* ============ Марио-стиль: фон-частицы на стартовой ============ */
+#mario{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden}
+#mario #mario-c{pointer-events:auto;width:100%}
+#tooltip{position:absolute;display:none;pointer-events:none;background:var(--card);border:1px solid var(--bd2);border-radius:10px;padding:4px 9px;font-size:11px;font-weight:600;color:var(--tx);white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:4}
+#posStrip{position:fixed;left:14px;bottom:14px;z-index:2;padding:6px 10px;border-radius:9px;background:var(--card);font-size:11px;color:var(--mut);max-width:90%;opacity:.95;pointer-events:none}
+.strip-icon{width:16px;height:16px}
+.strip-tile{display:flex;align-items:center;gap:4px;color:var(--ac2);font-size:11px}
+/* Максимальный текст — это просто увеличенный шрифт в заголовках и таблицах */
+:root[data-max="1"] main,:root[data-max="1"] .card,:root[data-max="1"] table th,:root[data-max="1"] table td,:root[data-max="1"] .hstat b,:root[data-max="1"] .tb-title h1,:root[data-max="1"] .dh-top h1{font-size:1.45em!important}
 </style>
 <script>try{const t=localStorage.getItem('cp_theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.dataset.theme=t;const a=localStorage.getItem('cp_accent');const c=localStorage.getItem('cp_custom');if(c&&/^#[0-9a-f]{6}$/i.test(c)){const n=c.replace('#',''),r=parseInt(n.slice(0,2),16),g=parseInt(n.slice(2,4),16),b=parseInt(n.slice(4,6),16),s=document.documentElement.style;s.setProperty('--ac',c);s.setProperty('--ac-rgb',r+','+g+','+b);s.setProperty('--ac2','#'+[r,g,b].map(x=>Math.round(x*.7+255*.3).toString(16).padStart(2,'0')).join(''));s.setProperty('--btn1',c);s.setProperty('--btn2','#'+[r,g,b].map(x=>Math.round(x*.8).toString(16).padStart(2,'0')).join(''));s.setProperty('--ring','rgba('+r+','+g+','+b+',.35)');s.setProperty('--glow','0 0 18px rgba('+r+','+g+','+b+',.35)');s.setProperty('--g1','rgba('+r+','+g+','+b+',.16)');document.documentElement.dataset.accent='custom';}else if(a&&a!=='violet')document.documentElement.dataset.accent=a;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f4f3fa':'#0f0f23'}catch(e){}</script>
 </head>
 <body>
+<div id="mario"><canvas id="mario-c" width="1400" height="300"></canvas><div id="tooltip" hidden>Новая частица</div></div>
 <main id="app"><div class="boot">
   <div class="boot-orb"></div><div class="boot-orb"></div>
   <div class="boot-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Clan<em>Pulse</em></span></div>
@@ -889,6 +899,53 @@ const spark = points => {
   const pts = arr.map((v, i) => String(arr.length === 1 ? W / 2 : Math.round(i * (W - 6) / (arr.length - 1)) + 2) + ',' + Math.max(2, 28 - Math.min(22, v * 2.2))).join(' ');
   return '<svg class="spark" viewBox="0 0 96 30" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 };
+// ============ Марио-стиль: фон-частицы на стартовой ============
+const MAXIMIZE = {
+  flag() { MAXIMIZE.set(document.documentElement.dataset.max !== '1'); },
+  set(v) { const root = document.documentElement; const t = v ? '1' : '0'; if (root.dataset.max !== t) { root.dataset.max = t; try { localStorage.setItem('cp_max', t); } catch (e) {} } },
+  on() { try { MAXIMIZE.set(localStorage.getItem('cp_max') === '1'); } catch (e) { MAXIMIZE.set(false); } }
+};
+let marioParts = null;
+const MARIO_COLORS = ['#7fb4ff', '#4fe8b8', '#f7b468', '#b485ff'];
+function bootParticles() {
+  const cv = document.getElementById('mario-c'); if (!cv) return;
+  const W = cv.width, H = cv.height, ctx = cv.getContext('2d'); if (!ctx) return;
+  if (!marioParts) {
+    marioParts = [];
+    for (let i = 0; i < 34; i++) marioParts.push({
+      x: Math.random() * W, y: Math.random() * 0.30 * H, vy: Math.random() * 2 + 0.5, vx: 0,
+      tag: String(i).padStart(3, '0'), color: MARIO_COLORS[i % 4], drag: false, dead: false, id: i
+    });
+  }
+  const parts = marioParts;
+  const rect = cv.getBoundingClientRect(), w = rect.width / W, h = rect.height / H;
+  const t = () => document.getElementById('tooltip');
+  const showPos = p => { const e = t(); if (e) { e.hidden = false; e.textContent = p.tag + ' (' + p.x.toFixed(2) + ', ' + p.y.toFixed(2) + ')'; e.style.left = Math.min(rect.width - 150, p.x * w + 20) + 'px'; e.style.top = Math.max(0, p.y * h - 40) + 'px'; } };
+  const draw = p => {
+    ctx.save(); ctx.translate(p.x, p.y);
+    ctx.strokeStyle = '#576479'; ctx.lineCap = 'round'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 24); ctx.stroke();
+    ctx.restore();
+    ctx.save(); ctx.translate(p.x, p.y);
+    const r = 6;
+    ctx.beginPath(); ctx.arc(0, 0, r + 4, Math.PI, 0); ctx.lineTo(r + 4, r + 2); ctx.arc(r + 4, 3, r + 1, -Math.PI / 2, Math.PI); ctx.arc(0, r + 5, r + 1, 0, Math.PI); ctx.closePath();
+    ctx.fillStyle = '#d8433d'; ctx.strokeStyle = '#e65c4a'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, r + 8, 1.8, 0, 6.2832); ctx.fillStyle = '#9c2f26'; ctx.fill();
+    ctx.restore();
+  };
+  const tick = () => { ctx.clearRect(0, 0, W, H); parts.forEach(p => { if (!p.dead) { p.x += p.vx; p.y += p.vy; if (p.y > H) { p.dead = true; p.vy = Math.random() * 2 + 0.5; p.vx = 0; p.x = Math.random() * W; p.y = Math.random() * 0.30 * H; } draw(p); } }); requestAnimationFrame(tick); };
+  cv.addEventListener('pointerdown', e => {
+    const idx = parts.findIndex(p => Math.hypot((p.x - (e.clientX - rect.left) / w) * w, (p.y - (e.clientY - rect.top) / h) * h) < 14);
+    if (idx >= 0) { p.drag = true; cv.setPointerCapture(e.pointerId); showPos(p); }
+  });
+  cv.addEventListener('pointermove', e => { const p = parts.find(p => p.drag); if (p) { p.x = (e.clientX - rect.left) / w; p.y = Math.max(2, (e.clientY - rect.top) / h); showPos(p); } });
+  cv.addEventListener('pointerup', () => { parts.forEach(p => p.drag = false); const el = t(); if (el) el.hidden = true; });
+  cv.addEventListener('pointercancel', () => { parts.forEach(p => p.drag = false); });
+  cv.addEventListener('dblclick', e => {
+    const p = { x: (e.clientX - rect.left) / w, y: Math.max(2, (e.clientY - rect.top) / h), vy: Math.random() * 2 + 0.5, vx: 0, tag: String(parts.length) + '', color: MARIO_COLORS[Math.floor(Math.random() * MARIO_COLORS.length)], drag: false, dead: false };
+    parts.push(p); showPos(p);
+  });
+  tick();
+}
 function showLanding(errText, invited) {
   const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
   const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
@@ -931,7 +988,7 @@ function showLanding(errText, invited) {
     </div>
     <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
       <div class="land-links nav-links"><a href="#land-features">Что внутри</a><a href="#land-systems">Системы и показатели</a><a href="#land-flow">Как это работает</a><a href="#land-hooks">Хуки и психология</a></div>
-      <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button>
+      <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button>
         <button data-land-login>${loginLabel}</button></div></nav>
     <div class="theme-panel" id="theme_panel" hidden><h4>Цветовая схема</h4>
@@ -950,6 +1007,7 @@ function showLanding(errText, invited) {
         ['gallery', 'Тактик', ICONS.shield], ['messages', 'Сообщений', ICONS.chat], ['events', 'Событий', ICONS.cal]
       ].map(([k, l, ic]) => `<div class="bs" data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}">—</b><span>${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
       <div class="scroll-hint"><span>Листай вниз</span><i>↓</i></div>
+    <div id="posStrip"></div>
     </header>
     <section class="land-cta-sec top"><div class="cta-ring" aria-hidden="true"></div>
       <div class="sec-kicker">05 / НАЧНИ</div><h2>Готов играть вместе?</h2>
@@ -968,10 +1026,20 @@ function showLanding(errText, invited) {
     <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе</footer>
   </div>`;
   landBackdrop();
+  const posUpdate = () => {
+    const strip = document.getElementById('posStrip');
+    if (!strip) return;
+    const els = [...document.querySelectorAll('#land_stats [data-stat]')];
+    strip.textContent = els.length ? els.map(e => e.dataset.stat + ' (' + e.getBoundingClientRect().left.toFixed(0) + ',' + e.getBoundingClientRect().top.toFixed(0) + ')').join(' · ') : '';
+  };
+  const posTimer = setInterval(posUpdate, 350);
   app.querySelectorAll('[data-sfx-toggle]').forEach(b => b.onclick = () => {
     sfxOn = !sfxOn; localStorage.setItem(SFX_KEY, sfxOn ? '1' : '0');
     b.innerHTML = sfxOn ? ICONS.sound : ICONS.mute; sfx('toggle');
   });
+  const renderMaxSet = () => app.querySelectorAll('[data-max-toggle]').forEach(b => b.textContent = '[М]' + (document.documentElement.dataset.max === '1' ? ' ✓' : ''));
+  app.querySelectorAll('[data-max-toggle]').forEach(b => b.onclick = () => { MAXIMIZE.flag(); renderMaxSet(); });
+  renderMaxSet();
   const panel = app.querySelector('#theme_panel'), tpBtn = app.querySelector('[data-theme-panel]');
   if (tpBtn && panel) tpBtn.onclick = e => { e.stopPropagation(); panel.hidden = !panel.hidden; };
   document.addEventListener('click', e => { if (panel && !panel.hidden && !panel.contains(e.target) && e.target !== tpBtn) panel.hidden = true; });
@@ -1010,7 +1078,7 @@ function showLanding(errText, invited) {
     app.querySelectorAll('.land-links a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur));
   };
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
-  const exit = () => { if (LAND_RAF) cancelAnimationFrame(LAND_RAF); LAND_RAF = null; };
+  const exit = () => { if (LAND_RAF) cancelAnimationFrame(LAND_RAF); LAND_RAF = null; if (posTimer) clearInterval(posTimer); };
   app.querySelectorAll('[data-land-login]').forEach(b => b.onclick = async () => {
     if (user) { exit(); (clan ? render : renderHub)(); return; }
     b.disabled = true; b.textContent = 'Переходим в Discord…';
@@ -4932,6 +5000,7 @@ async function viewEvents() {
     const y = scrollY; await viewEvents(); scrollTo(0, y);
   });
 }
+MAXIMIZE.on(); bootParticles();
 sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLanding(); });
 init();
 </script>
