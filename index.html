@@ -332,7 +332,11 @@ a:hover{color:var(--ac)}
 .sq2-name{font-family:'Russo One','Exo 2',sans-serif;font-size:13px;color:var(--sq);text-transform:uppercase;letter-spacing:.4px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sq2-chip{font-size:10px;padding:3px 7px;border-radius:8px;border:1px solid color-mix(in srgb,var(--sq) 45%,transparent);color:var(--sq);font-variant-numeric:tabular-nums;white-space:nowrap}
 .sq2-tb{margin-top:6px}
-.sq2-row{display:grid;grid-template-columns:minmax(0,1fr) 32px 32px 32px 44px 46px;gap:4px;align-items:center;padding:5px 4px;font-size:11px;border-bottom:1px dashed var(--bd);min-width:0}
+.sq2-row{display:grid;grid-template-columns:minmax(0,1fr) 32px 32px 32px 44px 46px 26px;gap:4px;align-items:center;padding:5px 4px;font-size:11px;border-bottom:1px dashed var(--bd);min-width:0}
+.sq2-row[data-drag-pid],.lrow[data-drag-pid]{cursor:grab}
+.sq2-row.dragging,.lrow.dragging{opacity:.4}
+.sq2.drop-target,.lobby2.drop-target{outline:2px dashed var(--ac);outline-offset:2px;background:var(--g1)}
+.sq2-row .ico.x{width:22px;height:22px;min-width:22px;min-height:22px;padding:0;line-height:1}
 .sq2-row.th{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--bd2);padding-top:2px;padding-bottom:6px}
 .sq2-row>span:not(:first-child){text-align:center;font-variant-numeric:tabular-nums}
 .sq2-row .kill{color:var(--ok);text-align:center}
@@ -2923,7 +2927,7 @@ async function viewRoster() {
     <div class="row" style="margin-bottom:0">${orphan.map(m => `<span class="chip">${esc(m.display_name || memberNick(m, profiles) || 'без имени')}</span>`).join('')}</div>
     ${canEdit() ? '<button id="rsync" style="margin-top:10px">Добавить в состав</button>' : ''}
     ${sync.error ? `<p class="err" style="margin-top:8px">${esc(sync.error)}</p>` : ''}</div>` : '';
-  const viewHead = pgHead('Отряды', 'Расстановка игроков по отрядам на каждой карте, со статистикой и баррикадами.',
+  const viewHead = pgHead('Отряды', canEdit() ? 'Перетаскивай игроков между отрядами и лавкой. Крестик ✕ в строке — убрать игрока из отряда.' : 'Расстановка игроков по отрядам на каждой карте, со статистикой и баррикадами.',
       canEdit() ? '<button class="ghost" id="sq_mode">→ Управление</button>' : '');
   const manageHead = pgHead('Управление отрядами', `Перетаскивай игроков между отрядами и лавкой. Максимум ${SQ_CAP} отрядов на карте.`,
       `<button class="ghost" id="sq_new">+ Новый отряд</button><button class="ghost" id="sq_copy">Копировать отряды</button>
@@ -2931,12 +2935,12 @@ async function viewRoster() {
        <button class="ghost" id="sq_back">← К отрядам</button>`);
   const sqCards = squads.map((x, i) => {
     const color = SQ_COLORS[i % SQ_COLORS.length], mem = active.filter(p => p.squad_id === x.id), s = sqStats(x.id);
-    return `<div class="sq2" style="--sq:${color}"><div class="sq2-top">
+    return `<div class="sq2" data-drop-squad="${x.id}" style="--sq:${color}"><div class="sq2-top">
       <span class="sq2-ico">${svg(16, SQ_ICONS[i % SQ_ICONS.length])}</span>
       <span class="sq2-name">${esc(x.name)}</span>
       <span class="sq2-chip" title="Соотношение убийств к смертям всего отряда">K/D ${kdOf(s)}</span><span class="sq2-chip" title="Всего убийств отряда">K ${s.k}</span></div>
-      <div class="sq2-tb"><div class="sq2-row th"><span>ИГРОК</span><span title="Убийства">K</span><span title="Смерти">D</span><span title="Помощь">П</span><span title="K/D">K/D</span><span title="Счёт">Очки</span></div>
-      ${mem.length ? mem.map(p => `<div class="sq2-row">${plLink(p.id, p.nick)}${statCells(p)}</div>`).join('') : '<div class="sq2-empty">Нет игроков</div>'}</div></div>`;
+      <div class="sq2-tb"><div class="sq2-row th"><span>ИГРОК</span><span title="Убийства">K</span><span title="Смерти">D</span><span title="Помощь">П</span><span title="K/D">K/D</span><span title="Счёт">Очки</span><span></span></div>
+      ${mem.length ? mem.map(p => `<div class="sq2-row" ${canEdit() ? `draggable="true" data-drag-pid="${p.id}" title="Перетащи в другой отряд или в лавку"` : ''}>${plLink(p.id, p.nick)}${statCells(p)}${canEdit() ? `<button class="ico x" data-unsq="${p.id}" title="Убрать из отряда" aria-label="Убрать ${esc(p.nick)} из отряда">${ICONS.x}</button>` : '<span></span>'}</div>`).join('') : '<div class="sq2-empty">Нет игроков</div>'}</div></div>`;
   }).join('');
   const manageCards = squads.map((x, i) => {
     const color = SQ_COLORS[i % SQ_COLORS.length], mem = active.filter(p => p.squad_id === x.id);
@@ -2948,7 +2952,7 @@ async function viewRoster() {
       <div class="sq2-slots">${mem.map(p => `<div class="sq2-slot occupied"><span class="sq2-drag">⠿</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${plLink(p.id, p.nick)} 👑</span><button class="ico" data-unsq="${p.id}" title="Убрать из отряда">✕</button></div>`).join('')}
       ${Array.from({ length: Math.max(0, SQ_CAP - mem.length) }, () => '<div class="sq2-slot empty">Свободный слот</div>').join('')}</div></div>`;
   }).join('');
-  const lrow = p => `<div class="lrow" data-lobby-pick="${p.id}" title="Назначить в первый свободный отряд">${esc(p.nick)}</div>`;
+  const lrow = p => `<div class="lrow" data-lobby-pick="${p.id}" ${canEdit() ? `draggable="true" data-drag-pid="${p.id}" title="Перетащи в отряд или нажми — в первый свободный"` : 'title="Нажми, чтобы назначить в первый свободный отряд"'}>${esc(p.nick)}</div>`;
   const sqFilter = '<option value="">Все отряды</option><option value="none" ' + (RS.squad === 'none' ? 'selected' : '') + '>Без отряда</option>' +
     squads.map(x => `<option value="${x.id}" ${RS.squad === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
   const barricades = ['Листовая баррикада', 'Баррикада с окном', 'Баррикада без окна', 'Габон', 'Раликс'];
@@ -2966,7 +2970,7 @@ async function viewRoster() {
       ${barrCard}
       ${syncCard}
       <div class="pg-main"><div class="sq2-grid">${squads.length ? sqCards : '<p class="mut">Отрядов пока нет.</p>'}</div>
-        <aside class="lobby2"><h3><span>Лавка</span><span>${lobby.length} игроков</span></h3>
+        <aside class="lobby2" data-drop-squad="none"><h3><span>Лавка</span><span>${lobby.length} игроков</span></h3>
           ${lobby.length ? lobby.map(lrow).join('') : '<p class="mut">Все в отрядах.</p>'}</aside></div>
     </div>
     <div id="sq_manage" hidden>
@@ -3119,11 +3123,46 @@ async function viewRoster() {
     again();
   };
   body.querySelectorAll('[data-lobby-pick]').forEach(el => el.onclick = () => assignLobby(el.dataset.lobbyPick));
+  let draggingPid = null;
+  const wireDrag = root => {
+    if (!root) return;
+    root.querySelectorAll('[data-drag-pid]:not([data-drag-wired])').forEach(el => {
+      el.dataset.dragWired = '1';
+      el.addEventListener('dragstart', e => {
+        draggingPid = el.dataset.dragPid;
+        e.dataTransfer.setData('text/plain', draggingPid);
+        e.dataTransfer.effectAllowed = 'move';
+        el.classList.add('dragging');
+      });
+      el.addEventListener('dragend', () => {
+        draggingPid = null;
+        document.querySelectorAll('.dragging,.drop-target').forEach(x => x.classList.remove('dragging', 'drop-target'));
+      });
+    });
+    root.querySelectorAll('[data-drop-squad]:not([data-drop-wired])').forEach(z => {
+      z.dataset.dropWired = '1';
+      z.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; z.classList.add('drop-target'); });
+      z.addEventListener('dragleave', e => { if (!z.contains(e.relatedTarget)) z.classList.remove('drop-target'); });
+      z.addEventListener('drop', async e => {
+        e.preventDefault(); z.classList.remove('drop-target');
+        const pid = e.dataTransfer.getData('text/plain') || draggingPid;
+        if (!pid) return;
+        const sid = z.dataset.dropSquad === 'none' ? null : z.dataset.dropSquad;
+        const p = players.find(x => x.id === pid);
+        const { error } = await sb.from('players').update({ squad_id: sid }).eq('id', pid);
+        if (error) return alert(error.message);
+        auditLog(sid ? 'перемещение в отряд' : 'убрал из отряда', p ? p.nick : '', p ? p.nick : null);
+        again();
+      });
+    });
+  };
+  if (canEdit()) wireDrag(document.getElementById('sq_view'));
   const ls = document.getElementById('lsearch');
   if (ls) ls.oninput = () => {
     const q = ls.value.trim().toLowerCase();
     document.getElementById('llist').innerHTML = lobby.filter(p => p.nick.toLowerCase().includes(q)).map(lrow).join('') || '<p class="mut">Никого не найдено.</p>';
     document.querySelectorAll('#llist [data-lobby-pick]').forEach(el => el.onclick = () => assignLobby(el.dataset.lobbyPick));
+    wireDrag(document.getElementById('llist'));
   };
   const rs = document.getElementById('rsync');
   if (rs) rs.onclick = async () => {
@@ -3286,8 +3325,7 @@ async function viewTeam() {
       ? `<select data-rank="${m.user_id}">${CLAN_RANK_ORDER.map(k => `<option value="${k}" ${(m.rank || 'PRIVATE') === k ? 'selected' : ''}>${CLAN_RANKS[k]}</option>`).join('')}</select>`
       : esc(clanRank(m));
     const roleCell = manage
-      ? `<select data-role="${m.user_id}"><option value="officer" ${m.role === 'officer' ? 'selected' : ''}>офицер</option>
-         <option value="viewer" ${m.role === 'viewer' ? 'selected' : ''}>участник</option></select>`
+      ? `<select data-role="${m.user_id}" data-prev="${m.role}" aria-label="Роль участника">${Object.entries(ROLE).map(([k, l]) => `<option value="${k}" ${m.role === k ? 'selected' : ''}>${l}</option>`).join('')}</select>`
       : ROLE[m.role];
     return `<tr><td><span class="brand">${avImg(m.avatar_url, 'sm')}${esc(m.display_name || 'без имени')}${mine ? ' (ты)' : ''}</span></td><td>${rankCell}</td><td>${roleCell}</td>
       <td>${!mine ? `<button class="ghost" data-dm="${m.user_id}">Написать</button> ` : ''}${manage ? `<button class="ghost" data-rm="${m.user_id}">Убрать</button>` : ''}</td></tr>`;
@@ -3330,9 +3368,20 @@ async function viewTeam() {
     viewTeam();
   });
   body.querySelectorAll('[data-role]').forEach(sel => sel.onchange = async () => {
-    const { error } = await sb.from('clan_members').update({ role: sel.value }).eq('clan_id', clan.id).eq('user_id', sel.dataset.role);
-    if (error) alert(error.message);
-    auditLog('смена роли', ROLE[sel.value] || sel.value, sel.dataset.role);
+    const uid = sel.dataset.role;
+    if (sel.value === 'owner') {
+      if (!confirm('Передать владение кланом? Ты станешь офицером.')) { sel.value = sel.dataset.prev || 'officer'; return; }
+      const { error: e1 } = await sb.from('clan_members').update({ role: 'officer' }).eq('clan_id', clan.id).eq('user_id', user.id);
+      if (e1) { alert(e1.message); sel.value = sel.dataset.prev || 'officer'; return; }
+      const { error: e2 } = await sb.from('clan_members').update({ role: 'owner' }).eq('clan_id', clan.id).eq('user_id', uid);
+      if (e2) { alert(e2.message); sel.value = sel.dataset.prev || 'officer'; return; }
+      myRole = 'officer';
+      auditLog('смена роли', 'передача владения', uid);
+      viewTeam(); return;
+    }
+    const { error } = await sb.from('clan_members').update({ role: sel.value }).eq('clan_id', clan.id).eq('user_id', uid);
+    if (error) { alert(error.message); sel.value = sel.dataset.prev || 'officer'; return; }
+    auditLog('смена роли', ROLE[sel.value] || sel.value, uid);
     viewTeam();
   });
   body.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
