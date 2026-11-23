@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#0f0f23">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>ClanPulse</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
@@ -715,6 +718,7 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-session .ls-txt{min-width:0}
 .land-session .ls-txt b{display:block;font-size:13px;color:var(--ok)}
 .land-session .ls-txt span{display:block;font-size:11px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp-build{display:inline-block;margin-left:7px;padding:2px 5px;border:1px solid var(--bd2);border-radius:5px;font:600 9px 'Exo 2',sans-serif;color:var(--mut);vertical-align:middle;letter-spacing:.06em}
 .land-entry{display:flex;justify-content:center;position:relative;z-index:1;margin:22px 0 0}
 .land-entry-btn{display:inline-flex;align-items:center;gap:10px;padding:13px 30px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(135deg,var(--btn1),var(--btn2));color:#fff;font-size:15px;font-weight:700;box-shadow:0 8px 26px rgba(var(--ac-rgb),.32);transition:transform .15s,box-shadow .15s}
 .land-entry-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(var(--ac-rgb),.45)}
@@ -1022,7 +1026,7 @@ function showLanding(errText, invited) {
       <svg class="dc d3" viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v5</b></div>
       <div class="land-links nav-links"><a href="#land-features">Что внутри</a><a href="#land-systems">Системы и показатели</a><a href="#land-flow">Как это работает</a><a href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
@@ -1058,7 +1062,7 @@ function showLanding(errText, invited) {
     <section class="land-sec" id="land-hooks"><div class="sec-kicker">04 / ПСИХОЛОГИЯ</div>
       <h2 class="hook-title">Интерфейс настроен так,<br>чтобы клан играл чаще <em>и с удовольствием.</em></h2>
       <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
-    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе</footer>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v5</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
