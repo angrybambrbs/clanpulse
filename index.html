@@ -711,6 +711,13 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .strip-tile{display:flex;align-items:center;gap:4px;color:var(--ac2);font-size:11px}
 /* Максимальный текст — это просто увеличенный шрифт в заголовках и таблицах */
 :root[data-max="1"] main,:root[data-max="1"] .card,:root[data-max="1"] table th,:root[data-max="1"] table td,:root[data-max="1"] .hstat b,:root[data-max="1"] .tb-title h1,:root[data-max="1"] .dh-top h1{font-size:1.45em!important}
+.land-session{display:inline-flex;align-items:center;gap:12px;max-width:100%;margin:0 0 20px;padding:10px 12px 10px 14px;border:1px solid rgba(52,211,153,.5);border-radius:14px;background:linear-gradient(100deg,rgba(52,211,153,.14),rgba(var(--ac-rgb),.10));box-shadow:0 6px 24px rgba(5,4,18,.35);text-align:left}
+.land-session .ls-txt{min-width:0}
+.land-session .ls-txt b{display:block;font-size:13px;color:var(--ok)}
+.land-session .ls-txt span{display:block;font-size:11px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.land-session .ls-go{margin-left:6px;border:1px solid var(--ok);border-radius:10px;padding:8px 14px;background:rgba(52,211,153,.14);color:var(--ok);font-size:12px;font-weight:700;white-space:nowrap}
+.land-session .ls-go:hover{background:var(--ok);color:#08150f}
+@media(max-width:560px){.land-session{flex-wrap:wrap;justify-content:center;text-align:center}.land-session .ls-go{margin:4px auto 0}}
 .role-badge{display:inline-flex;align-items:center;gap:4px;margin:0 0 3px 8px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;vertical-align:middle;border:1px solid var(--bd2);color:var(--mut);background:var(--in)}
 .role-badge.owner{color:var(--warn);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.12)}
 .role-badge.officer{color:var(--ac2);border-color:rgba(var(--ac-rgb),.45);background:var(--g1)}
@@ -913,6 +920,15 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return showLanding(oauthError(), !!pendingInvite());
   user = session.user;
+  // Даже вошедший пользователь видит главную — подтягиваем только данные для бейджа.
+  try {
+    const cm = await sb.from('clan_members').select('role, clans(id,name,avatar_url,faction)').eq('user_id', user.id).limit(1);
+    if (!cm.error && cm.data && cm.data.length) { clan = cm.data[0].clans; myRole = cm.data[0].role; }
+  } catch (e) {}
+  showLanding(oauthError(), !!pendingInvite());
+}
+
+async function openCabinet() {
   if (!/[?&]tab=/.test(location.search)) {
     try {
       const st = localStorage.getItem(TAB_KEY); if (st) tab = st;
@@ -962,6 +978,13 @@ const MAXIMIZE = {
 function showLanding(errText, invited) {
   const back = user ? '<button class="ghost" data-land-back>← В кабинет</button>' : '';
   const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
+  const md = user ? (user.user_metadata || {}) : {};
+  const nick = md.name || md.nickname || md.full_name || (user ? String(user.email || 'Игрок').split('@')[0] : 'Игрок');
+  const roleText = myRole === 'owner' ? 'лидер клана' : myRole === 'officer' ? 'офицер' : myRole === 'viewer' ? 'участник' : '';
+  const sessionBar = user ? `<div class="land-session">
+    ${md.avatar_url ? `<img class="av sm" referrerpolicy="no-referrer" src="${esc(md.avatar_url)}" alt="">` : `<div class="av ph sm">${esc(String(nick).slice(0, 2).toUpperCase())}</div>`}
+    <div class="ls-txt"><b>Ты в аккаунте${roleText ? ' · ' + roleText : ''}</b><span>${esc(nick)}${clan ? ' · ' + esc(clan.name) : ''}</span></div>
+    <button class="ls-go" data-land-login>В кабинет →</button></div>` : '';
   const feat = [
     [ICONS.chart, 'Аналитика без таблиц', 'Явка, винрейт, K/D и KDA считаются автоматически из записанных боёв. Фильтры по периоду, режиму и отрядам.'],
     [ICONS.users, 'Отряды и состав', 'Цветные карточки отрядов, свободные слоты, лавка и быстрая рассадка игроков одной кнопкой.'],
@@ -1009,6 +1032,7 @@ function showLanding(errText, invited) {
         <input type="text" id="tp_hex" maxlength="7" value="${esc(hexFromCurrent())}" aria-label="HEX-код цвета"><button id="tp_apply">OK</button></div>
       <button class="ghost tp-theme" id="tp_theme">${document.documentElement.dataset.theme === 'light' ? '☀ Светлая' : '☾ Тёмная'} · сменить</button></div>
     <header class="land-hero">
+      ${sessionBar}
       <h1>Пульс твоего <em>клана</em></h1>
       <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
       <div class="land-cta"><button data-land-login>${loginLabel}</button><button class="sec" data-land-scroll>Узнать подробнее</button></div>
@@ -1090,13 +1114,13 @@ function showLanding(errText, invited) {
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
   const exit = () => { if (posTimer) clearInterval(posTimer); };
   app.querySelectorAll('[data-land-login]').forEach(b => b.onclick = async () => {
-    if (user) { exit(); (clan ? render : renderHub)(); return; }
+    if (user) { exit(); openCabinet(); return; }
     b.disabled = true; b.textContent = 'Переходим в Discord…';
     const { error } = await sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: location.origin + location.pathname } });
     if (error) { b.disabled = false; b.textContent = loginLabel; const el = document.getElementById('lerr'); if (el) el.textContent = 'Не удалось войти: ' + error.message; }
   });
   const bk = app.querySelector('[data-land-back]');
-  if (bk) bk.onclick = () => { exit(); (clan ? render : renderHub)(); };
+  if (bk) bk.onclick = () => { exit(); openCabinet(); };
   const sc = app.querySelector('[data-land-scroll]');
   if (sc) sc.onclick = () => app.querySelector('#land-features').scrollIntoView({ behavior: 'smooth' });
   const LB = { clones: ['Клан', 'Клана', 'Кланов'], players: ['Игрок', 'Игрока', 'Игроков'], matches: ['Бой', 'Боя', 'Боёв'], gallery: ['Тактик', 'Тактика', 'Тактик'], messages: ['Сообщение', 'Сообщения', 'Сообщений'], events: ['Событие', 'События', 'Событий'] };
