@@ -2051,13 +2051,16 @@ async function viewAdmin() {
 
 async function viewSettings() {
   const body = document.getElementById('body');
-  const { data: c, error } = await sb.from('clans').select('*').eq('id', clan.id).single();
-  if (error) return body.innerHTML = failBox(error);
+  const raw = await sb.from('clans').select('*').eq('id', clan.id).single();
+  const c = Array.isArray(raw.data) ? raw.data[0] : raw.data;
+  if (raw.error || !c) return body.innerHTML = failBox(raw.error || { message: 'Клан не найден' });
   const goals = c.goals || [];
+  const expected = ['faction', 'tier', 'min_gear_level', 'min_kd', 'min_ehp', 'min_speed', 'chat_mode', 'links', 'tournaments_per_week', 'brawls_per_week', 'open_slots', 'contact', 'needs_mic', 'about', 'goals'];
+  const missing = expected.filter(k => !(k in c));
   body.innerHTML = `<div class="card"><h2>Клан в поиске</h2>
     <div class="row" style="align-items:center">${c.avatar_url ? `<img class="av" src="${esc(c.avatar_url)}" alt="">` : '<div class="av" style="background:var(--bd)"></div>'}
     <input type="file" id="s_file" accept="image/png,image/jpeg,image/webp">${c.avatar_url ? '<button class="ghost" id="s_rmav">Убрать аватарку</button>' : ''}</div>
-    <label class="chk"><input type="checkbox" id="s_listed" ${c.listed ? 'checked' : ''}> Показывать клан в поиске и принимать заявки</label><div class="grid">
+    <div class="grid">
     ${fld('Фракция', `<select id="s_faction">${selOpts(FACTIONS, c.faction, '—')}</select>`)}
     ${fld('Тир (заявлен лидером)', `<select id="s_tier">${selOpts(TIERS, c.tier, '—')}</select>`)}
     ${fld('Минимальная снаряга', `<select id="s_gear">${selOpts(GEAR, c.min_gear_level)}</select>`)}
@@ -2075,20 +2078,24 @@ async function viewSettings() {
     ${fld('Описание клана', `<textarea id="s_about" maxlength="1000">${esc(c.about)}</textarea>`)}
     ${fld('Ссылки (по одной на строку: Название | https://…)', `<textarea id="s_links" placeholder="Discord | https://discord.gg/…">${esc((c.links || []).map(l => l.label + ' | ' + l.url).join('\n'))}</textarea>`)}
     <p class="mut">Тир в игре зависит от рейтинга: S — топ-8 от 2000, A — выше 2000, B — 1750–1999, C — 1500–1749, D — 1250–1499, E — до 1249. Здесь он указывается лидером и не проверяется.</p>
+    ${missing.length ? `<p class="err" style="font-size:12px">В базе отсутствуют колонки: ${esc(missing.join(', '))}. Эти поля не сохранятся — выполни supabase/clan_settings_columns.sql в Supabase SQL Editor.</p>` : ''}
     <button id="s_save">Сохранить</button></div><div id="verif"></div>`;
   setupAvatar();
   viewVerification();
   document.getElementById('s_save').onclick = async () => {
-    const upd = { listed: document.getElementById('s_listed').checked, faction: txt('s_faction'), tier: txt('s_tier'),
+    const upd = { faction: txt('s_faction'), tier: txt('s_tier'),
       min_gear_level: Number(val('s_gear')), min_kd: numv('s_kd'), min_ehp: numv('s_ehp'), min_speed: numv('s_speed'), chat_mode: val('s_chat'), links: parseLinks(val('s_links')), tournaments_per_week: Number(val('s_tpw')),
       brawls_per_week: Number(val('s_bpw')), open_slots: numv('s_slots') || 0, contact: txt('s_contact'),
       needs_mic: document.getElementById('s_mic').checked, about: txt('s_about'),
       goals: [...body.querySelectorAll('[data-goal]:checked')].map(x => x.dataset.goal) };
-    if (upd.listed && !upd.faction) return alert('Укажи фракцию клана');
-    if (upd.links.length > 6 || upd.links.some(l => !safeUrl(l.url))) return alert('Ссылок не больше 6, каждая должна начинаться с http:// или https://');
-    const { error: e } = await sb.from('clans').update(upd).eq('id', clan.id);
+    if (upd.links && (upd.links.length > 6 || upd.links.some(l => !safeUrl(l.url)))) return alert('Ссылок не больше 6, каждая должна начинаться с http:// или https://');
+    // В живой базе может не быть части колонок — отправляем только существующие.
+    const clean = Object.fromEntries(Object.entries(upd).filter(([k]) => k in c));
+    const skipped = Object.keys(upd).filter(k => !(k in c));
+    if (!Object.keys(clean).length) return alert('В базе клана нет доступных для сохранения полей. Выполни supabase/clan_settings_columns.sql в Supabase SQL Editor.');
+    const { error: e } = await sb.from('clans').update(clean).eq('id', clan.id);
     if (e) return alert(e.message);
-    alert('Сохранено');
+    alert(skipped.length ? 'Сохранено. Пропущены отсутствующие в базе поля: ' + skipped.join(', ') : 'Сохранено');
   };
 }
 
