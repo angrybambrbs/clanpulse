@@ -1958,8 +1958,12 @@ function setupAvatar() {
       const blob = await new Promise(r => cv.toBlob(r, 'image/webp', 0.9));
       const path = clan.id + '/avatar.' + (blob.type === 'image/webp' ? 'webp' : 'png');
       const up = await sb.storage.from('clan-avatars').upload(path, blob, { upsert: true, contentType: blob.type });
-      if (up.error) return alert(up.error.message);
-      const url = sb.storage.from('clan-avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+      let url;
+      if (up.error && /row-level security|bucket not found|permission|403/i.test(up.error.message)) {
+        // Бакета Storage нет — кладём маленькую аватарку прямо в clans.avatar_url.
+        url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result)); fr.onerror = () => rej(fr.error); fr.readAsDataURL(blob); });
+      } else if (up.error) return alert(up.error.message);
+      else url = sb.storage.from('clan-avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
       const { error } = await sb.from('clans').update({ avatar_url: url }).eq('id', clan.id);
       if (error) return alert(error.message);
       clan.avatar_url = url; render();
@@ -2007,7 +2011,9 @@ async function viewVerification() {
       const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
       const path = clan.id + '/' + Date.now() + '.jpg';
       const up = await sb.storage.from('verification-proofs').upload(path, blob, { contentType: 'image/jpeg' });
-      if (up.error) return alert(up.error.message);
+      if (up.error) return alert(/row-level security|bucket not found|permission|403/i.test(up.error.message)
+        ? 'Бакет verification-proofs не настроен. Выполни supabase/storage.sql в Supabase SQL Editor — он создаст бакет и политики доступа.'
+        : up.error.message);
       const { error } = await sb.rpc('request_verification', { p_cid: clan.id, p_tier: tier, p_ingame: txt('v_name'), p_proof: path, p_note: txt('v_note') });
       if (error) return alert(error.message);
       alert('Заявка отправлена');
@@ -2262,7 +2268,7 @@ async function viewAudit() {
     ${data.length ? `<table><tr><th>Когда</th><th>Кто</th><th>Действие</th><th>Игрок</th><th>Подробности</th></tr>${rows}</table>` : '<p class="mut">Пока нет записей.</p>'}</div>`;
 }
 let period = 30;
-const failBox = e => '<div class="card err">' + esc(e.message) + (/squads/i.test(e.message) ? '<br>Выполни squads.sql в Supabase → SQL Editor.' : '') + (/clan_invites|display_name|touch_member|join_clan|create_invite/i.test(e.message) ? '<br>Выполни invites.sql в Supabase → SQL Editor.' : '') + (/profiles|clan_directory|clan_applications|apply_to_clan|decide_application|min_gear_level/i.test(e.message) ? '<br>Выполни directory.sql в Supabase → SQL Editor.' : '') + (/avatar_url|min_speed|speed|links/i.test(e.message) ? '<br>Выполни clan_profile.sql в Supabase → SQL Editor.' : '') + (/verification|platform_admins|verified_tier|request_verification|review_verification/i.test(e.message) ? '<br>Выполни verification.sql в Supabase → SQL Editor.' : '') + (/clan_messages|direct_messages|user_cards|chat_mode|touch_card/i.test(e.message) ? '<br>Выполни chat.sql в Supabase → SQL Editor.' : '') + (/clan_events|event_rsvps|team_score/i.test(e.message) ? '<br>Выполни matches_events.sql в Supabase → SQL Editor.' : '') + '</div>';
+const failBox = e => '<div class="card err">' + esc(e.message) + (/row-level security|bucket not found|storage\//i.test(e.message) ? '<br>Выполни supabase/storage.sql в Supabase → SQL Editor.' : '') + (/squads/i.test(e.message) ? '<br>Выполни squads.sql в Supabase → SQL Editor.' : '') + (/clan_invites|display_name|touch_member|join_clan|create_invite/i.test(e.message) ? '<br>Выполни invites.sql в Supabase → SQL Editor.' : '') + (/profiles|clan_directory|clan_applications|apply_to_clan|decide_application|min_gear_level/i.test(e.message) ? '<br>Выполни directory.sql в Supabase → SQL Editor.' : '') + (/avatar_url|min_speed|speed|links/i.test(e.message) ? '<br>Выполни clan_profile.sql в Supabase → SQL Editor.' : '') + (/verification|platform_admins|verified_tier|request_verification|review_verification/i.test(e.message) ? '<br>Выполни verification.sql в Supabase → SQL Editor.' : '') + (/clan_messages|direct_messages|user_cards|chat_mode|touch_card/i.test(e.message) ? '<br>Выполни chat.sql в Supabase → SQL Editor.' : '') + (/clan_events|event_rsvps|team_score/i.test(e.message) ? '<br>Выполни matches_events.sql в Supabase → SQL Editor.' : '') + '</div>';
 let ratingSquad = '';
 
 async function viewRating() {
