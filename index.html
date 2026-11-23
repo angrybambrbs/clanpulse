@@ -702,7 +702,8 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .boot-dots i:nth-child(2){animation-delay:.15s}.boot-dots i:nth-child(3){animation-delay:.3s}
 @media(prefers-reduced-motion:reduce){.boot-orb,.boot-logo svg,.boot-bar i,.boot-dots i{animation:none}}
 /* ============ Марио-стиль: фон-частицы на стартовой ============ */
-#mario{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden}
+#mario{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden}.land-canvas{display:none}
+#tacTip{position:absolute;display:none;pointer-events:none;z-index:20;background:var(--card);border:1px solid var(--bd2);border-radius:9px;padding:4px 9px;font-size:11px;font-weight:600;color:var(--tx);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.5);letter-spacing:.5px}
 #mario #mario-c{pointer-events:auto;width:100%}
 #tooltip{position:absolute;display:none;pointer-events:none;background:var(--card);border:1px solid var(--bd2);border-radius:10px;padding:4px 9px;font-size:11px;font-weight:600;color:var(--tx);white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:4}
 #posStrip{position:fixed;left:14px;bottom:14px;z-index:2;padding:6px 10px;border-radius:9px;background:var(--card);font-size:11px;color:var(--mut);max-width:90%;opacity:.95;pointer-events:none}
@@ -989,8 +990,7 @@ function showLanding(errText, invited) {
     <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span></div>
       <div class="land-links nav-links"><a href="#land-features">Что внутри</a><a href="#land-systems">Системы и показатели</a><a href="#land-flow">Как это работает</a><a href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
-        <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button>
-        <button data-land-login>${loginLabel}</button></div></nav>
+        <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
     <div class="theme-panel" id="theme_panel" hidden><h4>Цветовая схема</h4>
       <div class="tp-swatches">${Object.entries(ACCENTS).map(([k, v]) => `<button class="tp-sw ${curAccent() === k ? 'on' : ''}" data-tp-preset="${k}" style="background:${v[1]}" aria-label="${esc(v[0])}"></button>`).join('')}
         <button class="tp-sw custom ${curAccent() === 'custom' ? 'on' : ''}" data-tp-custom aria-label="Свой цвет"></button></div>
@@ -998,22 +998,20 @@ function showLanding(errText, invited) {
         <input type="text" id="tp_hex" maxlength="7" value="${esc(hexFromCurrent())}" aria-label="HEX-код цвета"><button id="tp_apply">OK</button></div>
       <button class="ghost tp-theme" id="tp_theme">${document.documentElement.dataset.theme === 'light' ? '☀ Светлая' : '☾ Тёмная'} · сменить</button></div>
     <header class="land-hero">
-      <span class="kick">• Система управления кланом</span>
       <h1>Пульс твоего <em>клана</em></h1>
       <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
       <div class="land-cta"><button data-land-login>${loginLabel}</button><button class="sec" data-land-scroll>Узнать подробнее</button></div>
       <div class="land-bento" id="land_stats">${[
         ['clans', 'Кланов', ICONS.shield], ['players', 'Игроков', ICONS.users], ['matches', 'Боёв', ICONS.sword],
         ['gallery', 'Тактик', ICONS.shield], ['messages', 'Сообщений', ICONS.chat], ['events', 'Событий', ICONS.cal]
-      ].map(([k, l, ic]) => `<div class="bs" data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}">—</b><span>${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
+      ].map(([k, l, ic]) => `<div class="bs" data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}" data-lbl="${k}">—</b><span class="bsl">${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
       <div class="scroll-hint"><span>Листай вниз</span><i>↓</i></div>
     <div id="posStrip"></div>
     </header>
     <section class="land-cta-sec top"><div class="cta-ring" aria-hidden="true"></div>
       <div class="sec-kicker">05 / НАЧНИ</div><h2>Готов играть вместе?</h2>
       <p class="sub">Войди через Discord — пароль не нужен.</p>
-      <div class="land-cta"><button data-land-login>${loginLabel}</button></div>
-      ${errText || invited ? `<p class="err" id="lerr">${esc((errText || '') + (invited && !errText ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p>` : ''}</section>
+      <p class="err" id="lerr" style="display:none">${esc((errText || '') + (invited && !errText ? 'Вас пригласили в клан — войдите через Discord, чтобы вступить.' : ''))}</p></section>
     <section class="land-sec" id="land-features"><div class="sec-kicker">01 / ВОЗМОЖНОСТИ</div>
       <h2>Что внутри</h2><p class="sub">Шесть систем, которые закрывают весь цикл жизни клана.</p><div class="land-grid">${feat}</div></section>
     <section class="land-sec" id="land-systems"><div class="sec-kicker">02 / ПОКАЗАТЕЛИ</div>
@@ -1026,6 +1024,8 @@ function showLanding(errText, invited) {
     <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе</footer>
   </div>`;
   landBackdrop();
+  const lerrEl = app.querySelector('#lerr');
+  if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
   const posUpdate = () => {
     const strip = document.getElementById('posStrip');
     if (!strip) return;
@@ -1089,9 +1089,13 @@ function showLanding(errText, invited) {
   if (bk) bk.onclick = () => { exit(); (clan ? render : renderHub)(); };
   const sc = app.querySelector('[data-land-scroll]');
   if (sc) sc.onclick = () => app.querySelector('#land-features').scrollIntoView({ behavior: 'smooth' });
+  const LB = { clones: ['Клан', 'Клана', 'Кланов'], players: ['Игрок', 'Игрока', 'Игроков'], matches: ['Бой', 'Боя', 'Боёв'], gallery: ['Тактик', 'Тактика', 'Тактик'], messages: ['Сообщение', 'Сообщения', 'Сообщений'], events: ['Событие', 'События', 'Событий'] };
+  const inflect = (n, w) => (n % 10 === 1 && n % 100 !== 11 ? w[0] : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 > 20) ? w[1] : w[2]));
   const animate = (el, to) => {
+    const w = LB[el.dataset.lbl] || ['', '', ''];
+    const lbl = el.closest('.bs').querySelector('.bsl');
     const t0 = performance.now(), dur = 900;
-    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = String(Math.round(to * e)); if (k < 1) requestAnimationFrame(step); };
+    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3), n = Math.round(to * e); el.textContent = String(n); if (lbl) lbl.textContent = inflect(n, w); if (k < 1) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   };
   const fill = vals => Object.entries(vals).forEach(([k, v]) => {
@@ -2780,8 +2784,8 @@ async function viewRoster() {
     return `<div class="sq2" style="--sq:${color}"><div class="sq2-top">
       <span class="sq2-drag" title="Порядок">⠿</span><span class="sq2-ico">${svg(16, SQ_ICONS[i % SQ_ICONS.length])}</span>
       <span class="sq2-name">${esc(x.name)}</span><span class="sq2-chip">${mem.length}/${SQ_CAP}</span></div>
-      <div class="sq2-acts"><button class="ico" title="Настроить">⚙</button><button class="ico" data-sqcopy="${x.id}" title="Копировать состав">⧉</button>
-        <span style="flex:1"></span><button class="ico" data-unsqall="${x.id}" title="Очистить отряд">✕</button><button class="ico bad" data-dsq="${x.id}" title="Удалить отряд">🗑</button></div>
+      <div class="sq2-acts"><button class="ico" title="Настроить">⚙ Настроить</button><button class="ico" data-sqcopy="${x.id}" title="Копировать состав">⧉ Копировать состав</button>
+        <span style="flex:1"></span><button class="ico" data-unsqall="${x.id}" title="Очистить отряд">✕ Очистить отряд</button><button class="ico bad" data-dsq="${x.id}" title="Удалить отряд">🗑 Удалить отряд</button></div>
       <div class="sq2-slots">${mem.map(p => `<div class="sq2-slot occupied"><span class="sq2-drag">⠿</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${plLink(p.id, p.nick)} 👑</span><button class="ico" data-unsq="${p.id}" title="Убрать из отряда">✕</button></div>`).join('')}
       ${Array.from({ length: Math.max(0, SQ_CAP - mem.length) }, () => '<div class="sq2-slot empty">Свободный слот</div>').join('')}</div></div>`;
   }).join('');
@@ -3874,7 +3878,7 @@ function viewTactics() {
       <button id="tac_zo" aria-label="Уменьшить масштаб">−</button>
       <span id="tac_zl" aria-live="polite">${Math.round(TAC.zoom * 100)}%</span>
       <button id="tac_zi" aria-label="Увеличить масштаб">+</button>
-      <button id="tac_zr" aria-label="Сбросить масштаб" title="Сбросить масштаб">1:1</button>
+      <button id="tac_zr" aria-label="Сбросить масштаб" title="Сбросить масштаб">100%</button>
     </div></div>
     <p class="tac-hint" id="tac_hint">Метка ставится кликом по карте, повторный клик по метке убирает её. Свой — синий, враг — красный. Масштаб — колесо мыши, щипок или кнопки на карте. Отменить — Ctrl+Z, повторить — Ctrl+Shift+Z. Клавиши 1–6 — инструменты, Space — рука.</p>
     </div>
@@ -4041,6 +4045,27 @@ function viewTactics() {
     list.push(s); tacSave(); redraw(); counts();
   };
 
+  const tacTip = () => document.getElementById('tacTip');
+  const hideTacTip = () => { const t = tacTip(); if (t) t.hidden = true; };
+  const showTacTip = (p, txt) => {
+    const t = tacTip(); if (!t) return;
+    t.hidden = false; t.textContent = txt;
+    const r = cv.getBoundingClientRect();
+    t.style.left = Math.min(Math.max(4, r.width - 180), p[0] * r.width + 10) + 'px';
+    t.style.top = Math.max(4, p[1] * r.height - 30) + 'px';
+  };
+  hideTacTip();
+  cv.addEventListener('pointermove', e => { hideTacTip();
+    if (!TAC.visible) return;
+    const idx = hitStamp(ptOf(e));
+    if (idx < 0) return;
+    const s = list[idx];
+    const side = TAC_SIDE[s.side] ? TAC_SIDE[s.side][0] : '';
+    const kk = TAC_STAMPS[s.k] ? TAC_STAMPS[s.k][0] : String(s.k);
+    showTacTip(s.pts[0], kk + (side ? ' · ' + side : '') + ' · ' + Math.round(s.pts[0][0] * 100) + '% ' + Math.round(s.pts[0][1] * 100) + '%');
+  });
+  cv.addEventListener('pointerout', () => hideTacTip());
+  cv.addEventListener('pointerdown', () => hideTacTip());
   const ptrs = new Map();
   let drag = null, pinch = null;
   const startPinch = () => {
