@@ -1208,7 +1208,7 @@ const pgHead = (title, subtitle, actions = '') => `<div class="pg-head card"><di
 
 const NAV_ICON = {
   dash: svg(16, '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>'),
-  rating: ICONS.star, match: ICONS.sword, history: ICONS.clock, stats: ICONS.chart,
+  clan: ICONS.shield, rating: ICONS.star, match: ICONS.sword, history: ICONS.clock, stats: ICONS.chart,
   tactics: svg(16, '<path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3z"/><path d="M9 3v15M15 6v15"/>'),
   roster: ICONS.users, team: ICONS.users, apps: ICONS.inbox, audit: ICONS.book,
   treasury: svg(16, '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4.5a1.5 1.5 0 0 1 0 3H10a1.5 1.5 0 0 0 0 3h5"/>'),
@@ -1218,7 +1218,7 @@ const NAV_ICON = {
   global: svg(16, '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>')
 };
 const NAV_GROUP = {
-  dash: 'Разделы', rating: 'Разделы', match: 'Разделы', history: 'Разделы', stats: 'Разделы', events: 'Разделы', tactics: 'Разделы', chat: 'Разделы', team: 'Разделы',
+  dash: 'Разделы', clan: 'Разделы', rating: 'Разделы', match: 'Разделы', history: 'Разделы', stats: 'Разделы', events: 'Разделы', tactics: 'Разделы', chat: 'Разделы', team: 'Разделы',
   roster: 'Управление', apps: 'Управление', audit: 'Управление', treasury: 'Управление', settings: 'Управление',
   search: 'Клан', myapps: 'Клан', start: 'Клан',
   catalog: 'Аккаунт', dm: 'Аккаунт', notifs: 'Аккаунт', profile: 'Аккаунт', admin: 'Аккаунт', global: 'Аккаунт'
@@ -1320,7 +1320,7 @@ function shell(title, tabs, views, again, icon, primary) {
     sfx('toggle');
   });
   app.querySelectorAll('[data-clan-card]').forEach(b => {
-    const go = () => { toggle(false); viewClanCard(clan.id, () => render()); };
+    const go = () => { toggle(false); tab = 'clan'; render(); };
     b.onclick = go;
     b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
   });
@@ -1328,7 +1328,7 @@ function shell(title, tabs, views, again, icon, primary) {
 }
 
 function render() {
-  const tabs = [['dash', 'Дашборд'], ['rating', 'Рейтинг']];
+  const tabs = [['dash', 'Дашборд'], ['clan', 'Клан'], ['rating', 'Рейтинг']];
   if (canEdit()) tabs.push(['match', 'Новый бой']);
   tabs.push(['history', 'История'], ['stats', 'Аналитика'], ['tactics', 'Тактика'], ['events', 'События'], ['chat', 'Чат клана'], ['team', 'Команда']);
   if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки'], ['audit', 'Журнал'], ['treasury', 'Казна']);
@@ -1337,7 +1337,7 @@ function render() {
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (tab !== 'player' && !tabs.some(t => t[0] === tab)) tab = 'dash';
   saveTab();
-  shell(clan.name, tabs, { dash: viewDashboard, rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, tactics: viewTactics, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
+  shell(clan.name, tabs, { dash: viewDashboard, clan: () => viewClanCard(clan.id, () => { tab = 'dash'; render(); }), rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, tactics: viewTactics, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
     settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog, global: viewGlobalChat, treasury: viewTreasury }, render, clan.avatar_url, ['dash', 'rating', 'match', 'tactics', 'events', 'chat']);
 }
 
@@ -1627,13 +1627,27 @@ async function viewClanCard(cid, backFn) {
     if (r.data) { c = r.data; error = null; }
   }
   if (error || !c) { body.innerHTML = '<div class="card mut">Клан не найден.</div>'; return; }
+  // У своего клана нет roster_size в join'е — считаем живые цифры из базы.
+  if (clan && cid === clan.id) {
+    const [cnt, full] = await Promise.all([
+      sb.from('players').select('id', { count: 'exact', head: true }).eq('clan_id', cid).eq('active', true),
+      sb.from('clans').select('open_slots,about,links,contact,faction,tier,verified_tier').eq('id', cid).maybeSingle()
+    ]);
+    if (!cnt.error && cnt.count != null) c.roster_size = cnt.count;
+    const fd = Array.isArray(full.data) ? full.data[0] : full.data;
+    if (fd && !full.error) Object.assign(c, fd);
+  }
+  const slots = Number(c.open_slots || 0);
   body.innerHTML = `<button class="ghost" id="ccback">← Назад</button>
     <div class="card" style="margin-top:12px"><div class="brand" style="align-items:flex-start;gap:14px">${clanAv(c, 'lg')}
       <div><h2 style="margin:0 0 8px">${esc(c.name)}</h2>${tierBadge(c)}${factionChip(c.faction, 'Фракция не указана')}</div></div>
-      <p class="mut" style="margin-top:10px">В составе ${esc(String(c.roster_size ?? 0))}${c.open_slots ? ' · свободных мест: ' + esc(String(c.open_slots)) : ' · свободных мест нет'}</p>
+      <p class="mut" style="margin-top:10px">В составе ${esc(String(c.roster_size ?? 0))}${slots ? ' · свободных мест: ' + esc(String(slots)) : ' · свободных мест нет'}</p>
       ${c.about ? `<p>${esc(c.about)}</p>` : ''}${linksHtml(c.links)}${c.contact ? `<p class="mut">Контакт: ${esc(c.contact)}</p>` : ''}
+      ${myRole === 'owner' && clan && cid === clan.id ? `<div class="row" style="margin-top:10px"><button id="ccedit">Редактировать клан</button></div>` : ''}
       ${c.owner_id && c.owner_id !== user.id ? `<div class="row" style="margin-top:10px"><button class="ghost" id="ccdm">Написать лидеру</button></div>` : ''}</div>`;
   document.getElementById('ccback').onclick = backFn || (() => render());
+  const editBtn = document.getElementById('ccedit');
+  if (editBtn) editBtn.onclick = () => { tab = 'settings'; render(); };
   const dm = document.getElementById('ccdm');
   if (dm) dm.onclick = () => openDm(c.owner_id);
 }
