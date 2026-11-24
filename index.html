@@ -22,12 +22,12 @@
 [data-accent="amber"]{--bg:#170f02;--card:#221705;--tx:#faf0de;--mut:#c8ab7e;--ac:#f59e0b;--ac2:#fbbf24;--ac-rgb:245,158,11;--btn1:#b45309;--btn2:#92400e;--cta:#e11d48;--bd:#3a2a12;--bd2:#4a3416;--bad:#f87171;--in:#181006;--in2:#120b04;--ok:#34d399;--warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);--bad-bg:rgba(248,113,113,.12);--ring:rgba(245,158,11,.35);--glow:0 0 18px rgba(245,158,11,.35);--shadow:0 8px 24px rgba(20,10,2,.55);--g1:rgba(245,158,11,.16);--g2:rgba(244,63,94,.07)}
 [data-accent="amber"][data-theme="light"]{--bg:#fdf3e3;--card:#ffffff;--tx:#3d2a10;--mut:#7a5c34;--ac:#b45309;--ac2:#92400e;--ac-rgb:180,83,9;--btn1:#b45309;--btn2:#92400e;--cta:#be123c;--bd:#f0ddb8;--bd2:#e3c48c;--bad:#dc2626;--in:#ffffff;--in2:#fdf8ee;--ok:#059669;--warn:#b45309;--warn-bg:rgba(245,158,11,.14);--bad-bg:rgba(220,38,38,.10);--ring:rgba(180,83,9,.22);--glow:0 4px 14px rgba(180,83,9,.16);--shadow:0 6px 18px rgba(32,29,43,.08);--g1:rgba(180,83,9,.07);--g2:rgba(244,63,94,.05)}
 [data-accent="custom"]:not([data-theme="light"]){--bg:#0b1020;--card:#12172c;--in:#0d1226;--in2:#080d1c;--bd:#2c2854;--bd2:#3d376e}
-*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+*{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:rgba(var(--ac-rgb),.35) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
 ::selection{background:rgba(var(--ac-rgb),.45)}
-html{scroll-behavior:smooth;scroll-padding-top:16px}
+html{scroll-behavior:smooth;scroll-padding-top:16px;overscroll-behavior-y:contain;touch-action:manipulation}
 body{margin:0;font:16px/1.5 'Exo 2',system-ui,sans-serif;background:radial-gradient(1000px 520px at 85% -140px,var(--g1),transparent 60%),radial-gradient(800px 420px at -120px 35vh,var(--g2),transparent 55%),var(--bg);background-attachment:fixed;color:var(--tx)}
 main{max-width:880px;margin:0 auto;padding:16px}
 h1,h2{font-family:'Russo One','Exo 2',system-ui,sans-serif;font-weight:400;letter-spacing:.3px}
@@ -1053,7 +1053,7 @@ function showLanding(errText, invited) {
       <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v9</b></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v10</b></div>
       <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
@@ -1089,7 +1089,7 @@ function showLanding(errText, invited) {
     <section class="land-sec" id="land-hooks"><div class="sec-kicker">04 / ПСИХОЛОГИЯ</div>
       <h2 class="hook-title">Интерфейс настроен так,<br>чтобы клан играл чаще <em>и с удовольствием.</em></h2>
       <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
-    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v9</footer>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v10</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
