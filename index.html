@@ -721,7 +721,11 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .cp-build{display:inline-block;margin-left:7px;padding:2px 5px;border:1px solid var(--bd2);border-radius:5px;font:600 9px 'Exo 2',sans-serif;color:var(--mut);vertical-align:middle;letter-spacing:.06em}
 .land-session .ls-go{margin-left:6px;border:1px solid var(--ok);border-radius:10px;padding:8px 14px;background:rgba(52,211,153,.14);color:var(--ok);font-size:12px;font-weight:700;white-space:nowrap}
 .land-session .ls-go:hover{background:var(--ok);color:#08150f}
-.land-hero .land-session + .land-bento{margin-top:24px}
+.land-entry{display:flex;justify-content:center;position:relative;z-index:1;margin:22px 0 0}
+.land-entry-btn{display:inline-flex;align-items:center;gap:10px;padding:13px 30px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(135deg,var(--btn1),var(--btn2));color:#fff;font-size:15px;font-weight:700;box-shadow:0 8px 26px rgba(var(--ac-rgb),.32);transition:transform .15s,box-shadow .15s}
+.land-entry-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(var(--ac-rgb),.45)}
+.land-entry-btn:before{content:"";width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.2)}
+.land-hero .land-session + .land-bento,.land-hero .land-entry + .land-bento{margin-top:24px}
 @media(max-width:560px){.land-session{flex-wrap:wrap;justify-content:center;text-align:center}.land-session .ls-go{margin:4px auto 0}}
 .role-badge{display:inline-flex;align-items:center;gap:4px;margin:0 0 3px 8px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;vertical-align:middle;border:1px solid var(--bd2);color:var(--mut);background:var(--in)}
 .role-badge.owner{color:var(--warn);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.12)}
@@ -990,6 +994,7 @@ function showLanding(errText, invited) {
     ${md.avatar_url ? `<img class="av sm" referrerpolicy="no-referrer" src="${esc(md.avatar_url)}" alt="">` : `<div class="av ph sm">${esc(String(nick).slice(0, 2).toUpperCase())}</div>`}
     <div class="ls-txt"><b>Ты в аккаунте${roleText ? ' · ' + roleText : ''}</b><span>${esc(nick)}${clan ? ' · ' + esc(clan.name) : ''}</span></div>
     <button class="ls-go" data-land-login>В кабинет →</button></div>` : '';
+  const entryBar = user ? '' : `<div class="land-entry"><button class="land-entry-btn" data-land-login>${loginLabel}</button></div>`;
   const feat = [
     [ICONS.chart, 'Аналитика без таблиц', 'Явка, винрейт, K/D и KDA считаются автоматически из записанных боёв. Фильтры по периоду, режиму и отрядам.'],
     [ICONS.users, 'Отряды и состав', 'Цветные карточки отрядов, свободные слоты, лавка и быстрая рассадка игроков одной кнопкой.'],
@@ -1040,6 +1045,7 @@ function showLanding(errText, invited) {
       <h1>Пульс твоего <em>клана</em></h1>
       <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
       <div class="land-cta"><button class="sec" data-land-scroll>Узнать подробнее</button></div>
+      ${entryBar}
       ${sessionBar}
       <div class="land-bento" id="land_stats">${[
         ['clans', 'Кланов', ICONS.shield], ['players', 'Игроков', ICONS.users], ['matches', 'Боёв', ICONS.sword],
@@ -1122,7 +1128,7 @@ function showLanding(errText, invited) {
     if (user) { exit(); openCabinet(); return; }
     b.disabled = true; b.textContent = 'Переходим в Discord…';
     const { error } = await sb.auth.signInWithOAuth({ provider: 'discord', options: { redirectTo: location.origin + location.pathname } });
-    if (error) { b.disabled = false; b.textContent = loginLabel; const el = document.getElementById('lerr'); if (el) el.textContent = 'Не удалось войти: ' + error.message; }
+    if (error) { b.disabled = false; b.textContent = loginLabel; const text = 'Не удалось войти: ' + error.message; const el = document.getElementById('lerr'); if (el) { el.textContent = text; el.style.display = 'block'; } toast(text, 'err'); }
   });
   const bk = app.querySelector('[data-land-back]');
   if (bk) bk.onclick = () => { exit(); openCabinet(); };
