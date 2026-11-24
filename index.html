@@ -565,8 +565,6 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 @keyframes cpShimmer{0%,55%{left:-60%}85%,100%{left:130%}}
 @keyframes cpScan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
 @keyframes cpFloat{from{transform:translate3d(0,0,0) rotate(0)}to{transform:translate3d(10px,-14px,0) rotate(3deg)}}
-@keyframes cpPulseDot{0%,100%{box-shadow:0 0 0 4px rgba(52,211,153,.16)}50%{box-shadow:0 0 0 9px rgba(52,211,153,0)}}
-@keyframes cpMarquee{to{transform:translateX(-50%)}}
 @keyframes cpGlow{from{opacity:.18;transform:translate3d(0,-40px,0)}to{opacity:.55;transform:translate3d(0,70px,0)}}
 @keyframes cpSheen{0%,100%{opacity:.35}50%{opacity:1}}
 .hero-glow{position:absolute;left:50%;top:-18%;width:min(1100px,95vw);height:620px;margin-left:-min(550px,47.5vw);border-radius:50%;background:radial-gradient(ellipse at center,rgba(var(--ac-rgb),.26),transparent 68%);pointer-events:none;z-index:0;animation:cpGlow linear both;animation-timeline:scroll(root)}
@@ -575,16 +573,12 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-bento .bs:after{content:"";position:absolute;top:0;left:-60%;width:38%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);transform:skewX(-18deg);pointer-events:none;animation:cpShimmer 7s ease-in-out infinite}
 .land-bento .bs:nth-child(2):after{animation-delay:.9s}.land-bento .bs:nth-child(3):after{animation-delay:1.8s}.land-bento .bs:nth-child(4):after{animation-delay:2.7s}.land-bento .bs:nth-child(5):after{animation-delay:3.6s}.land-bento .bs:nth-child(6):after{animation-delay:4.5s}
 .land-decor .dc{animation:cpFloat 11s ease-in-out infinite alternate}.land-decor .dc.d2{animation-delay:-3s}.land-decor .dc.d3{animation-delay:-6s}
-.cp-ticker{position:relative;z-index:1;overflow:hidden;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);background:linear-gradient(90deg,var(--g1),transparent 45%,var(--g2));padding:11px 0}
-.cp-ticker-track{display:flex;gap:36px;width:max-content;animation:cpMarquee 34s linear infinite}
-.cp-ticker:hover .cp-ticker-track{animation-play-state:paused}
-.cp-tick{display:inline-flex;align-items:center;gap:9px;font:600 12px 'Exo 2',sans-serif;letter-spacing:.04em;color:var(--mut);white-space:nowrap;text-transform:uppercase}
-.cp-tick i{width:6px;height:6px;flex:none;border-radius:50%;background:var(--ok);animation:cpPulseDot 2.2s ease-in-out infinite}
-.cp-tick b{color:var(--tx);font-variant-numeric:tabular-nums}
-.cp-tick.hot b{color:var(--ok)}
+.cp-pulse{position:relative;z-index:1;text-align:center;padding:10px 16px;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);font:500 12px 'Exo 2',sans-serif;letter-spacing:.04em;color:var(--mut)}
+.cp-pulse b{color:var(--tx);font-weight:600;font-variant-numeric:tabular-nums}
+.cp-pulse .sep{margin:0 10px;color:var(--bd2)}
 .land-cta button,.land-session .ls-go{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,background-color .18s}
 .theme-panel{animation:rise .22s ease-out both}
-@media(prefers-reduced-motion:reduce){.cp-ticker-track,.cp-tick i,.land-hero:after,.land-bento .bs:after,.land-decor .dc,.hero-glow{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.land-hero:after,.land-bento .bs:after,.land-decor .dc,.hero-glow{animation:none!important}}
 .land-nav{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;padding:14px clamp(18px,5vw,54px);border-bottom:1px solid var(--bd2);background:rgba(var(--bg),.82);backdrop-filter:blur(16px)}
 .land-nav .logo{justify-self:start}
 .land-nav .land-links{justify-self:center}
@@ -1080,7 +1074,7 @@ function showLanding(errText, invited) {
       <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v13</b></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v14</b></div>
       <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
@@ -1104,7 +1098,7 @@ function showLanding(errText, invited) {
       <div class="scroll-hint"><span>Листай вниз</span><i>↓</i></div>
     <div id="posStrip"></div>
     </header>
-    <div class="cp-ticker" aria-label="Пульс клана"><div class="cp-ticker-track" id="cp_ticker"></div></div>
+    <div class="cp-pulse" id="cp_ticker" aria-label="Пульс клана"></div>
     <section class="land-cta-sec top"><div class="cta-ring" aria-hidden="true"></div>
       <div class="sec-kicker">05 / НАЧНИ</div><h2>Готов играть вместе?</h2>
       <p class="sub">Войди через Discord — пароль не нужен.</p>
@@ -1118,7 +1112,7 @@ function showLanding(errText, invited) {
     <section class="land-sec" id="land-hooks"><div class="sec-kicker">04 / ПСИХОЛОГИЯ</div>
       <h2 class="hook-title">Интерфейс настроен так,<br>чтобы клан играл чаще <em>и с удовольствием.</em></h2>
       <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
-    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v13</footer>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v14</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
@@ -1199,9 +1193,8 @@ function showLanding(errText, invited) {
   let tickVals = { ...seed };
   const paintTicker = () => {
     const host = document.getElementById('cp_ticker'); if (!host) return;
-    const parts = [['кланов', tickVals.clans], ['игроков', tickVals.players], ['боёв', tickVals.matches], ['тактик', tickVals.gallery], ['сообщений', tickVals.messages], ['событий', tickVals.events], ['онлайн', 'сейчас']];
-    const group = parts.map(([l, v]) => `<span class="cp-tick ${l === 'онлайн' ? 'hot' : ''}"><i></i>${l} <b>${esc(String(v ?? '—'))}</b></span>`).join('');
-    host.innerHTML = group + group;
+    const parts = [['кланов', tickVals.clans], ['игроков', tickVals.players], ['боёв', tickVals.matches], ['тактик', tickVals.gallery], ['сообщений', tickVals.messages], ['событий', tickVals.events]];
+    host.innerHTML = parts.map(([l, v]) => `${l} <b>${esc(String(v ?? '—'))}</b>`).join('<span class="sep">·</span>');
   };
   const fill = vals => {
     tickVals = { ...tickVals, ...vals }; paintTicker();
