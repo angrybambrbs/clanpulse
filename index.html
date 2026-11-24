@@ -576,6 +576,11 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .cp-pulse{position:relative;z-index:1;text-align:center;padding:10px 16px;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);font:500 12px 'Exo 2',sans-serif;letter-spacing:.04em;color:var(--mut)}
 .cp-pulse b{color:var(--tx);font-weight:600;font-variant-numeric:tabular-nums}
 .cp-pulse .sep{margin:0 10px;color:var(--bd2)}
+.land-counters{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;justify-content:center}
+.lc-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 20px;border:1px solid var(--bd2);border-radius:12px;background:linear-gradient(160deg,rgba(var(--ac-rgb),.10),transparent 50%),var(--card);transition:border-color .2s,transform .2s}
+.lc-card:hover{border-color:var(--ac);transform:translateY(-3px)}
+.lc-card b{display:block;font:700 30px 'Russo One','Exo 2',sans-serif;color:var(--ac2)}
+.lc-card span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
 .land-cta button,.land-session .ls-go{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,background-color .18s}
 .theme-panel{animation:rise .22s ease-out both}
 @media(prefers-reduced-motion:reduce){.land-hero:after,.land-bento .bs:after,.land-decor .dc,.hero-glow{animation:none!important}}
@@ -1051,6 +1056,15 @@ function showLanding(errText, invited) {
     ['Приведёнка и скорость', 'Общая живучесть и скорость передвижения для баланса отряда.', [6, 5, 7, 6, 8, 7, 9, 8]],
     ['Хроно и аирдропы', 'Хроносфера и пыль, обычные, сахарные и золотые контейнеры.', [2, 4, 3, 5, 4, 6, 5, 7]]
   ].map(([t, d, s]) => `<article class="land-card sys" data-reveal><span class="ic">${ICONS.chart}</span><h3>${t}</h3><p>${d}</p><div class="spark-wrap">${spark(s)}<span class="mut">за 8 недель</span></div></article>`).join('');
+  const trustLabels = { clans: 'Кланов', players: 'Игроков', matches: 'Боёв', gallery: 'Тактик' };
+  const platform = [
+    [ICONS.chart, 'Статистика и аналитика', 'K/D, KDA и победа/смерть — автоматически из каждого боя. Фильтры, сортировка, карточки игроков и отчёты по периодам.'],
+    [ICONS.users, 'Управление составом', 'Добавление, смена ролей, поиск и быстрая рассадка игроков по отрядам.'],
+    [ICONS.shield, 'Тактические отряды', 'Размещение, статистика и экспорт отрядов каждого клана. За один клик — в отряды.'],
+    [svg(24, '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M16 2v4h-2M8 2v4H6"/>'), 'Потасовки и зона', 'Турнирные серии, чемпионаты и распределение захватов — в календаре.'],
+    [ICONS.clock, 'Капсулы скорости', 'Quick bar — переход к Тактике, Событиям или Отрядам из любой страницы.'],
+    [ICONS.box, 'Каталог кланов', 'Публичный список кланов: название, масштаб и статус. Видно всем.']
+  ];
   const flow = [
     ['01', 'Войти', 'Discord-авторизация — пароль не нужен, клан узнаёт тебя сразу.'],
     ['02', 'Внести бой', 'Офицер заносит результат и статистику игроков за пару кликов.'],
@@ -1074,8 +1088,8 @@ function showLanding(errText, invited) {
       <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v14</b></div>
-      <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v15</b></div>
+      <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="/changelog">Обновления</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
     <div class="theme-panel" id="theme_panel" hidden><h4>Цветовая схема</h4>
@@ -1109,10 +1123,18 @@ function showLanding(errText, invited) {
       <h2>Системы и показатели</h2><p class="sub">Всё считается само — из боёв, которые вносит клан.</p><div class="land-grid">${systems}</div></section>
     <section class="land-sec" id="land-flow"><div class="sec-kicker">03 / СЦЕНАРИЙ</div>
       <h2>Один вечер клана</h2><p class="sub">От входа до общей игры — четыре шага.</p><div class="land-flow">${flow}</div></section>
+    <section class="land-sec" id="land-platform"><div class="sec-kicker">06 / ФУНКЦИОНАЛЬНОСТЬ</div>
+      <h2>Функциональность платформы.</h2>
+      <p class="sub">Профессиональный набор инструментов для управления кланом — без лишних шагов.</p>
+      <div class="land-grid">${platform}</div></section>
+    <section class="land-sec" id="land-trust"><div class="sec-kicker">07 / СООБЩЕСТВО</div>
+      <h2>Сообщество,<br>которому доверяют</h2>
+      <p class="sub">Реальные кланы, реальные матчи, реальная аналитика. Никаких надуманных цифр — только то, что происходит в действительности.</p>
+      <div class="land-counters">${['clans','players','matches','gallery'].map(k => `<div class="lc-card"><b data-lc="${k}">—</b><span>${esc(trustLabels[k] || k)}</span></div>`).join('')}</div></section>
     <section class="land-sec" id="land-hooks"><div class="sec-kicker">04 / ПСИХОЛОГИЯ</div>
       <h2 class="hook-title">Интерфейс настроен так,<br>чтобы клан играл чаще <em>и с удовольствием.</em></h2>
       <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
-    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v14</footer>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v15</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
@@ -1183,7 +1205,8 @@ function showLanding(errText, invited) {
   const inflect = (n, w) => (n % 10 === 1 && n % 100 !== 11 ? w[0] : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 > 20) ? w[1] : w[2]));
   const animate = (el, to) => {
     const w = LB[el.dataset.lbl] || ['', '', ''];
-    const lbl = el.closest('.bs').querySelector('.bsl');
+    const bs = el.closest('.bs');
+    const lbl = bs ? bs.querySelector('.bsl') : null;
     const token = (el._anim || 0) + 1; el._anim = token;
     const t0 = performance.now(), dur = 900;
     const step = now => { if (el._anim !== token) return; const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3), n = Math.round(to * e); el.textContent = String(n); if (lbl) lbl.textContent = inflect(n, w); if (k < 1) requestAnimationFrame(step); };
@@ -1200,8 +1223,11 @@ function showLanding(errText, invited) {
     tickVals = { ...tickVals, ...vals }; paintTicker();
     Object.entries(vals).forEach(([k, v]) => {
       const el = app.querySelector('[data-v="' + k + '"]'); if (el) animate(el, Number(v) || 0);
-      const bar = el && el.closest('.bs').querySelector('.bar i');
+      const bar = el && el.closest('.bs') ? el.closest('.bs').querySelector('.bar i') : null;
       if (bar) bar.style.width = Math.max(8, Math.min(100, Math.log10(Number(v) + 1) * 28)) + '%';
+    });
+    ['clans', 'players', 'matches', 'gallery'].forEach(k => {
+      const el = app.querySelector('.land-counters [data-lc="' + k + '"]'); if (el) animate(el, Number(vals[k] || 0));
     });
   };
   fill(seed);

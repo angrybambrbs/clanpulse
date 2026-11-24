@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Обновления кланового центра</title>
+<style>
+html.dark{--bg:#0f0f23;--tx:#e8eaf6;--mut:#9aa3c7;--ac:#8b5cf6;--ac2:#a78bfa;--ac-rgb:139,92,246;--card:#181634;--bd:#2c2854;--ok:#34d399}
+:root:not(.dark){--bg:#f4f3fa;--tx:#201d2b;--mut:#67617d;--ac:#7c3aed;--card:#fff;--bd:#ddd8ea;--ok:#059669}
+body{margin:0;font:16px/1.5 'Exo 2',system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+.layout{max-width:880px;margin:0 auto;padding:20px clamp(16px,4vw,40px) 60px}
+a.back{display:inline-flex;align-items:center;gap:6px;margin:14px 0 8px;color:var(--mut);text-decoration:none;font-size:14px}
+a.back:hover{color:var(--ac2)}
+h1{margin:0 0 4px;font:700 clamp(20px,3.4vw,30px) 'Russo One','Exo 2';letter-spacing:-.4px;color:var(--tx)}
+.sub{color:var(--mut);font-size:13px;margin:0 0 26px}
+.ver{margin-bottom:34px;padding-bottom:26px;border-bottom:1px solid var(--bd);position:relative}
+.ver:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.ver h2{margin:0 0 10px;font:600 14px 'Russo One',sans-serif;color:var(--ac2)}
+ul.ch-list{list-style:none;margin:0;padding:0}
+ul.ch-list li{display:grid;grid-template-columns:8px 1fr 100px;gap:8px;align-items:center;padding:7px 0;font-size:13.5px;color:var(--tx)}
+.ch-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 3px rgba(var(--ac-rgb),.12)}
+.ch-dot.dim{background:var(--ac2);box-shadow:0 0 0 3px rgba(var(--ac-rgb),.06)}
+.ch-hash{color:var(--mut);font:500 11px 'Exo 2';margin-left:4px}
+footer.chf{text-align:center;padding:30px 0 18px;color:var(--mut);font-size:12px;margin-top:30px;border-top:1px solid var(--bd)}
+</style></head>
+<body><div class="layout"><a class="back" href="/clanpulse/">← На сайт</a>
+<h1>Обновления</h1><p class="sub">Новые фичи и исправления.</p>
+<div class="ver"><h2>v14</h2><ul class="ch-list"><li><span class="ch-dot dim"></span><span class="ch-hash">design:</span><span>design: replace noisy marquee with quiet live stats line (v14)</span></li></ul></div><div class="ver"><h2>v13</h2><ul class="ch-list"><li><span class="ch-dot dim"></span><span class="ch-hash">feat: m</span><span>feat: motion pass - live stats ticker, shimmer/scan/float/glow, magnetic CTA (v13)</span></li></ul></div>
+<footer class="chf">ClanPulse · сборка eaf26d6</footer>
+</div></body></html>
