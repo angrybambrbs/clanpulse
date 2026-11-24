@@ -1122,7 +1122,7 @@ function showLanding(errText, invited) {
       <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v16</b></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v17</b></div>
       <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-updates">Обновления</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
@@ -1177,7 +1177,7 @@ function showLanding(errText, invited) {
       <p class="sub">Новые фичи, переработки и исправления — от команды.</p>
       <div class="land-upd">${items.map((c, i) => `<article class="upd-card" data-reveal><span class="upd-n">${i + 1}</span><b>${esc(c.s.length > 86 ? c.s.slice(0, 86) + '…' : c.s)}</b><span class="upd-hash">${c.h}</span><p>${i === 0 ? 'Добавлена секция «Фичи против аналогов» — честно сравниваем с аналогами.' : ''}</p></article>`).join('')}</div>
       <a class="upd-more" href="/changelog">Смотреть все обновления →</a></section>
-    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v16</footer>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v17</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
