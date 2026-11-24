@@ -27,6 +27,7 @@
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
 ::selection{background:rgba(var(--ac-rgb),.45)}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
 body{margin:0;font:16px/1.5 'Exo 2',system-ui,sans-serif;background:radial-gradient(1000px 520px at 85% -140px,var(--g1),transparent 60%),radial-gradient(800px 420px at -120px 35vh,var(--g2),transparent 55%),var(--bg);background-attachment:fixed;color:var(--tx)}
 main{max-width:880px;margin:0 auto;padding:16px}
 h1,h2{font-family:'Russo One','Exo 2',system-ui,sans-serif;font-weight:400;letter-spacing:.3px}
@@ -602,10 +603,11 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-card:hover{transform:translateY(-7px) scale(1.01);border-color:var(--ac);box-shadow:var(--glow),0 0 20px rgba(var(--ac-rgb),.18)}
 .land-card .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(var(--ac-rgb),.14);color:var(--ac2);margin-bottom:14px}
 .land-card h3{margin:0 0 8px;font-size:18px}.land-card p{margin:0;color:var(--mut);font-size:14px}
-/* Прокачка главной: появление + ленивые анимации секций */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1)}
-.reveal.inview{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important;transition:none!important}}
+/* Прокачка главной: плавное появление при пролистывании (скролл-таймлайн + IO-фолбэк) */
+@keyframes cpReveal{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+[data-reveal]{opacity:0;transform:translateY(22px);animation:cpReveal .7s linear both;animation-timeline:scroll(root);animation-range:0px 45%;animation-fill:backwards}
+[data-reveal].inview{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){[data-reveal]{animation:none!important;opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.land-aurora i,.land-decor .dc,.scroll-hint i{animation:none}}
 @media (prefers-reduced-motion:reduce){.land-aurora i{animation:none}}
 .cta-ring{animation:ctaRingPulse 9s ease-in-out infinite}
@@ -1051,7 +1053,7 @@ function showLanding(errText, invited) {
       <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v7</b></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v8</b></div>
       <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
@@ -1087,7 +1089,7 @@ function showLanding(errText, invited) {
     <section class="land-sec" id="land-hooks"><div class="sec-kicker">04 / ПСИХОЛОГИЯ</div>
       <h2 class="hook-title">Интерфейс настроен так,<br>чтобы клан играл чаще <em>и с удовольствием.</em></h2>
       <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
-    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v7</footer>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v8</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
