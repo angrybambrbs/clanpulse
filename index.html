@@ -598,10 +598,21 @@ button.danger:hover{box-shadow:0 0 18px rgba(225,29,72,.45)}
 .land-sec>h2{text-align:center;font-size:clamp(26px,4vw,42px);text-transform:uppercase;margin-bottom:8px}
 .land-sec>.sub{text-align:center;color:var(--mut);margin-bottom:30px}
 .land-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-.land-card{padding:22px;border:1px solid var(--bd2);border-radius:18px;background:linear-gradient(160deg,rgba(var(--ac-rgb),.10),transparent 60%),var(--card);transition:transform .25s,border-color .25s,box-shadow .25s}
-.land-card:hover{transform:translateY(-5px);border-color:var(--ac);box-shadow:var(--glow)}
+.land-card{padding:22px;border:1px solid var(--bd2);border-radius:18px;background:linear-gradient(160deg,rgba(var(--ac-rgb),.10),transparent 60%),var(--card);transition:transform .26s,border-color .26s,box-shadow .26s}
+.land-card:hover{transform:translateY(-7px) scale(1.01);border-color:var(--ac);box-shadow:var(--glow),0 0 20px rgba(var(--ac-rgb),.18)}
 .land-card .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(var(--ac-rgb),.14);color:var(--ac2);margin-bottom:14px}
 .land-card h3{margin:0 0 8px;font-size:18px}.land-card p{margin:0;color:var(--mut);font-size:14px}
+/* Прокачка главной: появление + ленивые анимации секций */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1)}
+.reveal.inview{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.land-aurora i,.land-decor .dc,.scroll-hint i{animation:none}}
+@media (prefers-reduced-motion:reduce){.land-aurora i{animation:none}}
+.cta-ring{animation:ctaRingPulse 9s ease-in-out infinite}
+@keyframes ctaRingPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.035)}}
+.land-cta .sec{position:relative;overflow:hidden;transition:color .15s ease,border-color .15s ease,transform .15s ease}
+.land-cta .sec:after{content:"";position:absolute;inset:auto 0 0 0;height:2px;background:linear-gradient(90deg,transparent,var(--ac2),transparent);transform:scaleX(0);transition:transform .2s ease}
+.land-cta .sec:hover:after{transform:scaleX(1)}
 .land-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .land-step{padding:20px;border-left:3px solid var(--ac);border-radius:0 14px 14px 0;background:var(--card)}
 .land-step b{display:block;color:var(--ac2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
@@ -984,17 +995,26 @@ const MAXIMIZE = {
   set(v) { const root = document.documentElement; const t = v ? '1' : '0'; if (root.dataset.max !== t) { root.dataset.max = t; try { localStorage.setItem('cp_max', t); } catch (e) {} } },
   on() { try { MAXIMIZE.set(localStorage.getItem('cp_max') === '1'); } catch (e) { MAXIMIZE.set(false); } }
 };
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const initReveal = () => {
+  const els = [...app.querySelectorAll('[data-reveal]')].filter(el => !el.classList.contains('inview'));
+  if (REDUCED) { els.forEach(el => el.classList.add('inview')); return; }
+  if (!els.length) return;
+  els.slice().sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top).forEach((el, i) => { el.style.animationDelay = `${(i % 5) * .14 + .02}s`; });
+  const io = new IntersectionObserver(rs => rs.forEach(r => r.isIntersecting && r.target.classList.add('inview')), { rootMargin: '0px 0px -15% 0px', threshold: .03 });
+  els.forEach(el => io.observe(el));
+};
 function showLanding(errText, invited) {
   const back = '';
   const loginLabel = user ? 'Открыть кабинет' : 'Войти через Discord';
   const md = user ? (user.user_metadata || {}) : {};
   const nick = md.name || md.nickname || md.full_name || (user ? String(user.email || 'Игрок').split('@')[0] : 'Игрок');
   const roleText = myRole === 'owner' ? 'лидер клана' : myRole === 'officer' ? 'офицер' : myRole === 'viewer' ? 'участник' : '';
-  const sessionBar = user ? `<div class="land-session">
+  const sessionBar = user ? `<div class="land-session" data-reveal>
     ${md.avatar_url ? `<img class="av sm" referrerpolicy="no-referrer" src="${esc(md.avatar_url)}" alt="">` : `<div class="av ph sm">${esc(String(nick).slice(0, 2).toUpperCase())}</div>`}
     <div class="ls-txt"><b>Ты в аккаунте${roleText ? ' · ' + roleText : ''}</b><span>${esc(nick)}${clan ? ' · ' + esc(clan.name) : ''}</span></div>
     <button class="ls-go" data-land-login>В кабинет →</button></div>` : '';
-  const entryBar = user ? '' : `<div class="land-entry"><button class="land-entry-btn" data-land-login>${loginLabel}</button></div>`;
+  const entryBar = user ? '' : `<div class="land-entry" data-reveal><button class="land-entry-btn" data-land-login>${loginLabel}</button></div>`;
   const feat = [
     [ICONS.chart, 'Аналитика без таблиц', 'Явка, винрейт, K/D и KDA считаются автоматически из записанных боёв. Фильтры по периоду, режиму и отрядам.'],
     [ICONS.users, 'Отряды и состав', 'Цветные карточки отрядов, свободные слоты, лавка и быстрая рассадка игроков одной кнопкой.'],
@@ -1002,19 +1022,19 @@ function showLanding(errText, invited) {
     [ICONS.cal, 'Календарь и Зона', 'Турниры, хроноразломы и аирдропы. Напоминания за день и RSVP прямо в календаре.'],
     [ICONS.chat, 'Связь', 'Чат клана, глобальный чат, личные сообщения, @упоминания и уведомления.'],
     [ICONS.user, 'Профиль игрока', 'Снаряга, показатели, статистика по режимам и ссылка на профиль каждого участника клана.']
-  ].map(([ic, t, d], i) => `<article class="land-card"><span class="land-card-n">0${i + 1}</span><span class="ic">${ic}</span><h3>${t}</h3><p>${d}</p><span class="card-glow"></span></article>`).join('');
+  ].map(([ic, t, d], i) => `<article class="land-card" data-reveal><span class="land-card-n">0${i + 1}</span><span class="ic">${ic}</span><h3>${t}</h3><p>${d}</p><span class="card-glow"></span></article>`).join('');
   const systems = [
     ['K/D и KDA', 'Убийства, смерти и помощь отдельно по потасовкам, турнирам и захвату базы.', [3, 5, 4, 7, 6, 8, 7, 9]],
     ['Винрейт и явка', 'Процент побед и посещаемости с учётом даты вступления игрока в клан.', [4, 6, 5, 8, 7, 9, 8, 10]],
     ['Приведёнка и скорость', 'Общая живучесть и скорость передвижения для баланса отряда.', [6, 5, 7, 6, 8, 7, 9, 8]],
     ['Хроно и аирдропы', 'Хроносфера и пыль, обычные, сахарные и золотые контейнеры.', [2, 4, 3, 5, 4, 6, 5, 7]]
-  ].map(([t, d, s]) => `<article class="land-card sys"><span class="ic">${ICONS.chart}</span><h3>${t}</h3><p>${d}</p><div class="spark-wrap">${spark(s)}<span class="mut">за 8 недель</span></div></article>`).join('');
+  ].map(([t, d, s]) => `<article class="land-card sys" data-reveal><span class="ic">${ICONS.chart}</span><h3>${t}</h3><p>${d}</p><div class="spark-wrap">${spark(s)}<span class="mut">за 8 недель</span></div></article>`).join('');
   const flow = [
     ['01', 'Войти', 'Discord-авторизация — пароль не нужен, клан узнаёт тебя сразу.'],
     ['02', 'Внести бой', 'Офицер заносит результат и статистику игроков за пару кликов.'],
     ['03', 'Увидеть картину', 'Рейтинг, явка и K/D обновляются сами — без ручных таблиц.'],
     ['04', 'Сыграть вместе', 'Отряды, тактика и календарь превращают данные в общую игру.']
-  ].map(([n, t, d]) => `<div class="land-step flow"><span class="flow-n">${n}</span><h3>${t}</h3><p>${d}</p></div>`).join('');
+  ].map(([n, t, d]) => `<div class="land-step flow" data-reveal><span class="flow-n">${n}</span><h3>${t}</h3><p>${d}</p></div>`).join('');
   const hooks = [
     ['Винрейт всегда на виду', 'Цифра обновляется после каждого боя — клан видит прогресс и хочет его сохранить.'],
     ['Пьедестал из топ-3', 'Три игрока на подиуме создают здоровое соревнование без сложных рейтингов.'],
@@ -1022,17 +1042,17 @@ function showLanding(errText, invited) {
     ['KPI вместо протоколов', 'Четыре карточки дают дофамин быстрее, чем длинная таблица с итогами.'],
     ['Отряд вместо списка', 'Цветная карточка с именами вызывает чувство принадлежности сильнее, чем строка в таблице.'],
     ['Точки на карте', 'Буквы A/B/C превращают абстрактную карту в конкретную задачу отряда.']
-  ].map(([t, d], i) => `<div class="land-step"><span class="step-n">0${i + 1}</span><b>${t}</b><span>${d}</span></div>`).join('');
+  ].map(([t, d], i) => `<div class="land-step" data-reveal><span class="step-n">0${i + 1}</span><b>${t}</b><span>${d}</span></div>`).join('');
   app.innerHTML = `<div class="land">
     <div class="land-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="land-decor" aria-hidden="true">
-      <svg class="dc d1" viewBox="0 0 200 200"><circle cx="100" cy="100" r="82" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="54" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="26" fill="none" stroke="currentColor"/><path d="M100 0v200M0 100h200" stroke="currentColor"/></svg>
-      <svg class="dc d2" viewBox="0 0 200 200"><path d="M100 8 184 56v88L100 192 16 144V56z" fill="none" stroke="currentColor"/><path d="M100 42 152 72v56l-52 30-52-30V72z" fill="none" stroke="currentColor"/></svg>
-      <svg class="dc d3" viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
+      <svg class="dc d1" data-reveal viewBox="0 0 200 200"><circle cx="100" cy="100" r="82" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="54" fill="none" stroke="currentColor"/><circle cx="100" cy="100" r="26" fill="none" stroke="currentColor"/><path d="M100 0v200M0 100h200" stroke="currentColor"/></svg>
+      <svg class="dc d2" data-reveal viewBox="0 0 200 200"><path d="M100 8 184 56v88L100 192 16 144V56z" fill="none" stroke="currentColor"/><path d="M100 42 152 72v56l-52 30-52-30V72z" fill="none" stroke="currentColor"/></svg>
+      <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v6</b></div>
-      <div class="land-links nav-links"><a href="#land-features">Что внутри</a><a href="#land-systems">Системы и показатели</a><a href="#land-flow">Как это работает</a><a href="#land-hooks">Хуки и психология</a></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v7</b></div>
+      <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
     <div class="theme-panel" id="theme_panel" hidden><h4>Цветовая схема</h4>
@@ -1042,15 +1062,15 @@ function showLanding(errText, invited) {
         <input type="text" id="tp_hex" maxlength="7" value="${esc(hexFromCurrent())}" aria-label="HEX-код цвета"><button id="tp_apply">OK</button></div>
       <button class="ghost tp-theme" id="tp_theme">${document.documentElement.dataset.theme === 'light' ? '☀ Светлая' : '☾ Тёмная'} · сменить</button></div>
     <header class="land-hero">
-      <h1>Пульс твоего <em>клана</em></h1>
-      <p>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
+      <h1 data-reveal>Пульс твоего <em>клана</em></h1>
+      <p data-reveal>Вся жизнь клана в одном месте: бои, отряды, тактика, события и люди. Никаких таблиц в Excel — только то, что реально помогает играть вместе.</p>
       <div class="land-cta"><button class="sec" data-land-scroll>Узнать подробнее</button></div>
       ${entryBar}
       ${sessionBar}
       <div class="land-bento" id="land_stats">${[
         ['clans', 'Кланов', ICONS.shield], ['players', 'Игроков', ICONS.users], ['matches', 'Боёв', ICONS.sword],
         ['gallery', 'Тактик', ICONS.shield], ['messages', 'Сообщений', ICONS.chat], ['events', 'Событий', ICONS.cal]
-      ].map(([k, l, ic]) => `<div class="bs" data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}" data-lbl="${k}">—</b><span class="bsl">${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
+      ].map(([k, l, ic]) => `<div class="bs" data-reveal data-stat="${k}"><span class="ic">${ic}</span><b data-v="${k}" data-lbl="${k}">—</b><span class="bsl">${l}</span><div class="bar"><i></i></div></div>`).join('')}</div>
       <div class="scroll-hint"><span>Листай вниз</span><i>↓</i></div>
     <div id="posStrip"></div>
     </header>
@@ -1067,7 +1087,7 @@ function showLanding(errText, invited) {
     <section class="land-sec" id="land-hooks"><div class="sec-kicker">04 / ПСИХОЛОГИЯ</div>
       <h2 class="hook-title">Интерфейс настроен так,<br>чтобы клан играл чаще <em>и с удовольствием.</em></h2>
       <p class="sub">Шесть небольших решений, которые работают незаметно.</p><div class="land-steps">${hooks}</div></section>
-    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v6</footer>
+    <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе · сборка v7</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
@@ -1151,6 +1171,7 @@ function showLanding(errText, invited) {
   });
   fill({ clans: 2, players: 8, matches: 1, gallery: 8, messages: 6, events: 1 });
   sb.rpc('site_stats').then(r => { if (!r.error && r.data && typeof r.data === 'object') fill(r.data); }).catch(() => {});
+  initReveal();
 }
 let hubNote = '';
 let isAdmin = false;
