@@ -1474,6 +1474,7 @@ const pgHead = (title, subtitle, actions = '') => `<div class="pg-head card"><di
 const NAV_ICON = {
   dash: svg(16, '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>'),
   clan: ICONS.shield, rating: ICONS.star, match: ICONS.sword, history: ICONS.clock, stats: ICONS.chart,
+  quests: ICONS.star, tours: ICONS.cal, seasons: ICONS.chart, badges: ICONS.shield,
   tactics: svg(16, '<path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3z"/><path d="M9 3v15M15 6v15"/>'),
   roster: ICONS.users, team: ICONS.users, apps: ICONS.inbox, audit: ICONS.book,
   treasury: svg(16, '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4.5a1.5 1.5 0 0 1 0 3H10a1.5 1.5 0 0 0 0 3h5"/>'),
@@ -1483,10 +1484,10 @@ const NAV_ICON = {
   global: svg(16, '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>')
 };
 const NAV_GROUP = {
-  dash: 'Разделы', clan: 'Разделы', rating: 'Разделы', match: 'Разделы', history: 'Разделы', stats: 'Разделы', events: 'Разделы', tactics: 'Разделы', chat: 'Разделы', team: 'Разделы',
+  dash: 'Разделы', quests: 'Разделы', clan: 'Разделы', rating: 'Разделы', match: 'Разделы', history: 'Разделы', stats: 'Разделы', seasons: 'Разделы', events: 'Разделы', tours: 'Разделы', tactics: 'Разделы', chat: 'Разделы', team: 'Разделы',
   roster: 'Управление', apps: 'Управление', audit: 'Управление', treasury: 'Управление', settings: 'Управление',
   search: 'Клан', myapps: 'Клан', start: 'Клан',
-  catalog: 'Аккаунт', dm: 'Аккаунт', notifs: 'Аккаунт', profile: 'Аккаунт', admin: 'Аккаунт', global: 'Аккаунт'
+  catalog: 'Аккаунт', dm: 'Аккаунт', notifs: 'Аккаунт', badges: 'Аккаунт', profile: 'Аккаунт', admin: 'Аккаунт', global: 'Аккаунт'
 };
 
 function shell(title, tabs, views, again, icon, primary) {
@@ -1593,18 +1594,31 @@ function shell(title, tabs, views, again, icon, primary) {
   views[tab]();
 }
 
+const jumpTo = async (view, marker) => {
+  await view();
+  const el = [...document.querySelectorAll('#body .card, #body h2, #body h3')].find(n => (n.textContent || '').includes(marker));
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  el.style.outline = '2px solid var(--ac)';
+  setTimeout(() => { el.style.outline = ''; }, 1800);
+};
+const viewQuests = () => jumpTo(viewDashboard, 'КВЕСТЫ НЕДЕЛИ');
+const viewSeasons = () => jumpTo(viewStats, 'Зал славы');
+const viewTours = () => jumpTo(viewEvents, 'Турнирный хаб');
+const viewBadges = () => jumpTo(viewProfile, 'Косметика и достижения');
+
 function render() {
-  const tabs = [['dash', 'Дашборд'], ['clan', 'Клан'], ['rating', 'Рейтинг']];
+  const tabs = [['dash', 'Дашборд'], ['quests', 'Квесты недели'], ['clan', 'Клан'], ['rating', 'Рейтинг']];
   if (canEdit()) tabs.push(['match', 'Новый бой']);
-  tabs.push(['history', 'История'], ['stats', 'Аналитика'], ['tactics', 'Тактика'], ['events', 'События'], ['chat', 'Чат клана'], ['team', 'Команда']);
+  tabs.push(['history', 'История'], ['stats', 'Аналитика'], ['seasons', 'Сезоны'], ['tactics', 'Тактика'], ['events', 'События'], ['tours', 'Турниры'], ['chat', 'Чат клана'], ['team', 'Команда']);
   if (canEdit()) tabs.push(['roster', 'Состав'], ['apps', 'Заявки'], ['audit', 'Журнал'], ['treasury', 'Казна']);
   if (myRole === 'owner') tabs.push(['settings', 'Клан в поиске']);
-  tabs.push(['catalog', 'Каталог снаряжения'], ['global', 'Глобальный чат'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['profile', 'Профиль']);
+  tabs.push(['catalog', 'Каталог снаряжения'], ['global', 'Глобальный чат'], ['dm', 'Сообщения'], ['notifs', 'Уведомления'], ['badges', 'Достижения'], ['profile', 'Профиль']);
   if (isAdmin) tabs.push(['admin', 'Модерация']);
   if (tab !== 'player' && !tabs.some(t => t[0] === tab)) tab = 'dash';
   saveTab();
-  shell(clan.name, tabs, { dash: viewDashboard, clan: () => viewClanCard(clan.id, () => { tab = 'dash'; render(); }), rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, tactics: viewTactics, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
-    settings: viewSettings, profile: viewProfile, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, player: viewPlayer, catalog: viewCatalog, global: viewGlobalChat, treasury: viewTreasury }, render, clan.avatar_url, ['dash', 'rating', 'match', 'tactics', 'events', 'chat']);
+  shell(clan.name, tabs, { dash: viewDashboard, quests: viewQuests, clan: () => viewClanCard(clan.id, () => { tab = 'dash'; render(); }), rating: viewRating, match: viewMatch, history: viewHistory, stats: viewStats, seasons: viewSeasons, tactics: viewTactics, roster: viewRoster, team: viewTeam, apps: viewApps, audit: viewAudit,
+    settings: viewSettings, profile: viewProfile, badges: viewBadges, admin: viewAdmin, chat: viewChat, dm: viewDm, notifs: viewNotifs, events: viewEvents, tours: viewTours, player: viewPlayer, catalog: viewCatalog, global: viewGlobalChat, treasury: viewTreasury }, render, clan.avatar_url, ['dash', 'rating', 'match', 'tactics', 'events', 'chat']);
 }
 
 function renderHub() {
@@ -5207,7 +5221,7 @@ async function notifyMentions(text, href) {
       const prefs = { ...NOTIF_DEFAULT_PREFS, ...((pref.data && pref.data.notif_prefs) || {}) };
       if (prefs.mention === false) continue;
       await sb.from('notifications').insert({
-        user_id: uid, type: 'mention', title: '??? ????????? ? ????',
+        user_id: uid, type: 'mention', title: 'Упоминание в чате',
         body: tacNick() + ': ' + String(text).slice(0, 120), href: href || 'chat', actor_id: user.id
       });
     } catch (e) {}
@@ -5225,7 +5239,7 @@ async function refreshNotifCount() {
 }
 
 const NOTIF_DEFAULT_PREFS = { application:true, dm:true, rsvp:true, verification:true, digest:true, like:true, pin:true, mention:true, event_reminder:true };
-const NOTIF_LABELS = { application:'??????', dm:'?????? ?????????', rsvp:'?????? ?? ???????', verification:'???????????', digest:'?????????', like:'?????', pin:'???????', mention:'??????????', event_reminder:'??????????? ? ????????' };
+const NOTIF_LABELS = { application:'Заявка', dm:'Личное сообщение', rsvp:'Ответ на событие', verification:'Верификация', digest:'Дайджест', like:'Лайк', pin:'Закреплено', mention:'Упоминание', event_reminder:'Напоминание о событии' };
 async function getNotifPrefs() {
   try {
     const { data } = await sb.from('profiles').select('notif_prefs').eq('user_id', user.id).maybeSingle();
@@ -5257,21 +5271,21 @@ async function viewNotifs() {
   if (error) return body.innerHTML = failBox(error);
   const prefs = await getNotifPrefs();
   const ICON = { application: ICONS.list, dm: ICONS.mail, rsvp: ICONS.cal, verification: ICONS.shield, digest: ICONS.chart, like: TAC_HEART, pin: TAC_PIN, mention: ICONS.chat, event_reminder: ICONS.clock };
-  const LABEL = { application: '??????', dm: '?????????', rsvp: '???????', verification: '???????????', digest: '????????', like:'????', pin:'??????', mention:'??????????', event_reminder:'???????????' };
+  const LABEL = { application: 'Заявка', dm: 'Сообщение', rsvp: 'Ответ', verification: 'Верификация', digest: 'Дайджест', like:'Лайк', pin:'Закреп', mention:'Упоминание', event_reminder:'Напоминание' };
   const types = ['all','unread',...Object.keys(NOTIF_LABELS)];
   const list = (data || []).filter(n => notifFilter === 'all' ? true : notifFilter === 'unread' ? !n.read_at : n.type === notifFilter);
-  body.innerHTML = `<div class="card"><div class="top"><h2>???????????</h2><div class="row" style="gap:8px;flex-wrap:wrap">
-    ${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">????????? ???</button>' : ''}
-    ${data.some(n => n.read_at) ? '<button class="ghost" id="nclear">???????? ???????????</button>' : ''}
-    <button class="ghost" id="nprefs">?????????</button></div></div>
-    <div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">${types.map(t => `<button class="ghost ${notifFilter===t?'on':''}" data-nf="${t}">${esc(t==='all'?'???':t==='unread'?'?????????????':(NOTIF_LABELS[t]||t))}</button>`).join('')}</div>
+  body.innerHTML = `<div class="card"><div class="top"><h2>Уведомления</h2><div class="row" style="gap:8px;flex-wrap:wrap">
+    ${data.some(n => !n.read_at) ? '<button class="ghost" id="nall">Прочитать все</button>' : ''}
+    ${data.some(n => n.read_at) ? '<button class="ghost" id="nclear">Удалить прочитанные</button>' : ''}
+    <button class="ghost" id="nprefs">Настройки</button></div></div>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">${types.map(t => `<button class="ghost ${notifFilter===t?'on':''}" data-nf="${t}">${esc(t==='all'?'Все':t==='unread'?'Непрочитанные':(NOTIF_LABELS[t]||t))}</button>`).join('')}</div>
     <div id="npanel" hidden class="card" style="margin:10px 0;padding:12px"></div>
     ${list.length ? list.map(n => `<div class="msg" data-n="${n.id}" ${n.read_at ? '' : 'style="border-left:3px solid var(--ac)"'}>
       <div class="brand"><b>${ICON[n.type] || ICONS.bell} ${esc(LABEL[n.type] || n.type)}</b>
         <span class="mut">${fmtTime(n.created_at)}</span></div>
       <p><b>${esc(n.title)}</b>${n.body ? '<br>' + esc(n.body) : ''}</p>
-      <div class="row" style="gap:8px;flex-wrap:wrap">${n.href ? `<button class="ghost" data-go="${esc(n.href)}">???????</button>` : ''}<button class="ghost" data-del="${esc(n.id)}">???????</button></div></div>`).join('')
-      : `<div class="empty"><div class="eico">${ICONS.bell}</div><h3>??????????? ???</h3><p>????? ???????? ??????, ?????????, ???????, ?????????? ? ???????????.</p></div>`}</div>`;
+      <div class="row" style="gap:8px;flex-wrap:wrap">${n.href ? `<button class="ghost" data-go="${esc(n.href)}">Открыть</button>` : ''}<button class="ghost" data-del="${esc(n.id)}">Удалить</button></div></div>`).join('')
+      : `<div class="empty"><div class="eico">${ICONS.bell}</div><h3>Уведомлений нет</h3><p>Здесь появятся упоминания, приглашения, ответы, напоминания и сообщения.</p></div>`}</div>`;
   body.querySelectorAll('[data-nf]').forEach(b => b.onclick = () => { notifFilter = b.dataset.nf; viewNotifs(); });
   body.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
     await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', b.closest('[data-n]').dataset.n);
@@ -5292,11 +5306,11 @@ async function viewNotifs() {
     const panel = document.getElementById('npanel');
     panel.hidden = !panel.hidden;
     if (panel.hidden) return;
-    panel.innerHTML = `<b>???? ???????????</b><div style="display:grid;gap:8px;margin-top:10px">${Object.entries(NOTIF_LABELS).map(([k,l])=>`<label class="chk"><input type="checkbox" data-npref="${k}" ${prefs[k]!==false?'checked':''}> ${esc(l)}</label>`).join('')}</div><div class="row" style="margin-top:10px"><button id="npref_save">?????????</button></div>`;
+    panel.innerHTML = `<b>Типы уведомлений</b><div style="display:grid;gap:8px;margin-top:10px">${Object.entries(NOTIF_LABELS).map(([k,l])=>`<label class="chk"><input type="checkbox" data-npref="${k}" ${prefs[k]!==false?'checked':''}> ${esc(l)}</label>`).join('')}</div><div class="row" style="margin-top:10px"><button id="npref_save">Сохранить</button></div>`;
     panel.querySelector('#npref_save').onclick = async () => {
       const next = { ...NOTIF_DEFAULT_PREFS };
       panel.querySelectorAll('[data-npref]').forEach(i => next[i.dataset.npref] = i.checked);
-      try { await saveNotifPrefs(next); toast('????????? ??????????? ?????????'); panel.hidden = true; } catch(e){ alert(e.message); }
+      try { await saveNotifPrefs(next); toast('Настройки уведомлений сохранены'); panel.hidden = true; } catch(e){ alert(e.message); }
     };
   };
 }
