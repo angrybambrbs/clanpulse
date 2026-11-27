@@ -2501,14 +2501,18 @@ async function viewStats() {
     + rows('Лучший новичок', newcomers);
   const bp = (v, l) => `<button class="ghost ${statPeriod === v ? 'on' : ''}" data-sp="${v}">${l}</button>`;
   const bg = (v, l) => `<button class="ghost ${statGroup === v ? 'on' : ''}" data-sg="${v}">${l}</button>`;
-  body.innerHTML = pgHead('Аналитика', 'Динамика боёв, винрейт и эффективность игроков.',
+    const season = seasonRange(new Date());
+  let seasonRows=[], hall=[];
+  try { const [sr,hr]=await Promise.all([sb.from('clan_season_results').select('*,players(nick)').eq('clan_id',clan.id).eq('season_name',season.name).order('rank',{ascending:true}).limit(20), sb.from('clan_seasons').select('*').eq('clan_id',clan.id).order('start_date',{ascending:false}).limit(8)]); seasonRows=sr.data||[]; hall=hr.data||[]; } catch(_){}
+  const seasonCard = `<div class="card" style="margin-top:14px"><div class="top"><h3>Сезон ${esc(season.name)}</h3><div class="mut">${season.start} — ${season.end}</div></div><p class="mut">Косметические награды по итогам сезона. Роли не меняются автоматически.</p>${seasonRows.length?`<div class="wrap"><table><tr><th>#</th><th>Игрок</th><th>Очки</th><th>MVP</th><th>Награда</th></tr>${seasonRows.map(r=>`<tr><td>${r.rank||''}</td><td>${esc(r.players?.nick||'—')}</td><td>${r.score||0}</td><td>${r.mvp_count||0}</td><td>${esc(r.reward||'')}</td></tr>`).join('')}</table></div>`:'<p class="mut">Итоги сезона ещё не зафиксированы.</p>'}<div class="row" style="margin-top:10px">${canEdit()?'<button class="ghost" id="season_finalize">Зафиксировать сезон</button>':''}</div><h4 style="margin-top:14px">Зал славы</h4>${hall.length?hall.map(h=>`<div class="rowline"><span><b>${esc(h.name)}</b> <span class="mut">${esc(h.start_date||'')}—${esc(h.end_date||'')}</span></span><span class="mut">${esc(h.status||'')}</span></div>`).join(''):'<p class="mut">Пока нет закрытых сезонов.</p>'}</div>`;
+body.innerHTML = pgHead('Аналитика', 'Динамика боёв, винрейт и эффективность игроков.',
       `${bp(7, '7 дней')}${bp(30, '30 дней')}${bp(0, 'Всё время')}${bg('day', 'По дням')}${bg('week', 'По неделям')}`)
     + `<div class="card"><h2>Активность клана</h2><div class="topcard">
     <div class="stat"><b>${allN}</b><span>боёв</span></div><div class="stat"><b>${allW}</b><span>побед</span></div>
     <div class="stat"><b>${allN ? Math.round(allW / allN * 100) + '%' : '—'}</b><span>винрейт</span></div>
     <div class="stat"><b>${allD ? (allK / allD).toFixed(2) : '—'}</b><span>средний K/D</span></div></div>${chart}${trend}</div>
     ${modeCard}
-    <h2 style="margin:4px 0 12px">Топ клана</h2><div class="grid">${topBlock}</div>`;
+    <h2 style="margin:4px 0 12px">Топ клана</h2><div class="grid">${topBlock}</div>` + seasonCard;
   body.querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { statPeriod = Number(b.dataset.sp); viewStats(); });
   body.querySelectorAll('[data-sg]').forEach(b => b.onclick = () => { statGroup = b.dataset.sg; viewStats(); });
 }
@@ -2942,6 +2946,69 @@ let dashMode = 'tiles';
 try { dashMode = localStorage.getItem('cp_dash_mode') || 'tiles'; } catch (e) {}
 const isWinMatch = m => /побед/i.test(m.result || '') || m.place === 1;
 
+
+const BADGE_DEFS = [
+  { key:'first_blood', icon:'🩸', title:'Первая кровь', desc:'Первый записанный бой', test:(st,agg)=>agg.matches>=1 },
+  { key:'mvp5', icon:'⭐', title:'MVP x5', desc:'5 MVP наград', test:(st,agg)=>agg.mvp>=5 },
+  { key:'kills100', icon:'🎯', title:'100 фрагов', desc:'100 убийств в боях', test:(st,agg)=>agg.kills>=100 },
+  { key:'team_player', icon:'🤝', title:'Командный игрок', desc:'50 ассистов', test:(st,agg)=>agg.assists>=50 },
+  { key:'veteran', icon:'🛡️', title:'Ветеран', desc:'25 боёв', test:(st,agg)=>agg.matches>=25 },
+];
+function calcMvp(rows){
+  const pick=(rows||[]).filter(r=>r && (r.kills||r.deaths||r.assists||r.score)!=null);
+  if(!pick.length) return null;
+  const scored=pick.map(r=>({ ...r, _v:(+r.kills||0)*3+(+r.assists||0)*1.5+(+r.score||0)*0.05-(+r.deaths||0)*2 }));
+  scored.sort((a,b)=>b._v-a._v);
+  const m=scored[0]; return { player_id:m.player_id, nick:m.nick_raw||m.nick||'Игрок', kills:+m.kills||0, deaths:+m.deaths||0, assists:+m.assists||0, score:+m.score||0 };
+}
+function weekStartIso(d=new Date()){ const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const day=x.getUTCDay()||7; if(day!==1) x.setUTCDate(x.getUTCDate()-day+1); x.setUTCHours(0,0,0,0); return x.toISOString().slice(0,10); }
+async function ensureBadgesForPlayers(clanId, playerIds){
+  const ids=[...new Set((playerIds||[]).filter(Boolean))]; if(!ids.length) return;
+  try{
+    const [sr,br]=await Promise.all([
+      sb.from('match_stats').select('player_id,kills,deaths,assists,score,match_id').eq('clan_id',clanId).in('player_id',ids),
+      sb.from('player_badges').select('player_id,badge_key').eq('clan_id',clanId).in('player_id',ids)
+    ]);
+    const stats=sr.data||[], have=new Set((br.data||[]).map(b=>b.player_id+':'+b.badge_key));
+    const by={}; stats.forEach(r=>{ const a=by[r.player_id]||(by[r.player_id]={kills:0,deaths:0,assists:0,score:0,matches:new Set(),mvp:0}); a.kills+=+r.kills||0; a.deaths+=+r.deaths||0; a.assists+=+r.assists||0; a.score+=+r.score||0; a.matches.add(r.match_id); });
+    const mr=await sb.from('matches').select('extra,match_stats(player_id)').eq('clan_id',clanId).order('played_at',{ascending:false}).limit(200);
+    (mr.data||[]).forEach(m=>{ const mv=(m.extra&&m.extra.mvp)||calcMvp(m.match_stats||[]); if(mv&&mv.player_id&&by[mv.player_id]) by[mv.player_id].mvp++; });
+    const ins=[];
+    ids.forEach(pid=>{ const a=by[pid]||{kills:0,deaths:0,assists:0,score:0,matches:new Set(),mvp:0}; const agg={...a,matches:a.matches.size}; BADGE_DEFS.forEach(d=>{ if(d.test(null,agg)&&!have.has(pid+':'+d.key)) ins.push({clan_id:clanId,player_id:pid,badge_key:d.key,title:d.title,icon:d.icon,meta:{desc:d.desc}}); }); });
+    if(ins.length) await sb.from('player_badges').insert(ins);
+  }catch(e){ console.warn('ensureBadgesForPlayers',e); }
+}
+async function ensureWeeklyQuests(clanId){
+  try{
+    const ws=weekStartIso();
+    const qr=await sb.from('clan_weekly_quests').select('*').eq('clan_id',clanId).eq('week_start',ws);
+    const defs=[
+      {quest_key:'matches_10',title:'Сыграть 10 боёв',description:'Клан проводит 10 боёв за неделю',target:10,reward:'Рамка "На ходу"'},
+      {quest_key:'wins_5',title:'5 побед',description:'Выиграть 5 боёв за неделю',target:5,reward:'Титул "Победный"'},
+      {quest_key:'kills_150',title:'150 фрагов',description:'Набрать 150 убийств суммарно',target:150,reward:'Бейдж "Огонь"'},
+    ];
+    let rows=qr.data||[];
+    if(!rows.length){
+      const ins=defs.map(d=>({clan_id:clanId,week_start:ws,...d,progress:0,updated_at:new Date().toISOString()}));
+      const ir=await sb.from('clan_weekly_quests').insert(ins).select('*');
+      rows=ir.data||ins;
+    }
+    const from=new Date(ws+'T00:00:00Z').toISOString();
+    const mr=await sb.from('matches').select('id,result,match_stats(kills)').eq('clan_id',clanId).gte('played_at',from).limit(500);
+    const ms=mr.data||[];
+    const prog={matches_10:ms.length, wins_5:ms.filter(m=>/поб|win/i.test(String(m.result||''))).length, kills_150:ms.reduce((a,m)=>a+(m.match_stats||[]).reduce((k,r)=>k+(+r.kills||0),0),0)};
+    for(const r of rows){
+      const p=Math.min(r.target, prog[r.quest_key]||0);
+      const done=p>=r.target;
+      if(p!==(r.progress||0) || (!!r.completed_at)!==done){
+        await sb.from('clan_weekly_quests').update({progress:p, completed_at: done ? (r.completed_at||new Date().toISOString()) : null, updated_at:new Date().toISOString()}).eq('id',r.id);
+        r.progress=p; r.completed_at=done?r.completed_at||new Date().toISOString():null;
+      }
+    }
+    return rows;
+  }catch(e){ console.warn('ensureWeeklyQuests',e); return []; }
+}
+function seasonRange(d=new Date()){ const y=d.getUTCFullYear(); const q=Math.floor(d.getUTCMonth()/3)+1; const sm=(q-1)*3; const start=new Date(Date.UTC(y,sm,1)); const end=new Date(Date.UTC(y,sm+3,0)); return {name:`S${y}-Q${q}`, start:start.toISOString().slice(0,10), end:end.toISOString().slice(0,10)}; }
 async function viewDashboard() {
   const body = document.getElementById('body');
   const since = dashRange ? new Date(Date.now() - dashRange * 864e5).toISOString() : '1970-01-01T00:00:00Z';
@@ -3004,9 +3071,12 @@ async function viewDashboard() {
     });
   });
   const ach = (ic, title, sub, val, unit) => `<div class="db-ach">${svg(18, ic)}<span><b>${esc(sub)}</b><small>${esc(title)}</small></span><span class="val">${val}<small>${esc(unit)}</small></span></div>`;
+  const mvpCount={}; matches.forEach(m=>{ const mv=(m.extra&&m.extra.mvp)||calcMvp(m.match_stats||[]); if(mv&&mv.nick) mvpCount[mv.nick]=(mvpCount[mv.nick]||0)+1; });
+  const mvpLeader=Object.entries(mvpCount).sort((a,b)=>b[1]-a[1])[0];
   const achHtml = ach('<path d="M12 2 4 6v6c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6z"/>', 'максимум убийств в матче', bk.n, bk.v, 'фрагов')
     + ach('<path d="M12 2c2 4-2 5 0 9 2-2 4-3 4-5 3 3 5 6 5 9a9 9 0 0 1-18 0c0-4 3-7 6-9-1 3 1 4 3 5-2-4 2-5 0-9z"/>', 'самая длинная серия побед', sn, best, 'побед')
-    + ach('<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>', 'максимум очков в матче', bs.n, bs.v, 'очков');
+    + ach('<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>', 'максимум очков в матче', bs.n, bs.v, 'очков')
+    + ach('<path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.6-4.9-2.6-4.9 2.6.9-5.6-4-3.9 5.5-.8z"/>', 'MVP периода', mvpLeader?mvpLeader[0]:'—', mvpLeader?mvpLeader[1]:0, 'раз');
   const mine = players.filter(p => p.user_id === user.id || p.id === playerId).map(p => p.id);
   const pages = Math.max(1, Math.ceil(matches.length / 6));
   if (dashPage >= pages) dashPage = pages - 1;
@@ -3046,6 +3116,8 @@ async function viewDashboard() {
       <p class="sub">Рекорды клана за период</p>${achHtml}</div></div>
     <div class="db-card" style="margin-bottom:14px"><div class="db-card-head"><div><h3>${svg(15, '<path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3z"/>')} ТОП ОТРЯДОВ</div></div><button class="db-link" data-go="team">Все отряды →</button></div>
       <p class="sub">По среднему K/D и винрейту</p>${sqHtml}</div>
+    <div class="db-card" style="margin-bottom:14px"><div class="db-card-head"><div><h3>${svg(15, '<path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.6-4.9-2.6-4.9 2.6.9-5.6-4-3.9 5.5-.8z"/>')} КВЕСТЫ НЕДЕЛИ</div><div class="mut">${esc(weekStartIso())}</div></div>
+      <p class="sub">Общие цели клана, награды косметические</p>${(typeof quests!=='undefined'?quests:[]).length?(typeof quests!=='undefined'?quests:[]).map(q=>{const pct=Math.max(0,Math.min(100,Math.round((q.progress||0)/(q.target||1)*100)));return `<div style="margin:10px 0"><div class="top"><b>${esc(q.title)}</b><span class="mut">${q.progress||0}/${q.target}</span></div><div class="mut" style="font-size:12px">${esc(q.description||'')}</div><div class="bar" style="margin-top:6px"><i style="width:${pct}%"></i></div><div class="mut" style="font-size:12px;margin-top:4px">Награда: ${esc(q.reward||'—')} ${q.completed_at?'• выполнено':''}</div></div>`;}).join(''):'<p class="mut">Нет данных по квестам.</p>'}</div>
     <div class="db-card"><div class="db-card-head"><div><h3>${svg(15, '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>')} МОИ ИГРЫ</div></div><button class="db-link" data-go="history">Все игры →</button></div>
       <p class="sub">${matches.length} матчей за период · Страница ${dashPage + 1} из ${pages}</p>
       <div class="db-match-grid">${cards}</div>
@@ -3085,10 +3157,11 @@ async function viewHistory() {
     const absent = pr.data.filter(p => p.active && !shown.has(p.id) && !(p.joined_at && new Date(p.joined_at) > new Date(m.played_at)));
     const teams = (m.extra && m.extra.teams) || [];
     const opp = teams.filter(t => !t.own && !(m.place != null && t.place === m.place && t.score === m.team_score));
-    const rows = present.map(s => `<tr><td>${plLink(s.player_id, s.nick_raw)}</td><td>${nv(s.kills)}</td><td>${nv(s.deaths)}</td><td>${nv(s.assists)}</td><td>${nv(s.score)}</td></tr>`).join('')
+    const mvp = (m.extra&&m.extra.mvp)||calcMvp(m.match_stats||[]);
+    const rows = present.map(s => `<tr><td>${plLink(s.player_id, s.nick_raw)}${mvp && mvp.player_id===s.player_id ? ' <span class="chip ok">MVP</span>' : ''}</td><td>${nv(s.kills)}</td><td>${nv(s.deaths)}</td><td>${nv(s.assists)}</td><td>${nv(s.score)}</td></tr>`).join('')
       + absent.map(p => `<tr class="dim"><td>${plLink(p.id, p.nick)}</td><td colspan="4">не явился</td></tr>`).join('');
     const emap = (m.extra && m.extra.map) || '';
-    return `<div class="card"><details ${open ? 'open' : ''}><summary><b>${fmtTime(m.played_at)}</b>${m.mode ? ' · ' + esc(m.mode) : ''}${emap && TAC_MAPS[emap] ? ' · ' + esc(TAC_MAPS[emap].name) : ''}${m.result ? ' · ' + esc(m.result) : ''}${m.place ? ' · ' + m.place + ' место' : ''}
+    return `<div class="card"><details ${open ? 'open' : ''}><summary><b>${fmtTime(m.played_at)}</b>${m.mode ? ' · ' + esc(m.mode) : ''}${emap && TAC_MAPS[emap] ? ' · ' + esc(TAC_MAPS[emap].name) : ''}${m.result ? ' · ' + esc(m.result) : ''}${m.place ? ' · ' + m.place + ' место' : ''}${(m.extra&&m.extra.mvp)?' · ⭐ MVP: '+esc(m.extra.mvp.nick):''}
       <span class="mut">· явилось ${present.length} из ${present.length + absent.length}</span></summary>
       ${m.team_score != null ? `<p class="mut">Очки клана: ${m.team_score}</p>` : ''}
       ${opp.length ? `<p class="mut" style="margin-bottom:2px">Противники:</p><div>${opp.map(t => `<span class="chip">${esc(t.name)} · ${nv(t.score)}${t.place ? ' (' + t.place + ' место)' : ''}</span>`).join('')}</div>` : ''}
@@ -3655,17 +3728,24 @@ async function viewMatch() {
     if (!present.length) return alert('Отметь хотя бы одного игрока');
     const modeLabel = document.getElementById('mode').value || '';
     const place = numv('mplace'), score = numv('mscore');
+    const mvp = calcMvp(statsRows);
+    meta.extra = { ...(meta.extra||{}), mvp: mvp ? { player_id:mvp.player_id, nick:mvp.nick, kills:mvp.kills, deaths:mvp.deaths, assists:mvp.assists, score:mvp.score } : null, highlight: mvp ? `${mvp.nick} — MVP боя` : '' };
+    const qb = await sb.from('clan_weekly_quests').select('quest_key,completed_at').eq('clan_id',clan.id).eq('week_start',weekStartIso()).catch(()=>({data:[]}));
+    const doneBefore = new Set((qb.data||[]).filter(q=>q.completed_at).map(q=>q.quest_key));
     const { data: m, error } = await sb.from('matches').insert({
       clan_id: clan.id, played_at: new Date(document.getElementById('dt').value).toISOString(),
-      mode: modeLabel || null, result: document.getElementById('res').value || null, ...manualMeta(),
+      mode: modeLabel || null, result: document.getElementById('res').value || null, ...meta,
       created_by: user.id }).select('id').single();
     if (error) return alert(error.message);
-    const { error: e2 } = await sb.from('match_stats').insert(present.map(r => ({
-      match_id: m.id, clan_id: clan.id, player_id: r.dataset.pid, nick_raw: r.dataset.nick,
-      kills: num(r.querySelector('.k')), deaths: num(r.querySelector('.d')), assists: num(r.querySelector('.ast')), score: num(r.querySelector('.sc')),
-      confirmed: true })));
+    const { error: e2 } = await sb.from('match_stats').insert(statsRows.map(r => ({ ...r, match_id: m.id })));
     if (e2) return alert(e2.message);
-    auditLog('бой добавлен', modeLabel + (place ? ', ' + place + ' место' : '') + (score != null ? ', очки ' + score : ''));
+    await ensureBadgesForPlayers(clan.id, [...new Set(statsRows.map(r=>r.player_id).filter(Boolean))]);
+    await ensureWeeklyQuests(clan.id);
+    const qa = await sb.from('clan_weekly_quests').select('quest_key,title,completed_at,reward').eq('clan_id',clan.id).eq('week_start',weekStartIso()).catch(()=>({data:[]}));
+    for (const q of (qa.data||[]).filter(q=>q.completed_at && !doneBefore.has(q.quest_key))) {
+      try { await sb.from('notifications').insert({ user_id:user.id, type:'quest', title:'Квест выполнен: '+q.title, body:'Награда: '+(q.reward||'косметика'), href:'dash' }); } catch(_) {}
+    }
+    auditLog('бой добавлен', modeLabel + (place ? ', ' + place + ' место' : '') + (score != null ? ', очки ' + score : '') + (mvp ? ', MVP: '+mvp.nick : ''));
     tab = 'rating'; render();
   };
 }
@@ -5552,6 +5632,33 @@ async function viewEvents() {
       (list.length ? list.map(e => `<div class="calev k-${esc(e.kind)}" data-ev="${esc(e.id)}"><b>${new Date(e.starts_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</b><span>${esc(e.title||EV_KIND[e.kind]||'Событие')}</span></div>`).join('') : '<span class="calempty">·</span>') + '</div>';
   }).join('');
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1); tomorrow.setHours(20,0,0,0);
+  const tourCard = `<div class="card"><div class="top"><h2>Турнирный хаб</h2><div class="mut">Без фиксированной сетки: чек-ин, раунды и итог по факту.</div></div>
+    ${canEdit()?`<div class="grid" style="margin-top:10px">
+      ${fld('Название', '<input id="t_title" placeholder="Clan War / Турнир">')}
+      ${fld('Время (опц.)', '<input type="datetime-local" id="t_dt">')}
+      ${fld('Формат', '<input id="t_format" placeholder="5v5, BO1/BO3, custom">')}
+      ${fld('Статус', `<select id="t_status">${selOpts({planned:'Запланирован',checkin:'Чек-ин',live:'Live',done:'Завершён'},'planned')}</select>`)}
+    </div>
+    <div class="grid" style="margin-top:8px">
+      ${fld('Место', '<input id="t_place" type="number" min="1" placeholder="1">')}
+      ${fld('Итог', '<input id="t_result" placeholder="Победа / 2-1 / Топ-4">')}
+      ${fld('MVP', `<select id="t_mvp"><option value="">— MVP —</option>${(players||[]).map(p=>`<option value="${p.id}" data-nick="${esc(p.nick)}">${esc(p.nick)}</option>`).join('')}</select>`)}
+      ${fld('Ссылка/клип', '<input id="t_link" placeholder="https://...">')}
+    </div>
+    ${fld('Раунды/соперники по факту', '<textarea id="t_rounds" rows="3" placeholder="R1 vs Team A — win 13:7\nR2 vs Team B — loss 9:13"></textarea>')}
+    ${fld('Рекап', '<textarea id="t_recap" rows="2" placeholder="Короткий итог"></textarea>')}
+    <details style="margin:8px 0"><summary>Чек-ин / ростер</summary><div class="grid" style="margin-top:8px">${(players||[]).map(p=>`<label class="check"><input type="checkbox" data-tp="${p.id}" data-nick="${esc(p.nick)}"> ${esc(p.nick)}</label>`).join('')}</div></details>
+    <button class="ghost" id="t_add">Сохранить турнир</button>`:''}
+    ${(tours.data||[]).length ? (tours.data||[]).map(t=>`<div class="card" style="margin-top:10px"><div class="top"><b>${esc(t.title)}</b><span class="chip">${esc(t.status||'planned')}</span></div>
+      <div class="mut">${t.starts_at?fmtTime(t.starts_at):'время по факту'} ${t.format?'· '+esc(t.format):''}</div>
+      <div class="mut" style="margin-top:6px">Ростер: ${(t.roster||[]).map(r=>esc(r.nick||r)).join(', ')||'—'}</div>
+      ${(t.rounds||[]).length?`<div style="margin-top:6px">${(t.rounds||[]).map(r=>`<div class="mut">• ${esc(r.text||r)}</div>`).join('')}</div>`:''}
+      <div class="rowline" style="margin-top:6px"><span>${t.placement?('Место: '+t.placement+' '):''}${esc(t.result||'')}</span><span class="mut">${t.mvp_nick?('MVP: '+esc(t.mvp_nick)):''}</span></div>
+      ${t.recap&&t.recap.text?`<p class="mut" style="margin-top:6px">${esc(t.recap.text)}</p>`:''}
+      ${t.recap&&t.recap.link?`<p style="margin-top:6px"><a href="${esc(t.recap.link)}" target="_blank" rel="noopener">Ссылка/клип</a></p>`:''}
+      ${canEdit()?`<div class="row" style="margin-top:8px"><button class="ghost" data-tdel="${t.id}">Удалить</button></div>`:''}
+    </div>`).join('') : '<p class="mut">Пока нет турнирных записей.</p>'}
+  </div>`;
   const zoneCard = `<div class="card"><h2>События зоны</h2>
     <p class="mut">Хроноразломы и аирдропы — планируйте вылазки клана и добавляйте их в календарь.</p>
     ${canEdit() ? `<div class="zone-form" id="zone_form" hidden><div class="grid">
@@ -5588,13 +5695,13 @@ async function viewEvents() {
   body.innerHTML = `<div class="card"><div class="top"><h2>Календарь</h2><div class="row">
     <button class="ghost" id="cal_prev">←</button><b>${esc(title)}</b><button class="ghost" id="cal_next">→</button>
     <button class="ghost ${calMode==='week'?'on':''}" id="cal_week">Неделя</button><button class="ghost ${calMode==='month'?'on':''}" id="cal_month">Месяц</button>
-    <button class="ghost" id="evn_new" ${canEdit() ? '' : 'disabled'}>+ Событие</button><button class="ghost" id="zone_new" ${canEdit() ? '' : 'disabled'}>+ Зона</button></div></div>
+    <button class="ghost" id="evn_new" ${canEdit() ? '' : 'disabled'}>+ Событие</button><button class="ghost" id="tour_new_btn" ${canEdit() ? '' : 'disabled'}>+ Турнир</button><button class="ghost" id="zone_new" ${canEdit() ? '' : 'disabled'}>+ Зона</button></div></div>
     <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
       <select id="cal_kind"><option value="all">Все типы</option>${Object.entries(EV_KIND).map(([k,v])=>`<option value="${k}" ${calKindFilter===k?'selected':''}>${esc(v)}</option>`).join('')}</select>
       <select id="cal_rsvp"><option value="all">Любой RSVP</option>${Object.entries(RSVP).map(([k,v])=>`<option value="${k}" ${calRsvpFilter===k?'selected':''}>Мой RSVP: ${esc(v)}</option>`).join('')}</select>
     </div>
     <div class="calgrid ${calMode==='month'?'month':''}">${cells}</div></div>
-    ${zoneCard}${form}
+    ${form}${tourCard}${zoneCard}
     ${filtered.length ? filtered.map(card).join('') : `<div class="card empty"><div class="eico">${ICONS.cal}</div><h3>Событий нет</h3><p>Измени фильтры или создай новое событие.</p></div>`}`;
   document.getElementById('cal_prev').onclick = () => { calOffset--; viewEvents(); };
   document.getElementById('cal_next').onclick = () => { calOffset++; viewEvents(); };
@@ -5660,6 +5767,9 @@ async function viewEvents() {
   });
   body.querySelectorAll('[data-delev]').forEach(b => b.onclick = async () => { if (!confirm('Удалить событие?')) return; const { error } = await sb.from('clan_events').delete().eq('id', b.dataset.delev); if (error) return alert(error.message); viewEvents(); });
   body.querySelectorAll('[data-delseries]').forEach(b => b.onclick = async () => { if (!confirm('Удалить всю серию?')) return; const { error } = await sb.from('clan_events').delete().eq('series_id', b.dataset.delseries); if (error) return alert(error.message); viewEvents(); });
+  const tadd=document.getElementById('t_add');
+  if(tadd) tadd.onclick=async()=>{ const title=val('t_title').trim(); if(!title) return alert('Укажи название турнира'); const roster=[...body.querySelectorAll('[data-tp]:checked')].map(x=>({player_id:x.dataset.tp,nick:x.dataset.nick})); const rounds=val('t_rounds').split('\n').map(s=>s.trim()).filter(Boolean).map(text=>({text})); const mvpOpt=document.getElementById('t_mvp').selectedOptions[0]; const rec={text:val('t_recap').trim(),link:val('t_link').trim()}; const row={clan_id:clan.id,title,starts_at:val('t_dt')?new Date(val('t_dt')).toISOString():null,status:val('t_status')||'planned',format:val('t_format').trim(),roster,rounds,placement:numv('t_place'),result:val('t_result').trim(),mvp_player_id:val('t_mvp')||null,mvp_nick:mvpOpt?.dataset.nick||null,recap:rec,created_by:user.id,updated_at:new Date().toISOString()}; const {error}=await sb.from('clan_tournaments').insert(row); if(error) return alert(error.message); auditLog('турнир сохранён',title); viewEvents(); };
+  body.querySelectorAll('[data-tdel]').forEach(b=>b.onclick=async()=>{ if(!confirm('Удалить запись турнира?')) return; const {error}=await sb.from('clan_tournaments').delete().eq('id',b.dataset.tdel).eq('clan_id',clan.id); if(error) return alert(error.message); viewEvents(); });
 }
 
 function openEventModal(e, by, mine, matches){
@@ -7069,7 +7179,8 @@ async function viewHistory() {
     const absent = pr.data.filter(p => p.active && !shown.has(p.id) && !(p.joined_at && new Date(p.joined_at) > new Date(m.played_at)));
     const teams = (m.extra && m.extra.teams) || [];
     const opp = teams.filter(t => !t.own && !(m.place != null && t.place === m.place && t.score === m.team_score));
-    const rows = present.map(s => `<tr><td>${plLink(s.player_id, s.nick_raw)}</td><td>${nv(s.kills)}</td><td>${nv(s.deaths)}</td><td>${nv(s.assists)}</td><td>${nv(s.score)}</td></tr>`).join('')
+    const mvp = (m.extra&&m.extra.mvp)||calcMvp(m.match_stats||[]);
+    const rows = present.map(s => `<tr><td>${plLink(s.player_id, s.nick_raw)}${mvp && mvp.player_id===s.player_id ? ' <span class="chip ok">MVP</span>' : ''}</td><td>${nv(s.kills)}</td><td>${nv(s.deaths)}</td><td>${nv(s.assists)}</td><td>${nv(s.score)}</td></tr>`).join('')
       + absent.map(p => `<tr class="dim"><td>${plLink(p.id, p.nick)}</td><td colspan="4">не явился</td></tr>`).join('');
     const emap = (m.extra && m.extra.map) || '';
     return `<div class="card"><details ${open ? 'open' : ''}><summary><b>${fmtTime(m.played_at)}</b>${m.mode ? ' · ' + esc(m.mode) : ''}${emap && TAC_MAPS[emap] ? ' · ' + esc(TAC_MAPS[emap].name) : ''}${m.result ? ' · ' + esc(m.result) : ''}${m.place ? ' · ' + m.place + ' место' : ''}
