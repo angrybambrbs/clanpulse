@@ -26,7 +26,7 @@ create index if not exists clan_player_badges_player_idx on public.clan_player_b
 alter table public.clan_player_badges enable row level security;
 drop policy if exists "clan_player_badges_read" on public.clan_player_badges;
 create policy "clan_player_badges_read" on public.clan_player_badges for select to authenticated
-  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or exists (select 1 from public.clans c where c.id = clan_id and coalesce(c.is_public,true)));
+  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or is_clan_member(clan_id));
 drop policy if exists "clan_player_badges_insert" on public.clan_player_badges;
 create policy "clan_player_badges_insert" on public.clan_player_badges for insert to authenticated
   with check (clan_id in (select clan_id from public.clan_members where user_id = auth.uid() and role in ('owner','officer','member')));
@@ -58,7 +58,7 @@ create index if not exists clan_quests_clan_week_idx on public.clan_quests(clan_
 alter table public.clan_quests enable row level security;
 drop policy if exists "clan_quests_read" on public.clan_quests;
 create policy "clan_quests_read" on public.clan_quests for select to authenticated
-  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or exists (select 1 from public.clans c where c.id = clan_id and coalesce(c.is_public,true)));
+  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or is_clan_member(clan_id));
 drop policy if exists "clan_quests_write" on public.clan_quests;
 create policy "clan_quests_write" on public.clan_quests for all to authenticated
   using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid() and role in ('owner','officer','member')))
@@ -101,14 +101,14 @@ alter table public.clan_seasons enable row level security;
 alter table public.clan_season_results enable row level security;
 drop policy if exists "clan_seasons_read" on public.clan_seasons;
 create policy "clan_seasons_read" on public.clan_seasons for select to authenticated
-  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or exists (select 1 from public.clans c where c.id = clan_id and coalesce(c.is_public,true)));
+  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or is_clan_member(clan_id));
 drop policy if exists "clan_seasons_write" on public.clan_seasons;
 create policy "clan_seasons_write" on public.clan_seasons for all to authenticated
   using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid() and role in ('owner','officer')))
   with check (clan_id in (select clan_id from public.clan_members where user_id = auth.uid() and role in ('owner','officer')));
 drop policy if exists "clan_season_results_read" on public.clan_season_results;
 create policy "clan_season_results_read" on public.clan_season_results for select to authenticated
-  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or exists (select 1 from public.clans c where c.id = clan_id and coalesce(c.is_public,true)));
+  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or is_clan_member(clan_id));
 drop policy if exists "clan_season_results_write" on public.clan_season_results;
 create policy "clan_season_results_write" on public.clan_season_results for all to authenticated
   using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid() and role in ('owner','officer')))
@@ -138,7 +138,7 @@ create index if not exists clan_tournaments_clan_idx on public.clan_tournaments(
 alter table public.clan_tournaments enable row level security;
 drop policy if exists "clan_tournaments_read" on public.clan_tournaments;
 create policy "clan_tournaments_read" on public.clan_tournaments for select to authenticated
-  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or exists (select 1 from public.clans c where c.id = clan_id and coalesce(c.is_public,true)));
+  using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid()) or is_clan_member(clan_id));
 drop policy if exists "clan_tournaments_write" on public.clan_tournaments;
 create policy "clan_tournaments_write" on public.clan_tournaments for all to authenticated
   using (clan_id in (select clan_id from public.clan_members where user_id = auth.uid() and role in ('owner','officer')))
