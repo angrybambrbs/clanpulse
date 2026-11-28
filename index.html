@@ -1145,6 +1145,7 @@ function showLanding(errText, invited) {
     [ICONS.clock, 'PDF/PNG-экспорт', 'Рассадки и рейтинг клана — скачай как картинку или PDF.']
   ];
   const items = [
+    { v: 'v22.5', date: '28 ноября', t: 'Ответы между сайтом и Discord', d: 'Ответ на сайте становится ответом в Discord и наоборот.', list: ['Ответ с сайта на сообщение Discord отправляется в Discord как reply.', 'Ответ из Discord на сообщение с сайта показывается цитатой на сайте.'] },
     { v: 'v22.4', date: '28 ноября', t: 'Ответы в чате как в мессенджере', d: 'Цитата ответа стала заметнее: аватар автора и текст, клик переносит к исходному сообщению.', list: ['Цитата ответа показывает аватар и имя автора.', 'Клик по цитате прокручивает к исходному сообщению и подсвечивает его.', 'Ответы из Discord теперь связываются с исходным сообщением.'] },
     { v: 'v22.3', date: '28 ноября', t: 'Мост чата и профили участников', d: 'Сообщения с сайта снова уходят в Discord, а автора чата можно открыть профилем.', list: ['Исправлена отправка сообщений с сайта в Discord.', 'Имя и аватар автора в чате кликабельны — открывается профиль.', 'Для участников без аккаунта показывается карточка «Нет аккаунта на сайте».'] },
     { v: 'v22.2', date: '28 ноября', t: 'Чат: авторы, аватары и ответы', d: 'В чате клана видно, кто написал сообщение, и Discord-аватар; ответы отображаются цитатой.', list: ['Имя и аватар автора теперь видны у каждого сообщения, включая мост из Discord.', 'Ответы показываются цитатой с кликом переход к оригиналу.', 'Дискорд-упоминания <@id> показываются как @ник.', 'Убраны дубли сообщений из Discord и восстановлена связка ответов.'] },
@@ -1184,7 +1185,7 @@ function showLanding(errText, invited) {
       <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v22.4</b></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v22.5</b></div>
       <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a><a data-reveal href="#land-updates">Обновления</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
@@ -1243,7 +1244,7 @@ function showLanding(errText, invited) {
         <ul class="upd-list">${c.list.map(x => `<li>${esc(x)}</li>`).join('')}</ul></article>`).join('')}</div>
       <a class="upd-more" href="/changelog">Смотреть все обновления →</a></section>
     <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе<br>
-      <a href="privacy.html">Конфиденциальность</a> · <a href="terms.html">Условия</a> · <a href="changelog.html">Обновления</a> · <a href="mailto:angrybambrbs@gmail.com?subject=ClanPulse%20%C2%B7%20%D0%BE%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a><br>сборка v22.4</footer>
+      <a href="privacy.html">Конфиденциальность</a> · <a href="terms.html">Условия</a> · <a href="changelog.html">Обновления</a> · <a href="mailto:angrybambrbs@gmail.com?subject=ClanPulse%20%C2%B7%20%D0%BE%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a><br>сборка v22.5</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
