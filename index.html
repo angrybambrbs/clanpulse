@@ -174,6 +174,7 @@ a:hover{color:var(--ac)}
 .reply-quote .rq-ico{color:var(--ac2);font-weight:700}
 .reply-quote b{color:var(--tx);font-weight:600;white-space:nowrap}
 .reply-quote span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.disc-mention{color:var(--ac2);background:rgba(var(--ac-rgb),.12);border-radius:5px;padding:0 4px}
 .reacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .react{padding:2px 8px;border-radius:999px;font-size:12px;background:var(--card-s,var(--in));border:1px solid var(--bd);cursor:pointer}
 .react.on{border-color:var(--ac);color:var(--ac2)}
@@ -1140,7 +1141,7 @@ function showLanding(errText, invited) {
     [ICONS.clock, 'PDF/PNG-экспорт', 'Рассадки и рейтинг клана — скачай как картинку или PDF.']
   ];
   const items = [
-    { v: 'v22.2', date: '28 ноября', t: 'Чат: авторы, аватары и ответы', d: 'В чате клана видно, кто написал сообщение, и Discord-аватар; ответы отображаются цитатой.', list: ['Имя и аватар автора теперь видны у каждого сообщения, включая мост из Discord.', 'Ответы показываются цитатой с кликом переход к оригиналу.', 'Убраны дубли сообщений из Discord и восстановлена связка ответов.'] },
+    { v: 'v22.2', date: '28 ноября', t: 'Чат: авторы, аватары и ответы', d: 'В чате клана видно, кто написал сообщение, и Discord-аватар; ответы отображаются цитатой.', list: ['Имя и аватар автора теперь видны у каждого сообщения, включая мост из Discord.', 'Ответы показываются цитатой с кликом переход к оригиналу.', 'Дискорд-упоминания <@id> показываются как @ник.', 'Убраны дубли сообщений из Discord и восстановлена связка ответов.'] },
     { v: 'v22.1', date: '27 ноября', t: 'Стабильная загрузка и доводка killer pack', d: 'Убрали причину бесконечной загрузки и починили сценарии, которые ломались после большого обновления.', list: ['Загрузка: удалены дубли блоков приложения — сайт больше не зависает на «Подключаем клан».', 'Бой вручную: сохранение статистики и MVP снова работает, квесты обновляются после боя.', 'Сезоны и турниры: итоги и записи сохраняются по реальной схеме базы.', 'Профиль: титулы, рамки и бейджи видны в карточке игрока.'] },
     { v: 'v22', date: '27 ноября', t: 'Killer pack: MVP, достижения, квесты, сезоны, турниры', d: 'Пять систем, которые превращают статистику в игру: MVP и хайлайты, бейджи, общие квесты недели, сезоны с Залом славы и турнирный хаб.', list: ['MVP и хайлайты: лучший игрок боя считается автоматически и виден в истории и на дашборде.', 'Бейджи и достижения: выдаются за бои, MVP и серии побед.', 'Квесты недели: общие цели клана с косметическими наградами.', 'Сезоны: фиксация итогов и Зал славы без изменения ролей.', 'Турниры: чек-ин, раунды по факту, место, MVP, ссылка и рекап.'] },
     { v: 'v21', date: '27 ноября', t: 'Уведомления, календарь и общение', d: 'События с RSVP и напоминаниями, чат клана и глобальный чат, карточки игроков и кланов.', list: ['Уведомления: упоминания, RSVP, напоминания о событиях и выполнении квестов.', 'Календарь: неделя и месяц, фильтры, RSVP, экспорт .ics и повторы.', 'Чат и профили: реакции, ответы, закрепление, глобальный чат и личные сообщения.'] },
@@ -5188,7 +5189,15 @@ document.addEventListener('keydown', e => {
 const stopChan = () => { if (chan) { sb.removeChannel(chan); chan = null; } };
 const dmLabel = () => 'Сообщения' + (unread ? ' (' + unread + ')' : '');
 const fmtTime = iso => new Date(iso).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
-const fmtMentions = t => esc(t || '').replace(/(@[\p{L}\p{N}_.-]{2,32})/gu, m => `<button type="button" class="mention" data-mention="${m.slice(1)}">${m}</button>`);
+let discordIdNames = {};
+const discordIdFromAvatar = url => { const m = String(url || '').match(/\/avatars\/(\d{15,20})\//); return m ? m[1] : null; };
+const fmtMentions = t => {
+  let out = esc(t || '');
+  out = out.replace(/&lt;@!?(\d{15,20})&gt;/g, (_, id) => `<span class="disc-mention" title="Discord ${id}">${esc(discordIdNames[id] ? '@' + discordIdNames[id] : '@discord')}</span>`);
+  out = out.replace(/&lt;@&(\d{15,20})&gt;/g, () => '<span class="disc-mention">@роль</span>');
+  out = out.replace(/&lt;#(\d{15,20})&gt;/g, () => '<span class="disc-mention">#канал</span>');
+  return out.replace(/(@[\p{L}\p{N}_.-]{2,32})/gu, m => `<button type="button" class="mention" data-mention="${m.slice(1)}">${m}</button>`);
+};
 const fmtMessage = t => {
   const s = String(t || '');
   if (s.startsWith('GIF|')) {
@@ -5357,6 +5366,10 @@ async function viewChat() {
     sb.from('profiles').select('user_id,nickname,avatar_url').limit(1000)
   ]);
   const profiles = Object.fromEntries((pf.data || []).map(x => [x.user_id, x]));
+  discordIdNames = {};
+  (pf.data || []).forEach(p => { const id = discordIdFromAvatar(p.avatar_url); if (id && p.nickname) discordIdNames[id] = p.nickname; });
+  (mb.data || []).forEach(m => { const p = profiles[m.user_id]; const id = discordIdFromAvatar(p && p.avatar_url); if (id && m.display_name) discordIdNames[id] = m.display_name; });
+  (r.data || []).forEach(m => { const id = discordIdFromAvatar(m.author_avatar || (m.user_cards && m.user_cards.avatar_url)); if (id && (m.author_name || (m.user_cards && m.user_cards.name))) discordIdNames[id] = m.author_name || m.user_cards.name; });
   if (r.error) return body.innerHTML = failBox(r.error);
   const canPost = canEdit() || (cm.data && cm.data.chat_mode !== 'announce');
   body.innerHTML = `<div class="card"><div class="top" style="margin-bottom:8px"><h2 style="margin:0">Чат клана</h2><div class="row" style="gap:8px"><input id="csearch" placeholder="Поиск по сообщениям" style="max-width:240px"><span class="mut" id="ccount"></span></div></div>
