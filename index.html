@@ -1141,6 +1141,7 @@ function showLanding(errText, invited) {
     [ICONS.clock, 'PDF/PNG-экспорт', 'Рассадки и рейтинг клана — скачай как картинку или PDF.']
   ];
   const items = [
+    { v: 'v22.3', date: '28 ноября', t: 'Мост чата и профили участников', d: 'Сообщения с сайта снова уходят в Discord, а автора чата можно открыть профилем.', list: ['Исправлена отправка сообщений с сайта в Discord.', 'Имя и аватар автора в чате кликабельны — открывается профиль.', 'Для участников без аккаунта показывается карточка «Нет аккаунта на сайте».'] },
     { v: 'v22.2', date: '28 ноября', t: 'Чат: авторы, аватары и ответы', d: 'В чате клана видно, кто написал сообщение, и Discord-аватар; ответы отображаются цитатой.', list: ['Имя и аватар автора теперь видны у каждого сообщения, включая мост из Discord.', 'Ответы показываются цитатой с кликом переход к оригиналу.', 'Дискорд-упоминания <@id> показываются как @ник.', 'Убраны дубли сообщений из Discord и восстановлена связка ответов.'] },
     { v: 'v22.1', date: '27 ноября', t: 'Стабильная загрузка и доводка killer pack', d: 'Убрали причину бесконечной загрузки и починили сценарии, которые ломались после большого обновления.', list: ['Загрузка: удалены дубли блоков приложения — сайт больше не зависает на «Подключаем клан».', 'Бой вручную: сохранение статистики и MVP снова работает, квесты обновляются после боя.', 'Сезоны и турниры: итоги и записи сохраняются по реальной схеме базы.', 'Профиль: титулы, рамки и бейджи видны в карточке игрока.'] },
     { v: 'v22', date: '27 ноября', t: 'Killer pack: MVP, достижения, квесты, сезоны, турниры', d: 'Пять систем, которые превращают статистику в игру: MVP и хайлайты, бейджи, общие квесты недели, сезоны с Залом славы и турнирный хаб.', list: ['MVP и хайлайты: лучший игрок боя считается автоматически и виден в истории и на дашборде.', 'Бейджи и достижения: выдаются за бои, MVP и серии побед.', 'Квесты недели: общие цели клана с косметическими наградами.', 'Сезоны: фиксация итогов и Зал славы без изменения ролей.', 'Турниры: чек-ин, раунды по факту, место, MVP, ссылка и рекап.'] },
@@ -1178,7 +1179,7 @@ function showLanding(errText, invited) {
       <svg class="dc d3" data-reveal viewBox="0 0 200 60"><path d="M0 30h40l10-20 10 40 10-40 10 40 10-20h110" fill="none" stroke="currentColor"/></svg>
       <div class="dc d4"></div><div class="dc d5"></div>
     </div>
-    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v22.2</b></div>
+    <nav class="land-nav"><div class="logo"><i>⚡</i><span>ClanPulse</span><b class="cp-build">v22.3</b></div>
       <div class="land-links nav-links"><a data-reveal href="#land-features">Что внутри</a><a data-reveal href="#land-systems">Системы и показатели</a><a data-reveal href="#land-flow">Как это работает</a><a data-reveal href="#land-hooks">Хуки и психология</a><a data-reveal href="#land-updates">Обновления</a></div>
       <div class="lbtns">${back}<button class="ghost" data-sfx-toggle aria-label="Звуки кнопок">${sfxOn ? ICONS.sound : ICONS.mute}</button><button class="ghost" data-max-toggle aria-label="Режим: нормальный текст">[М]</button>
         <button class="ghost" data-theme-panel aria-label="Настроить цвета" title="Настроить цвета">${ICONS.palette}</button></div></nav>
@@ -1237,7 +1238,7 @@ function showLanding(errText, invited) {
         <ul class="upd-list">${c.list.map(x => `<li>${esc(x)}</li>`).join('')}</ul></article>`).join('')}</div>
       <a class="upd-more" href="/changelog">Смотреть все обновления →</a></section>
     <footer class="land-foot">ClanPulse · Сделано для кланов, которые играют вместе<br>
-      <a href="privacy.html">Конфиденциальность</a> · <a href="terms.html">Условия</a> · <a href="changelog.html">Обновления</a> · <a href="mailto:angrybambrbs@gmail.com?subject=ClanPulse%20%C2%B7%20%D0%BE%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a><br>сборка v22.2</footer>
+      <a href="privacy.html">Конфиденциальность</a> · <a href="terms.html">Условия</a> · <a href="changelog.html">Обновления</a> · <a href="mailto:angrybambrbs@gmail.com?subject=ClanPulse%20%C2%B7%20%D0%BE%D0%B1%D1%80%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%81%D0%B2%D1%8F%D0%B7%D1%8C">Обратная связь</a><br>сборка v22.3</footer>
   </div>`;
   const lerrEl = app.querySelector('#lerr');
   if (lerrEl) lerrEl.style.display = (errText || invited) ? 'block' : 'none';
@@ -1964,9 +1965,21 @@ async function viewClanCard(cid, backFn) {
   if (dm) dm.onclick = () => openDm(c.owner_id);
 }
 
-async function viewUserCard(uid, backFn) {
+async function viewUserCard(uid, backFn, guest) {
   const body = document.getElementById('body');
-  if (!uid || uid === user.id) { tab = 'profile'; return render(); }
+  if (!uid) {
+    const g = guest || {};
+    const nm = g.name || 'Неизвестный пользователь';
+    body.innerHTML = `<button class="ghost" id="ucback">← Назад</button>
+      <div class="card" style="margin-top:12px"><div class="brand" style="gap:14px">
+        ${avImg(g.avatar, 'lg') || `<div class="av ph lg">${esc(nm.slice(0, 2).toUpperCase())}</div>`}
+        <div><h2 style="margin:0 0 6px">${esc(nm)}</h2><span class="chip">Нет аккаунта на сайте</span></div></div>
+        <p class="mut" style="margin-top:12px">Этот участник пишет из Discord и ещё не регистрировался на ClanPulse. Профиль появится, когда он войдёт через Discord.</p>
+      </div>`;
+    document.getElementById('ucback').onclick = backFn || (() => render());
+    return;
+  }
+  if (uid === user.id) { tab = 'profile'; return render(); }
   if (clan) {
     const pls = await sb.from('players').select('id,nick').eq('clan_id', clan.id).eq('user_id', uid).order('nick');
     const found = pls.data || [];
@@ -2199,15 +2212,15 @@ async function viewGlobalChat() {
       const pinBtn = canEdit() ? `<button class="msg-tool" data-pinmsg="${escAttr(m.id)}">${m.pinned_at?'Открепить':'Закрепить'}</button>` : '';
       const delBtn = mine ? `<button class="msg-tool" data-delmsg="${escAttr(m.id)}">Удалить</button>` : '';
       return `<div class="bub ${mine?'me':''}" data-msgid="${escAttr(m.id)}">
-        <button class="gavatar" data-user="${escAttr(m.user_id)}" aria-label="Профиль">${av}</button>
-        <div class="txt"><div class="who"><button class="gnick" data-user="${escAttr(m.user_id)}">${esc(m.nick||'Игрок')}</button><span>${fmtTime(m.created_at)}</span>
+        <button class="gavatar" data-user="${escAttr(m.user_id)}" data-gname="${escAttr(m.nick||'')}" data-gavatar="${escAttr(m.avatar_url||'')}" aria-label="Профиль">${av}</button>
+        <div class="txt"><div class="who"><button class="gnick" data-user="${escAttr(m.user_id)}" data-gname="${escAttr(m.nick||'')}" data-gavatar="${escAttr(m.avatar_url||'')}">${esc(m.nick||'Игрок')}</button><span>${fmtTime(m.created_at)}</span>
         <div class="msg-tools"><button class="msg-tool" data-reply="global" data-mid="${escAttr(m.id)}">Ответить</button>${pinBtn}${delBtn}</div></div>
         ${renderReplyQuote('global', m, byId)}
         <p>${fmtMessage(m.body)}</p>${renderReacts('global', m.id, reacts[m.id]||[])}</div></div>`;
     }).join('') : `<div class="empty"><div class="eico">${ICONS.chat}</div><h3>Тишина в эфире</h3><p>Напиши первым — сообщение увидят все пользователи сайта.</p></div>`;
     if (stick) log.scrollTop = log.scrollHeight;
     wireReplyJump(log);
-    log.querySelectorAll('[data-user]').forEach(b => b.onclick = () => { stopGlobalChan(); viewUserCard(b.dataset.user, () => { tab='global'; render(); }); });
+    log.querySelectorAll('[data-user]').forEach(b => b.onclick = () => { stopGlobalChan(); viewUserCard(b.dataset.user, () => { tab='global'; render(); }, { name: b.dataset.gname, avatar: b.dataset.gavatar }); });
     log.querySelectorAll('[data-reply="global"]').forEach(b => b.onclick = () => { const m=byId[b.dataset.mid]; setReply('global', m); });
     log.querySelectorAll('[data-react="global"]').forEach(b => b.onclick = () => toggleReaction('global', b.dataset.mid, b.dataset.emoji, load));
     log.querySelectorAll('[data-delmsg]').forEach(b => b.onclick = () => animateDelete(b, async () => { const { error } = await sb.from('global_messages').delete().eq('id', b.dataset.delmsg); if (error) return alert(error.message); load(); }));
@@ -5399,18 +5412,20 @@ async function viewChat() {
     log.innerHTML = list.length ? list.map(m => {
       const mine = m.user_id === user.id;
       const who = chatAuthor(m, mb.data, profiles);
-      const av = avImg(who.avatar, 'sm');
+      const av = avImg(who.avatar, 'sm') || `<span class="av ph sm">${esc(who.name.slice(0, 2).toUpperCase())}</span>`;
       const name = who.name;
+      const uprof = `data-user="${escAttr(m.user_id || '')}" data-gname="${escAttr(who.name)}" data-gavatar="${escAttr(who.avatar || '')}"`;
       const pinBtn = canEdit() ? `<button class="msg-tool" data-pinmsg="${escAttr(m.id)}">${m.pinned_at?'Открепить':'Закрепить'}</button>` : '';
       const delBtn = (mine || canEdit()) ? `<button class="msg-tool" data-delmsg="${escAttr(m.id)}">Удалить</button>` : '';
-      return `<div class="bub ${mine?'me':''}" data-msgid="${escAttr(m.id)}">${av}
-        <div class="txt"><div class="who"><b>${esc(name)}</b><span>${fmtTime(m.created_at)}</span>
+      return `<div class="bub ${mine?'me':''}" data-msgid="${escAttr(m.id)}"><button class="gavatar" ${uprof} aria-label="Профиль">${av}</button>
+        <div class="txt"><div class="who"><button class="gnick" ${uprof}>${esc(name)}</button><span>${fmtTime(m.created_at)}</span>
         <div class="msg-tools"><button class="msg-tool" data-reply="clan" data-mid="${escAttr(m.id)}">Ответить</button>${pinBtn}${delBtn}</div></div>
         ${renderReplyQuote('clan', m, byId)}
         <p>${fmtMessage(m.body)}</p>${renderReacts('clan', m.id, reacts[m.id]||[])}</div></div>`;
     }).join('') : `<div class="empty"><div class="eico">${ICONS.chat}</div><h3>Тишина в чате</h3><p>Напиши первым — сообщение увидят участники клана.</p></div>`;
     if (stick) log.scrollTop = log.scrollHeight;
     wireReplyJump(log);
+    log.querySelectorAll('[data-user]').forEach(b => b.onclick = () => viewUserCard(b.dataset.user, () => { tab = 'chat'; render(); }, { name: b.dataset.gname, avatar: b.dataset.gavatar }));
     log.querySelectorAll('[data-reply="clan"]').forEach(b => b.onclick = () => setReply('clan', byId[b.dataset.mid]));
     log.querySelectorAll('[data-react="clan"]').forEach(b => b.onclick = () => toggleReaction('clan', b.dataset.mid, b.dataset.emoji, load));
     log.querySelectorAll('[data-delmsg]').forEach(b => b.onclick = () => animateDelete(b, async () => { const { error } = await sb.from('clan_messages').delete().eq('id', b.dataset.delmsg); if (error) return alert(error.message); load(); }));
@@ -5483,12 +5498,13 @@ async function viewThread(body) {
   if (mr.error) return body.innerHTML = failBox(mr.error);
   const card = cr.data;
   body.innerHTML = `<div class="card"><div class="row" style="align-items:center;justify-content:space-between"><div class="row" style="align-items:center"><button class="ghost" id="dback">← К списку</button>
-    <span class="brand">${avImg(card && card.avatar_url, 'sm')}<b>${esc(card ? card.name : 'Пользователь не найден')}</b></span></div><input id="dsearch" placeholder="Поиск" style="max-width:220px"></div>
+    <span class="brand"><button class="gavatar" data-user="${escAttr(pid)}">${avImg(card && card.avatar_url, 'sm') || '<span class="av ph sm">?</span>'}</button><button class="gnick" data-user="${escAttr(pid)}">${esc(card ? card.name : 'Пользователь не найден')}</button></span></div><input id="dsearch" placeholder="Поиск" style="max-width:220px"></div>
     <div class="log chat" id="log"></div>
     <button class="ghost chat-jump" id="djump" hidden>Новые сообщения ↓</button>
     <div id="dreply"></div>
     ${card ? '<div class="chatform"><textarea id="dmsg" rows="1" placeholder="Сообщение (Enter — отправить, @ник — упоминание)"></textarea><button id="dsend">' + ICONS.send + ' Отправить</button></div>' : ''}</div>`;
-  const log = document.getElementById('log');
+  log = document.getElementById('log');
+  body.querySelectorAll('[data-user]').forEach(b => b.onclick = () => viewUserCard(pid, () => viewDm(), { name: card ? card.name : '', avatar: card ? card.avatar_url : '' }));
   const jump = document.getElementById('djump');
   let raw = (mr.data || []).slice().reverse();
   let stick = true;
